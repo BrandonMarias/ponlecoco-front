@@ -1,9 +1,11 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { ConfirmationModalComponent } from './shared/confirmation-modal/confirmation-modal.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  standalone: true,
+  imports: [RouterOutlet, ConfirmationModalComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })

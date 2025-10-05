@@ -6,39 +6,63 @@
         <label for="username" class="block text-sm font-medium text-gray-700">Nombre de Usuario</label>
         <input type="text" id="username" name="username" formControlName="username"
           class="block w-full px-3 py-2 mt-1 text-gray-900 bg-gray-200 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-        <div *ngIf="registerForm.get('username')?.invalid && (registerForm.get('username')?.dirty || registerForm.get('username')?.touched)" class="text-red-600 text-sm mt-1">
-          <div *ngIf="registerForm.get('username')?.errors?.['required']">El nombre de usuario es requerido.</div>
-        </div>
+        @if (registerForm.get('username')?.invalid && (registerForm.get('username')?.dirty || registerForm.get('username')?.touched)) {
+          <div class="text-red-600 text-sm mt-1">
+            @if (registerForm.get('username')?.errors?.['required']) {
+              <div>El nombre de usuario es requerido.</div>
+            }
+          </div>
+        }
       </div>
       <div>
         <label for="email" class="block text-sm font-medium text-gray-700">Correo Electrónico</label>
         <input type="email" id="email" name="email" formControlName="email"
           class="block w-full px-3 py-2 mt-1 text-gray-900 bg-gray-200 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-        <div *ngIf="registerForm.get('email')?.invalid && (registerForm.get('email')?.dirty || registerForm.get('email')?.touched)" class="text-red-600 text-sm mt-1">
-          <div *ngIf="registerForm.get('email')?.errors?.['required']">El correo es requerido.</div>
-          <div *ngIf="registerForm.get('email')?.errors?.['email']">El formato del correo no es válido.</div>
-        </div>
+        @if (registerForm.get('email')?.invalid && (registerForm.get('email')?.dirty || registerForm.get('email')?.touched)) {
+          <div class="text-red-600 text-sm mt-1">
+            @if (registerForm.get('email')?.errors?.['required']) {
+              <div>El correo es requerido.</div>
+            }
+            @if (registerForm.get('email')?.errors?.['email']) {
+              <div>El formato del correo no es válido.</div>
+            }
+          </div>
+        }
       </div>
       <div>
         <label for="password" class="block text-sm font-medium text-gray-700">Contraseña</label>
         <input type="password" id="password" name="password" formControlName="password"
           class="block w-full px-3 py-2 mt-1 text-gray-900 bg-gray-200 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-        <div *ngIf="registerForm.get('password')?.invalid && (registerForm.get('password')?.dirty || registerForm.get('password')?.touched)" class="text-red-600 text-sm mt-1">
-          <div *ngIf="registerForm.get('password')?.errors?.['required']">La contraseña es requerida.</div>
-          <div *ngIf="registerForm.get('password')?.errors?.['minlength']">La contraseña debe tener al menos 6 caracteres.</div>
-          <div *ngIf="registerForm.get('password')?.errors?.['passwordStrength']">{{ registerForm.get('password')?.errors?.['passwordStrength'] }}</div>
-        </div>
+        @if (registerForm.get('password')?.invalid && (registerForm.get('password')?.dirty || registerForm.get('password')?.touched)) {
+          <div class="text-red-600 text-sm mt-1">
+            @if (registerForm.get('password')?.errors?.['required']) {
+              <div>La contraseña es requerida.</div>
+            }
+            @if (registerForm.get('password')?.errors?.['minlength']) {
+              <div>La contraseña debe tener al menos 6 caracteres.</div>
+            }
+            @if (registerForm.get('password')?.errors?.['passwordStrength']) {
+              <div>{{ registerForm.get('password')?.errors?.['passwordStrength'] }}</div>
+            }
+          </div>
+        }
       </div>
       <div>
         <label for="confirmPassword" class="block text-sm font-medium text-gray-700">Confirmar Contraseña</label>
         <input type="password" id="confirmPassword" name="confirmPassword" formControlName="confirmPassword"
           class="block w-full px-3 py-2 mt-1 text-gray-900 bg-gray-200 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-        <div *ngIf="registerForm.get('confirmPassword')?.invalid && (registerForm.get('confirmPassword')?.dirty || registerForm.get('confirmPassword')?.touched)" class="text-red-600 text-sm mt-1">
-          <div *ngIf="registerForm.get('confirmPassword')?.errors?.['required']">Confirmar la contraseña es requerido.</div>
-        </div>
-        <div *ngIf="registerForm.errors?.['passwordMismatch'] && (registerForm.get('confirmPassword')?.dirty || registerForm.get('confirmPassword')?.touched)" class="text-red-600 text-sm mt-1">
-          Las contraseñas no coinciden.
-        </div>
+        @if (registerForm.get('confirmPassword')?.invalid && (registerForm.get('confirmPassword')?.dirty || registerForm.get('confirmPassword')?.touched)) {
+          <div class="text-red-600 text-sm mt-1">
+            @if (registerForm.get('confirmPassword')?.errors?.['required']) {
+              <div>Confirmar la contraseña es requerido.</div>
+            }
+          </div>
+        }
+        @if (registerForm.errors?.['passwordMismatch'] && (registerForm.get('confirmPassword')?.dirty || registerForm.get('confirmPassword')?.touched)) {
+          <div class="text-red-600 text-sm mt-1">
+            Las contraseñas no coinciden.
+          </div>
+        }
       </div>
       <div>
         <button type="submit" [disabled]="registerForm.invalid"
