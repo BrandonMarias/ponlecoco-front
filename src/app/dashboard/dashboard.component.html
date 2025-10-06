@@ -17,7 +17,7 @@
             <div class="bg-white p-4 rounded-lg shadow hover:shadow-lg transition-shadow flex flex-col justify-between">
               <h2 class="text-lg font-semibold text-gray-900 mb-4">{{ jeopardy.title }}</h2>
               <div class="flex items-center justify-between">
-                                                                <button class="text-green-500 hover:text-green-600">
+                <button (click)="openTeamSelection(jeopardy.id!)" class="text-green-500 hover:text-green-600">
                   <svg class="w-10 h-10" fill="currentColor" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
                     <path d="M11.596 8.697l-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/>
                   </svg>
@@ -50,4 +50,42 @@
   <button (click)="navigateTocreateJeopardy()" class="fixed bottom-6 right-6 bg-indigo-600 text-white p-4 rounded-full shadow-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
   </button>
+
+  <!-- Team Selection Modal -->
+  @if (showTeamSelection()) {
+    <div class="fixed inset-0 bg-gray-900 bg-opacity-75 backdrop-blur-sm z-40 flex items-center justify-center p-4">
+      <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm z-50">
+        <h3 class="text-xl font-semibold text-gray-900 mb-4">Seleccionar Equipos</h3>
+        <div class="space-y-4">
+          <div>
+            <label for="team-count" class="block text-sm font-medium text-gray-700">¿Cuántos equipos van a jugar?</label>
+            <select id="team-count" [ngModel]="teamCount()" (ngModelChange)="teamCount.set($event)" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+              @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+                <option [value]="i">{{ i }}</option>
+              }
+            </select>
+          </div>
+          <div>
+            <label for="time-per-question" class="block text-sm font-medium text-gray-700">Tiempo por pregunta</label>
+            <select id="time-per-question" [ngModel]="timePerQuestion()" (ngModelChange)="timePerQuestion.set($event)" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+              <option value="30">00:30</option>
+              <option value="60">01:00</option>
+              <option value="90">01:30</option>
+              <option value="120">02:00</option>
+              <option value="150">02:30</option>
+              <option value="180">03:00</option>
+            </select>
+          </div>
+        </div>
+        <div class="flex justify-end space-x-4 mt-6">
+          <button (click)="closeTeamSelection()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 cursor-pointer">
+            Cancelar
+          </button>
+          <button (click)="startGame()" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 cursor-pointer">
+            ¡Empezar a Jugar!
+          </button>
+        </div>
+      </div>
+    </div>
+  }
 </div>

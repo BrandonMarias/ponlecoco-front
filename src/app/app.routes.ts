@@ -17,6 +17,11 @@ export const routes: Routes = [
     canActivate: [authGuard], // Or apply to individual child routes
   },
   {
+    path: 'play/:id',
+    loadComponent: () => import('./game-play/game-play.component'),
+    canActivate: [authGuard],
+  },
+  {
     path: '',
     redirectTo: 'dashboard', // Changed from 'auth' to 'dashboard'
     pathMatch: 'full',

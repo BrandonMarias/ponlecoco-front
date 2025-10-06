@@ -6,11 +6,12 @@ import { JeopardyService } from '../jeopardy/jeopardy.service';
 import { Jeopardy } from '../jeopardy/jeopardy';
 import { ModalService } from '../shared/modal.service';
 import { filter } from 'rxjs';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, HeaderComponent],
+  imports: [CommonModule, HeaderComponent, FormsModule],
   templateUrl: './dashboard.component.html',
 })
 export default class DashboardComponent implements OnInit {
@@ -23,11 +24,13 @@ export default class DashboardComponent implements OnInit {
   error = signal<string | null>(null);
   openMenuId = signal<string | null>(null);
 
+  showTeamSelection = signal(false);
+  selectedJeopardyId = signal<string | null>(null);
+  teamCount = signal(2);
+  timePerQuestion = signal(30);
+
   @HostListener('document:click')
   onDocumentClick() {
-    // When a click happens anywhere in the document, close the menu.
-    // Clicks on the menu button or inside the menu itself will be stopped
-    // from propagating to this listener.
     this.openMenuId.set(null);
   }
 
@@ -57,18 +60,17 @@ export default class DashboardComponent implements OnInit {
 
   editJeopardy(id: string) {
     this.router.navigate(['/jeopardy/edit', id]);
-    this.openMenuId.set(null); // Close menu on action
+    this.openMenuId.set(null);
   }
 
   deleteJeopardy(id: string) {
-    this.openMenuId.set(null); // Close the three-dot menu immediately
+    this.openMenuId.set(null);
     this.modalService.open({
       title: 'Confirmar Eliminación',
       message: '¿Estás seguro de que quieres eliminar esta trivia? Esta acción no se puede deshacer.'
     }).pipe(
-      filter(confirmed => confirmed) // Only proceed if the user confirmed
+      filter(confirmed => confirmed)
     ).subscribe(() => {
-      // Proceed with deletion
       this.jeopardyService.deleteJeopardy(id).subscribe({
         next: () => {
           this.jeopardies.update(current => current.filter(j => j.id !== id));
@@ -83,5 +85,26 @@ export default class DashboardComponent implements OnInit {
 
   navigateTocreateJeopardy() {
     this.router.navigateByUrl('/jeopardy/create');
+  }
+
+  openTeamSelection(jeopardyId: string) {
+    this.selectedJeopardyId.set(jeopardyId);
+    this.showTeamSelection.set(true);
+  }
+
+  closeTeamSelection() {
+    this.showTeamSelection.set(false);
+    this.selectedJeopardyId.set(null);
+  }
+
+  startGame() {
+    if (!this.selectedJeopardyId() || !this.teamCount()) return;
+    this.router.navigate(['/play', this.selectedJeopardyId()], {
+      queryParams: {
+        teams: this.teamCount(),
+        time: this.timePerQuestion()
+      }
+    });
+    this.closeTeamSelection();
   }
 }

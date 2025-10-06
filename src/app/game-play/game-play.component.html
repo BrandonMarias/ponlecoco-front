@@ -1,0 +1,85 @@
+<div class="min-h-screen bg-gray-800 text-white p-4">
+  @if (showWinnerScreen()) {
+    <app-winner 
+      [winners]="winners()" 
+      [score]="winnerScore()"
+      (close)="goToDashboard()"
+    ></app-winner>
+  } @else {
+    @if (loading()) {
+      <p>Cargando juego...</p>
+    } @else if (error()) {
+      <div class="text-red-400">{{ error() }}</div>
+    } @else if (jeopardy(); as game) {
+      <div class="flex flex-col md:flex-row gap-4">
+        <!-- Game Board -->
+        <div class="flex-grow">
+          <h1 class="text-4xl font-bold text-center mb-8">{{ game.title }}</h1>
+          <div class="flex gap-2 md:gap-8">
+            <!-- Single loop to create each category column -->
+            @for (category of game.categories; track category.id; let catIndex = $index) {
+              <div class="flex flex-col gap-2 md:gap-4 flex-1">
+                <!-- Category Title -->
+                <div class="h-16 flex items-center justify-center p-2 text-center font-bold rounded-lg text-shadow-md text-2xl" [ngClass]="categoryColors[catIndex % categoryColors.length]">
+                  {{ category.title }}
+                </div>
+                <!-- Questions for this category -->
+                @for (question of category.questions; track question.id) {
+                  <div
+                    class="h-32 flex items-center justify-center p-2 text-3xl font-bold rounded-2xl shadow-lg transition-transform"
+                    [ngClass]="!answeredQuestions().has(question.id!) ? 'cursor-pointer hover:scale-105 ' + categoryColors[catIndex % categoryColors.length] : 'bg-gray-700 text-gray-500 cursor-not-allowed'"
+                    (click)="onQuestionClick(question.id!)">
+                    @if (!answeredQuestions().has(question.id!)) {
+                      <span>{{ question.value }}</span>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+  
+        <!-- Scoreboard -->
+        <div class="w-full md:w-64 flex-shrink-0 bg-gray-900 p-4 rounded-lg">
+          <h2 class="text-2xl font-bold mb-4 text-center">Puntuación</h2>
+          <div class="space-y-4">
+            @for (team of teams(); track team.name; let i = $index) {
+              <div>
+                <div class="flex justify-between items-center font-bold text-lg">
+                  @if (editingTeamIndex() === i) {
+                    <input
+                      type="text"
+                      [value]="team.name"
+                      (blur)="saveTeamName(i, $event)"
+                      (keydown.enter)="saveTeamName(i, $event)"
+                      (keydown.escape)="cancelEditing()"
+                      class="bg-gray-700 text-white rounded px-2 py-1 w-full"
+                      autofocus
+                    />
+                  } @else {
+                    <span (dblclick)="startEditingTeam(i)" class="cursor-pointer">{{ team.name }}</span>
+                  }
+                  <span>{{ team.score }}</span>
+                </div>
+                <div class="flex justify-end items-center mt-1 space-x-2">
+                  <button (click)="adjustScore(i, -100)" class="w-8 h-8 bg-red-600 rounded-full font-bold text-xl cursor-pointer">-</button>
+                  <button (click)="adjustScore(i, 100)" class="w-8 h-8 bg-green-600 rounded-full font-bold text-xl cursor-pointer">+</button>
+                </div>
+              </div>
+            }
+          </div>
+          <div class="mt-8 text-center">
+            <button (click)="confirmEndGame()" class="text-sm text-gray-400 hover:text-red-400 transition-colors cursor-pointer">
+              Terminar Juego
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+  
+    <!-- Question Modal -->
+    @if (selectedQuestion(); as question) {
+      <app-question-modal [question]="question" [timeLimit]="timePerQuestion()" (close)="closeQuestionModal()" (answerRevealed)="stopAllSounds()" (timeUp)="stopAllSounds()" />
+    }
+  }
+</div>

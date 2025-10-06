@@ -1,0 +1,35 @@
+<div class="fixed inset-0 bg-gray-900/90 flex flex-col items-center justify-center text-center z-50">
+  <div class="confetti-container">
+    <div class="confetti"></div>
+    <div class="confetti"></div>
+    <div class="confetti"></div>
+    <div class="confetti"></div>
+    <div class="confetti"></div>
+    <div class="confetti"></div>
+    <div class="confetti"></div>
+    <div class="confetti"></div>
+    <div class="confetti"></div>
+    <div class="confetti"></div>
+    <div class="confetti"></div>
+    <div class="confetti"></div>
+    <div class="confetti"></div>
+    <div class="confetti"></div>
+    <div class="confetti"></div>
+  </div>
+  <h1 class="text-6xl font-bold text-yellow-400 mb-4">¡Felicidades!</h1>
+  <h2 class="text-4xl mb-8">
+    @if (winners.length > 1) {
+      <span>Ganadores:</span>
+    } @else {
+      <span>Ganador:</span>
+    }
+  </h2>
+  @for (winner of winners; track winner.name) {
+    <p class="text-3xl font-semibold">{{ winner.name }}</p>
+  }
+  <p class="text-5xl font-bold mt-8">{{ score }} Puntos</p>
+
+  <button (click)="onClose()" class="mt-12 px-8 py-4 bg-indigo-600 rounded-lg text-xl font-semibold hover:bg-indigo-700 transition-transform hover:scale-105 cursor-pointer">
+    Volver al Menú
+  </button>
+</div>
