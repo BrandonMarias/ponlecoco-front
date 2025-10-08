@@ -1,8 +1,10 @@
-import { Component, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component, inject, signal } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { passwordMatchValidator, passwordStrengthValidator } from '../validators';
 import { CommonModule } from '@angular/common';
+import { AuthService } from '../auth.service';
+import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-register',
@@ -12,6 +14,11 @@ import { CommonModule } from '@angular/common';
 })
 export default class RegisterComponent {
   private fb = inject(FormBuilder);
+  private authService = inject(AuthService);
+  private router = inject(Router);
+
+  loading = signal(false);
+  error = signal<string | null>(null);
 
   registerForm = this.fb.group({
     username: ['', Validators.required],
@@ -22,7 +29,18 @@ export default class RegisterComponent {
 
   onSubmit() {
     if (this.registerForm.valid) {
-      console.log('Form Submitted', this.registerForm.value);
+      this.loading.set(true);
+      this.error.set(null);
+      const { username, email, password } = this.registerForm.getRawValue();
+
+      this.authService.register({ name: username!, email: email!, password: password! })
+        .pipe(
+          finalize(() => this.loading.set(false))
+        )
+        .subscribe({
+          next: () => this.router.navigateByUrl('/dashboard'),
+          error: (err) => this.error.set(err.error.message || 'An unexpected error occurred.')
+        });
     } else {
       this.registerForm.markAllAsTouched();
     }

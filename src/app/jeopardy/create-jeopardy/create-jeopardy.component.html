@@ -1,4 +1,4 @@
-<div class="container mx-auto p-4 pb-20">
+<div class="container mx-auto p-4 pb-20 text-gray-800 dark:text-white">
   <!-- Dynamic Title -->
   <h1 class="text-3xl font-bold mb-6">
     @if (isEditMode()) {
@@ -9,15 +9,15 @@
   </h1>
 
   @if (loading() && isEditMode()) {
-    <p>Cargando datos de la trivia...</p>
+    <p class="dark:text-gray-300">Cargando datos de la trivia...</p>
   } @else {
     <form [formGroup]="jeopardyForm" (ngSubmit)="onSubmit()" class="space-y-8">
       <!-- Jeopardy Title -->
       <div>
-        <label for="title" class="block text-lg font-medium text-gray-700">Título del Jeopardy</label>
-        <input type="text" id="title" formControlName="title" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+        <label for="title" class="block text-lg font-medium text-gray-700 dark:text-gray-300">Título del Jeopardy</label>
+        <input type="text" id="title" formControlName="title" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200">
         @if (jeopardyForm.get('title')?.invalid && jeopardyForm.get('title')?.touched) {
-          <div class="text-red-600 text-sm mt-1">El título es requerido.</div>
+          <div class="text-red-600 text-sm mt-1 dark:text-red-400">El título es requerido.</div>
         }
       </div>
 
@@ -25,13 +25,13 @@
       <div formArrayName="categories" class="space-y-6">
         <h2 class="text-2xl font-semibold">Categorías</h2>
         @if(categories.invalid && categories.touched && categories.errors?.['minlength']) {
-          <div class="p-4 text-sm text-red-800 bg-red-100 rounded-lg" role="alert">
+          <div class="p-4 text-sm text-red-800 bg-red-100 rounded-lg dark:bg-red-900 dark:text-red-300" role="alert">
             Debes añadir al menos una categoría.
           </div>
         }
 
         @for (category of categories.controls; track $index; let catIndex = $index) {
-          <div [formGroupName]="catIndex" class="p-4 border border-gray-200 rounded-lg bg-gray-50">
+          <div [formGroupName]="catIndex" class="p-4 border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
             <div class="flex justify-between items-center mb-4">
               <h3 class="text-xl font-medium">Categoría {{ catIndex + 1 }}</h3>
               <button type="button" (click)="removeCategory(catIndex)" class="px-3 py-1 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">- Eliminar Categoría</button>
@@ -39,10 +39,10 @@
 
             <!-- Category Title -->
             <div>
-              <label [for]="'cat-title-' + catIndex" class="block text-sm font-medium text-gray-700">Título de la Categoría</label>
-              <input [id]="'cat-title-' + catIndex" type="text" formControlName="title" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+              <label [for]="'cat-title-' + catIndex" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Título de la Categoría</label>
+              <input [id]="'cat-title-' + catIndex" type="text" formControlName="title" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200">
               @if(categories.at(catIndex).get('title')?.invalid && categories.at(catIndex).get('title')?.touched) {
-                <div class="text-red-600 text-sm mt-1">El título de la categoría es requerido.</div>
+                <div class="text-red-600 text-sm mt-1 dark:text-red-400">El título de la categoría es requerido.</div>
               }
             </div>
 
@@ -59,8 +59,8 @@
                       [value]="qIndex.toString()"
                       [checked]="categories.at(catIndex).get('doublePointsQuestion')?.value === qIndex.toString()"
                       (click)="toggleDoublePoints(catIndex, qIndex.toString())"
-                      class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300">
-                    <span>{{ questions(catIndex).at(qIndex).get('value')?.value }} Puntos</span>
+                      class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 dark:border-gray-600">
+                    <span class="dark:text-gray-300">{{ questions(catIndex).at(qIndex).get('value')?.value }} Puntos</span>
                   </label>
                 }
               </div>
@@ -70,21 +70,21 @@
             <div formArrayName="questions" class="mt-4 space-y-4">
               <h4 class="text-lg font-medium">Preguntas</h4>
               @for (question of questions(catIndex).controls; track $index; let qIndex = $index) {
-                <div [formGroupName]="qIndex" class="p-3 border border-gray-200 rounded bg-white">
-                  <p class="font-semibold">Pregunta por {{ questions(catIndex).at(qIndex).get('value')?.value }} puntos</p>
+                <div [formGroupName]="qIndex" class="p-3 border border-gray-200 rounded bg-white dark:bg-gray-700 dark:border-gray-600">
+                  <p class="font-semibold dark:text-white">Pregunta por {{ questions(catIndex).at(qIndex).get('value')?.value }} puntos</p>
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                     <div>
-                      <label [for]="'q-' + catIndex + '-' + qIndex" class="block text-sm font-medium text-gray-700">Pregunta</label>
-                      <textarea [id]="'q-' + catIndex + '-' + qIndex" formControlName="question" rows="2" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"></textarea>
+                      <label [for]="'q-' + catIndex + '-' + qIndex" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Pregunta</label>
+                      <textarea [id]="'q-' + catIndex + '-' + qIndex" formControlName="question" rows="2" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"></textarea>
                        @if(questions(catIndex).at(qIndex).get('question')?.invalid && questions(catIndex).at(qIndex).get('question')?.touched) {
-                        <div class="text-red-600 text-sm mt-1">La pregunta es requerida.</div>
+                        <div class="text-red-600 text-sm mt-1 dark:text-red-400">La pregunta es requerida.</div>
                       }
                     </div>
                     <div>
-                      <label [for]="'a-' + catIndex + '-' + qIndex" class="block text-sm font-medium text-gray-700">Respuesta</label>
-                      <textarea [id]="'a-' + catIndex + '-' + qIndex" formControlName="answer" rows="2" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"></textarea>
+                      <label [for]="'a-' + catIndex + '-' + qIndex" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Respuesta</label>
+                      <textarea [id]="'a-' + catIndex + '-' + qIndex" formControlName="answer" rows="2" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"></textarea>
                        @if(questions(catIndex).at(qIndex).get('answer')?.invalid && questions(catIndex).at(qIndex).get('answer')?.touched) {
-                        <div class="text-red-600 text-sm mt-1">La respuesta es requerida.</div>
+                        <div class="text-red-600 text-sm mt-1 dark:text-red-400">La respuesta es requerida.</div>
                       }
                     </div>
                   </div>
@@ -116,7 +116,7 @@
         </button>
       </div>
       @if(error()) {
-        <div class="p-4 mt-4 text-sm text-red-800 bg-red-100 rounded-lg" role="alert">
+        <div class="p-4 mt-4 text-sm text-red-800 bg-red-100 rounded-lg dark:bg-red-900 dark:text-red-300" role="alert">
           {{ error() }}
         </div>
       }

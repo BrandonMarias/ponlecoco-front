@@ -1,21 +1,21 @@
-<div class="flex flex-col min-h-screen bg-gray-50">
+<div class="flex flex-col min-h-screen bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white">
   <app-header></app-header>
 
   <main class="flex-grow container mx-auto p-4">
-    <h1 class="text-2xl font-bold text-gray-800 mb-4">Mis Trivias</h1>
+    <h1 class="text-2xl font-bold mb-4">Mis Trivias</h1>
 
     @if (loading()) {
       <p>Loading...</p>
     } @else if (error()) {
-      <div class="p-4 text-sm text-red-800 bg-red-100 rounded-lg" role="alert">
+      <div class="p-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-red-800 dark:text-red-200" role="alert">
         {{ error() }}
       </div>
     } @else {
       @if (jeopardies().length > 0) {
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           @for (jeopardy of jeopardies(); track jeopardy.id) {
-            <div class="bg-white p-4 rounded-lg shadow hover:shadow-lg transition-shadow flex flex-col justify-between">
-              <h2 class="text-lg font-semibold text-gray-900 mb-4">{{ jeopardy.title }}</h2>
+            <div class="bg-white dark:bg-gray-900 p-4 rounded-lg shadow hover:shadow-lg transition-shadow flex flex-col justify-between">
+              <h2 class="text-lg font-semibold mb-4">{{ jeopardy.title }}</h2>
               <div class="flex items-center justify-between">
                 <button (click)="openTeamSelection(jeopardy.id!)" class="text-green-500 hover:text-green-600">
                   <svg class="w-10 h-10" fill="currentColor" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
@@ -23,13 +23,13 @@
                   </svg>
                 </button>
                 <div class="relative">
-                  <button (click)="toggleMenu(jeopardy.id!); $event.stopPropagation()" class="p-2 rounded-full hover:bg-gray-200">
-                    <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path></svg>
+                  <button (click)="toggleMenu(jeopardy.id!); $event.stopPropagation()" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
+                    <svg class="w-6 h-6 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path></svg>
                   </button>
                   @if (openMenuId() === jeopardy.id) {
-                    <div (click)="$event.stopPropagation()" class="absolute right-0 bottom-full mb-2 w-48 bg-white rounded-md shadow-xl z-20">
-                      <a (click)="editJeopardy(jeopardy.id!)" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">Editar</a>
-                      <a (click)="deleteJeopardy(jeopardy.id!)" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100 cursor-pointer">Eliminar</a>
+                    <div (click)="$event.stopPropagation()" class="absolute right-0 bottom-full mb-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-xl z-20">
+                      <a (click)="editJeopardy(jeopardy.id!)" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">Editar</a>
+                      <a (click)="deleteJeopardy(jeopardy.id!)" class="block px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">Eliminar</a>
                     </div>
                   }
                 </div>
@@ -39,8 +39,8 @@
         </div>
       } @else {
         <div class="text-center py-12">
-          <p class="text-gray-500">No has creado ninguna trivia todavía.</p>
-          <p class="text-gray-500">¡Presiona el botón '+' para empezar!</p>
+          <p class="text-gray-500 dark:text-gray-400">No has creado ninguna trivia todavía.</p>
+          <p class="text-gray-500 dark:text-gray-400">¡Presiona el botón '+' para empezar!</p>
         </div>
       }
     }
@@ -54,20 +54,20 @@
   <!-- Team Selection Modal -->
   @if (showTeamSelection()) {
     <div class="fixed inset-0 bg-gray-900 bg-opacity-75 backdrop-blur-sm z-40 flex items-center justify-center p-4">
-      <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm z-50">
-        <h3 class="text-xl font-semibold text-gray-900 mb-4">Seleccionar Equipos</h3>
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-sm z-50">
+        <h3 class="text-xl font-semibold mb-4">Seleccionar Equipos</h3>
         <div class="space-y-4">
           <div>
-            <label for="team-count" class="block text-sm font-medium text-gray-700">¿Cuántos equipos van a jugar?</label>
-            <select id="team-count" [ngModel]="teamCount()" (ngModelChange)="teamCount.set($event)" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            <label for="team-count" class="block text-sm font-medium">¿Cuántos equipos van a jugar?</label>
+            <select id="team-count" [ngModel]="teamCount()" (ngModelChange)="teamCount.set($event)" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
               @for (i of [1, 2, 3, 4, 5, 6]; track i) {
                 <option [value]="i">{{ i }}</option>
               }
             </select>
           </div>
           <div>
-            <label for="time-per-question" class="block text-sm font-medium text-gray-700">Tiempo por pregunta</label>
-            <select id="time-per-question" [ngModel]="timePerQuestion()" (ngModelChange)="timePerQuestion.set($event)" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            <label for="time-per-question" class="block text-sm font-medium">Tiempo por pregunta</label>
+            <select id="time-per-question" [ngModel]="timePerQuestion()" (ngModelChange)="timePerQuestion.set($event)" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
               <option value="30">00:30</option>
               <option value="60">01:00</option>
               <option value="90">01:30</option>
@@ -78,7 +78,7 @@
           </div>
         </div>
         <div class="flex justify-end space-x-4 mt-6">
-          <button (click)="closeTeamSelection()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 cursor-pointer">
+          <button (click)="closeTeamSelection()" class="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500 cursor-pointer">
             Cancelar
           </button>
           <button (click)="startGame()" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 cursor-pointer">

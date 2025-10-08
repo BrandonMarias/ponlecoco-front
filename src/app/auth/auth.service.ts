@@ -8,6 +8,7 @@ interface User {
   id: string;
   email: string;
   name: string;
+  photoUrl?: string;
   role: string;
 }
 
@@ -73,6 +74,12 @@ export class AuthService {
 
   googleLogin(token: string) {
     return this.http.post<AuthResponse>(`${this.apiUrl}/auth/google`, { token }).pipe(
+      tap(response => this.setAuthState({ user: response.user, token: response.access_token }))
+    );
+  }
+
+  register(credentials: { name: string, email: string, password: string }) {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/users`, credentials).pipe(
       tap(response => this.setAuthState({ user: response.user, token: response.access_token }))
     );
   }
