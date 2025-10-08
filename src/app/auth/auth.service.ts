@@ -71,6 +71,12 @@ export class AuthService {
     );
   }
 
+  googleLogin(token: string) {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/google`, { token }).pipe(
+      tap(response => this.setAuthState({ user: response.user, token: response.access_token }))
+    );
+  }
+
   logout() {
     this.setAuthState({ user: null, token: null });
     this.router.navigateByUrl('/auth/login');
