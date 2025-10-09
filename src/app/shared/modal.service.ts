@@ -1,5 +1,4 @@
 import { Injectable, signal } from '@angular/core';
-import { Subject } from 'rxjs';
 
 interface ModalData {
   title: string;
@@ -10,18 +9,70 @@ interface ModalData {
   providedIn: 'root'
 })
 export class ModalService {
+  // Confirmation Modal
   isOpen = signal(false);
   modalData = signal<ModalData | null>(null);
-  private result = new Subject<boolean>();
+  private resolve?: (value: boolean) => void;
 
-  open(data: ModalData) {
+  // Input Modal
+  isInputOpen = signal(false);
+  inputModalData = signal<ModalData | null>(null);
+  private inputResolve?: (value: string | null) => void;
+
+  open(data: ModalData): Promise<boolean> {
     this.modalData.set(data);
     this.isOpen.set(true);
-    return this.result.asObservable();
+    return new Promise<boolean>((resolve) => {
+      this.resolve = resolve;
+    });
   }
 
-  close(confirmed: boolean) {
+  openInput(data: ModalData): Promise<string | null> {
+    this.inputModalData.set(data);
+    this.isInputOpen.set(true);
+    return new Promise<string | null>((resolve) => {
+      this.inputResolve = resolve;
+    });
+  }
+
+  confirm() {
+    if (this.resolve) {
+      this.resolve(true);
+    }
     this.isOpen.set(false);
-    this.result.next(confirmed);
+  }
+
+  cancel() {
+    if (this.resolve) {
+      this.resolve(false);
+    }
+    this.isOpen.set(false);
+  }
+
+  confirmInput(value: string) {
+    if (this.inputResolve) {
+      this.inputResolve(value);
+    }
+    this.isInputOpen.set(false);
+  }
+
+  closeInput() {
+    if (this.inputResolve) {
+      this.inputResolve(null);
+    }
+    this.isInputOpen.set(false);
+  }
+
+  onCancel() {
+    this.cancel();
+    this.closeInput();
+  }
+
+  onConfirm(value?: any) {
+    if (this.isOpen()) {
+      this.confirm();
+    } else if (this.isInputOpen()) {
+      this.confirmInput(value);
+    }
   }
 }

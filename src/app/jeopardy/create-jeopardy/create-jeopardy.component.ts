@@ -5,6 +5,9 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { JeopardyService } from '../jeopardy.service';
 import { finalize, switchMap, of, Observable } from 'rxjs';
 import { Jeopardy } from '../jeopardy';
+import { AiService } from '../../shared/ai.service';
+import { ModalService } from '../../shared/modal.service';
+import { AiCategoryResponse } from '../../shared/ai.interface';
 
 @Component({
   selector: 'app-create-jeopardy',
@@ -17,6 +20,8 @@ export default class CreateJeopardyComponent implements OnInit {
   private jeopardyService = inject(JeopardyService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private aiService = inject(AiService);
+  private modalService = inject(ModalService);
 
   jeopardyForm: FormGroup;
   loading = signal(false);
@@ -94,6 +99,43 @@ export default class CreateJeopardyComponent implements OnInit {
       title: ['', Validators.required],
       questions: this.fb.array(this.createFiveQuestions()),
       doublePointsQuestion: [null]
+    });
+    this.categories.push(categoryGroup);
+  }
+
+  async addCategoryWithIA() {
+    const topic = await this.modalService.openInput({
+      title: 'Generar Categoría con IA',
+      message: 'Introduce el tema para generar la categoría y las preguntas.'
+    });
+  
+    if (topic) {
+      this.loading.set(true);
+      this.aiService.generateCategory(topic).pipe(
+        finalize(() => this.loading.set(false))
+      ).subscribe({
+        next: (response) => {
+          this.addCategoryFromIA(response);
+        },
+        error: (err) => {
+          this.error.set(err.error.message || 'An unexpected error occurred.');
+        }
+      });
+    }
+  }
+
+  addCategoryFromIA(data: AiCategoryResponse) {
+    const randomIndex = Math.floor(Math.random() * 5).toString();
+    const categoryGroup = this.fb.group({
+      title: [data.category, Validators.required],
+      doublePointsQuestion: [randomIndex],
+      questions: this.fb.array(
+        data.questions.map(q => this.fb.group({
+          question: [q.question, Validators.required],
+          answer: [q.answer, Validators.required],
+          value: [q.value, Validators.required]
+        }))
+      )
     });
     this.categories.push(categoryGroup);
   }

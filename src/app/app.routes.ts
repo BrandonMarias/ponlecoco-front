@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './auth/auth.guard';
+import { CanDeactivateGameGuard } from './game-play/can-deactivate-game.guard';
 
 export const routes: Routes = [
   {
@@ -20,6 +21,7 @@ export const routes: Routes = [
     path: 'play/:id',
     loadComponent: () => import('./game-play/game-play.component'),
     canActivate: [authGuard],
+    canDeactivate: [CanDeactivateGameGuard],
   },
   {
     path: '',

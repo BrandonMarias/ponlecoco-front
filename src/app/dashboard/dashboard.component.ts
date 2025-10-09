@@ -63,14 +63,14 @@ export default class DashboardComponent implements OnInit {
     this.openMenuId.set(null);
   }
 
-  deleteJeopardy(id: string) {
+  async deleteJeopardy(id: string) {
     this.openMenuId.set(null);
-    this.modalService.open({
+    const confirmed = await this.modalService.open({
       title: 'Confirmar Eliminación',
       message: '¿Estás seguro de que quieres eliminar esta trivia? Esta acción no se puede deshacer.'
-    }).pipe(
-      filter(confirmed => confirmed)
-    ).subscribe(() => {
+    });
+
+    if (confirmed) {
       this.jeopardyService.deleteJeopardy(id).subscribe({
         next: () => {
           this.jeopardies.update(current => current.filter(j => j.id !== id));
@@ -80,7 +80,7 @@ export default class DashboardComponent implements OnInit {
           console.error(err);
         }
       });
-    });
+    }
   }
 
   navigateTocreateJeopardy() {

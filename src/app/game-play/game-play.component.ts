@@ -3,10 +3,11 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { JeopardyService } from '../jeopardy/jeopardy.service';
 import { Jeopardy, Question } from '../jeopardy/jeopardy';
-import { switchMap, map, filter } from 'rxjs';
+import { switchMap } from 'rxjs';
 import { QuestionModalComponent } from './question-modal/question-modal.component';
 import { ModalService } from '../shared/modal.service';
 import { WinnerComponent } from '../winner/winner.component';
+import { CanComponentDeactivate } from './can-deactivate-game.guard';
 
 interface Team {
   name: string;
@@ -19,7 +20,7 @@ interface Team {
   imports: [CommonModule, QuestionModalComponent, WinnerComponent],
   templateUrl: './game-play.component.html',
 })
-export default class GamePlayComponent implements OnInit {
+export default class GamePlayComponent implements OnInit, CanComponentDeactivate {
   private route = inject(ActivatedRoute);
   private jeopardyService = inject(JeopardyService);
   private router = inject(Router);
@@ -161,11 +162,21 @@ export default class GamePlayComponent implements OnInit {
     this.editingTeamIndex.set(null);
   }
 
-  confirmEndGame() {
+  async confirmEndGame() {
     const totalQuestions = this.jeopardy()?.categories.flatMap(c => c.questions).length || 0;
     const answeredCount = this.answeredQuestions().size;
 
+    let confirmed = false;
     if (totalQuestions > 0 && answeredCount === totalQuestions) {
+      confirmed = true;
+    } else {
+      confirmed = await this.modalService.open({
+        title: 'Terminar Juego',
+        message: '¿Estás seguro de que quieres terminar el juego? El progreso actual se perderá.'
+      });
+    }
+
+    if (confirmed) {
       const teams = this.teams();
       if (teams.length > 0) {
           const maxScore = Math.max(...teams.map(t => t.score));
@@ -177,16 +188,21 @@ export default class GamePlayComponent implements OnInit {
       } else {
           this.goToDashboard();
       }
-    } else {
-      this.modalService.open({
-        title: 'Terminar Juego',
-        message: '¿Estás seguro de que quieres terminar el juego? El progreso actual se perderá.'
-      }).pipe(
-        filter(confirmed => confirmed)
-      ).subscribe(() => {
-        this.goToDashboard();
-      });
     }
+  }
+
+  canDeactivate(): boolean | Promise<boolean> {
+    const totalQuestions = this.jeopardy()?.categories.flatMap(c => c.questions).length || 0;
+    const answeredCount = this.answeredQuestions().size;
+
+    if (this.showWinnerScreen() || (totalQuestions > 0 && answeredCount === totalQuestions)) {
+      return true;
+    }
+
+    return this.modalService.open({
+      title: 'Salir del Juego',
+      message: '¿Estás seguro de que quieres salir del juego? El progreso actual se perderá.'
+    });
   }
 
   goToDashboard() {

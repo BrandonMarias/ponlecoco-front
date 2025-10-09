@@ -96,7 +96,12 @@
       </div>
 
       <div class="flex items-center justify-between mt-8">
-        <button type="button" (click)="addCategory()" [disabled]="categories.length >= 6" class="px-4 py-2 font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-gray-400">+ Añadir Categoría</button>
+        <div class="flex gap-4">
+          <button type="button" (click)="addCategory()" [disabled]="categories.length >= 6" class="px-4 py-2 font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-gray-400">+ Añadir Categoría</button>
+          <button type="button" (click)="addCategoryWithIA()" [disabled]="categories.length >= 6" class="px-4 py-2 font-medium text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400" style="background-color: #4285F4;">
+            + Añadir Categoría con IA
+          </button>
+        </div>
         <button type="submit" [disabled]="jeopardyForm.invalid || loading()" class="px-6 py-2 font-semibold text-white bg-green-600 rounded-md hover:bg-green-700 disabled:bg-gray-400 flex items-center">
           @if(loading()) {
             <svg class="w-5 h-5 mr-2 text-white animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

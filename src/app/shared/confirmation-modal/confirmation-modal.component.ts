@@ -12,10 +12,10 @@ export class ConfirmationModalComponent {
   modalService = inject(ModalService);
 
   onConfirm() {
-    this.modalService.close(true);
+    this.modalService.confirm();
   }
 
   onCancel() {
-    this.modalService.close(false);
+    this.modalService.cancel();
   }
 }
