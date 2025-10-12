@@ -67,6 +67,7 @@ export class QuestionModalComponent implements OnInit, OnDestroy {
   revealAnswer() {
     this.drumrollSound.play();
     this.showAnswer.set(true);
+    this.showTimeUpBanner.set(false);
     this.clearTimer();
     this.answerRevealed.emit();
   }

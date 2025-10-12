@@ -1,130 +1,239 @@
 <div class="container mx-auto p-4 pb-20 text-gray-800 dark:text-white">
   <!-- Dynamic Title -->
   <h1 class="text-3xl font-bold mb-6">
-    @if (isEditMode()) {
-      Editar Jeopardy
-    } @else {
-      Crear un Nuevo Jeopardy
-    }
+    @if (isEditMode()) { Editar Jeopardy } @else { Crear un Nuevo Jeopardy }
   </h1>
 
   @if (loading() && isEditMode()) {
-    <p class="dark:text-gray-300">Cargando datos de la trivia...</p>
+  <p class="dark:text-gray-300">Cargando datos de la trivia...</p>
   } @else {
-    <form [formGroup]="jeopardyForm" (ngSubmit)="onSubmit()" class="space-y-8">
-      <!-- Jeopardy Title -->
-      <div>
-        <label for="title" class="block text-lg font-medium text-gray-700 dark:text-gray-300">Título del Jeopardy</label>
-        <input type="text" id="title" formControlName="title" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200">
-        @if (jeopardyForm.get('title')?.invalid && jeopardyForm.get('title')?.touched) {
-          <div class="text-red-600 text-sm mt-1 dark:text-red-400">El título es requerido.</div>
-        }
+  <form [formGroup]="jeopardyForm" (ngSubmit)="onSubmit()" class="space-y-8">
+    <!-- Jeopardy Title -->
+    <div>
+      <label
+        for="title"
+        class="block text-lg font-medium text-gray-700 dark:text-gray-300"
+        >Título del Jeopardy</label
+      >
+      <input
+        type="text"
+        id="title"
+        formControlName="title"
+        class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+      />
+      @if (jeopardyForm.get('title')?.invalid &&
+      jeopardyForm.get('title')?.touched) {
+      <div class="text-red-600 text-sm mt-1 dark:text-red-400">
+        El título es requerido.
       </div>
+      }
+    </div>
 
-      <!-- Categories -->
-      <div formArrayName="categories" class="space-y-6">
-        <h2 class="text-2xl font-semibold">Categorías</h2>
-        @if(categories.invalid && categories.touched && categories.errors?.['minlength']) {
-          <div class="p-4 text-sm text-red-800 bg-red-100 rounded-lg dark:bg-red-900 dark:text-red-300" role="alert">
-            Debes añadir al menos una categoría.
+    <!-- Categories -->
+    <div formArrayName="categories" class="space-y-6">
+      <h2 class="text-2xl font-semibold">Categorías</h2>
+      @if(categories.invalid && categories.touched &&
+      categories.errors?.['minlength']) {
+      <div
+        class="p-4 text-sm text-red-800 bg-red-100 rounded-lg dark:bg-red-900 dark:text-red-300"
+        role="alert"
+      >
+        Debes añadir al menos una categoría.
+      </div>
+      } @for (category of categories.controls; track $index; let catIndex =
+      $index) {
+      <div
+        [formGroupName]="catIndex"
+        class="p-4 border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700"
+      >
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-xl font-medium">Categoría {{ catIndex + 1 }}</h3>
+          <button
+            type="button"
+            (click)="removeCategory(catIndex)"
+            class="px-3 py-1 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700"
+          >
+            - Eliminar Categoría
+          </button>
+        </div>
+
+        <!-- Category Title -->
+        <div>
+          <label
+            [for]="'cat-title-' + catIndex"
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >Título de la Categoría</label
+          >
+          <input
+            [id]="'cat-title-' + catIndex"
+            type="text"
+            formControlName="title"
+            class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+          />
+          @if(categories.at(catIndex).get('title')?.invalid &&
+          categories.at(catIndex).get('title')?.touched) {
+          <div class="text-red-600 text-sm mt-1 dark:text-red-400">
+            El título de la categoría es requerido.
           </div>
-        }
+          }
+        </div>
 
-        @for (category of categories.controls; track $index; let catIndex = $index) {
-          <div [formGroupName]="catIndex" class="p-4 border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
-            <div class="flex justify-between items-center mb-4">
-              <h3 class="text-xl font-medium">Categoría {{ catIndex + 1 }}</h3>
-              <button type="button" (click)="removeCategory(catIndex)" class="px-3 py-1 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">- Eliminar Categoría</button>
-            </div>
+        <!-- Double Points Selection -->
+        <div class="mt-4">
+          <h4 class="text-lg font-medium">
+            Pregunta con Puntos Dobles (Opcional)
+          </h4>
+          <div class="flex flex-wrap gap-x-4 gap-y-2 mt-2">
+            @for (question of questions(catIndex).controls; track $index; let
+            qIndex = $index) {
+            <label
+              [for]="'dp-' + catIndex + '-' + qIndex"
+              class="flex items-center space-x-2 cursor-pointer"
+            >
+              <input
+                [id]="'dp-' + catIndex + '-' + qIndex"
+                type="radio"
+                [name]="'doublePoints-' + catIndex"
+                [value]="qIndex.toString()"
+                [checked]="
+                  categories.at(catIndex).get('doublePointsQuestion')?.value ===
+                  qIndex.toString()
+                "
+                (click)="toggleDoublePoints(catIndex, qIndex.toString())"
+                class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 dark:border-gray-600"
+              />
+              <span class="dark:text-gray-300"
+                >{{
+                  questions(catIndex).at(qIndex).get("value")?.value
+                }}
+                Puntos</span
+              >
+            </label>
+            }
+          </div>
+        </div>
 
-            <!-- Category Title -->
-            <div>
-              <label [for]="'cat-title-' + catIndex" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Título de la Categoría</label>
-              <input [id]="'cat-title-' + catIndex" type="text" formControlName="title" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200">
-              @if(categories.at(catIndex).get('title')?.invalid && categories.at(catIndex).get('title')?.touched) {
-                <div class="text-red-600 text-sm mt-1 dark:text-red-400">El título de la categoría es requerido.</div>
-              }
-            </div>
-
-            <!-- Double Points Selection -->
-            <div class="mt-4">
-              <h4 class="text-lg font-medium">Pregunta con Puntos Dobles (Opcional)</h4>
-              <div class="flex flex-wrap gap-x-4 gap-y-2 mt-2">
-                @for (question of questions(catIndex).controls; track $index; let qIndex = $index) {
-                  <label [for]="'dp-' + catIndex + '-' + qIndex" class="flex items-center space-x-2 cursor-pointer">
-                    <input
-                      [id]="'dp-' + catIndex + '-' + qIndex"
-                      type="radio"
-                      [name]="'doublePoints-' + catIndex"
-                      [value]="qIndex.toString()"
-                      [checked]="categories.at(catIndex).get('doublePointsQuestion')?.value === qIndex.toString()"
-                      (click)="toggleDoublePoints(catIndex, qIndex.toString())"
-                      class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 dark:border-gray-600">
-                    <span class="dark:text-gray-300">{{ questions(catIndex).at(qIndex).get('value')?.value }} Puntos</span>
-                  </label>
+        <!-- Questions -->
+        <div formArrayName="questions" class="mt-4 space-y-4">
+          <h4 class="text-lg font-medium">Preguntas</h4>
+          @for (question of questions(catIndex).controls; track $index; let
+          qIndex = $index) {
+          <div
+            [formGroupName]="qIndex"
+            class="p-3 border border-gray-200 rounded bg-white dark:bg-gray-700 dark:border-gray-600"
+          >
+            <p class="font-semibold dark:text-white">
+              Pregunta por
+              {{ questions(catIndex).at(qIndex).get("value")?.value }} puntos
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+              <div>
+                <label
+                  [for]="'q-' + catIndex + '-' + qIndex"
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >Pregunta</label
+                >
+                <textarea
+                  [id]="'q-' + catIndex + '-' + qIndex"
+                  formControlName="question"
+                  rows="2"
+                  class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                ></textarea>
+                @if(questions(catIndex).at(qIndex).get('question')?.invalid &&
+                questions(catIndex).at(qIndex).get('question')?.touched) {
+                <div class="text-red-600 text-sm mt-1 dark:text-red-400">
+                  La pregunta es requerida.
+                </div>
+                }
+              </div>
+              <div>
+                <label
+                  [for]="'a-' + catIndex + '-' + qIndex"
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >Respuesta</label
+                >
+                <textarea
+                  [id]="'a-' + catIndex + '-' + qIndex"
+                  formControlName="answer"
+                  rows="2"
+                  class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                ></textarea>
+                @if(questions(catIndex).at(qIndex).get('answer')?.invalid &&
+                questions(catIndex).at(qIndex).get('answer')?.touched) {
+                <div class="text-red-600 text-sm mt-1 dark:text-red-400">
+                  La respuesta es requerida.
+                </div>
                 }
               </div>
             </div>
-
-            <!-- Questions -->
-            <div formArrayName="questions" class="mt-4 space-y-4">
-              <h4 class="text-lg font-medium">Preguntas</h4>
-              @for (question of questions(catIndex).controls; track $index; let qIndex = $index) {
-                <div [formGroupName]="qIndex" class="p-3 border border-gray-200 rounded bg-white dark:bg-gray-700 dark:border-gray-600">
-                  <p class="font-semibold dark:text-white">Pregunta por {{ questions(catIndex).at(qIndex).get('value')?.value }} puntos</p>
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-                    <div>
-                      <label [for]="'q-' + catIndex + '-' + qIndex" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Pregunta</label>
-                      <textarea [id]="'q-' + catIndex + '-' + qIndex" formControlName="question" rows="2" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"></textarea>
-                       @if(questions(catIndex).at(qIndex).get('question')?.invalid && questions(catIndex).at(qIndex).get('question')?.touched) {
-                        <div class="text-red-600 text-sm mt-1 dark:text-red-400">La pregunta es requerida.</div>
-                      }
-                    </div>
-                    <div>
-                      <label [for]="'a-' + catIndex + '-' + qIndex" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Respuesta</label>
-                      <textarea [id]="'a-' + catIndex + '-' + qIndex" formControlName="answer" rows="2" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"></textarea>
-                       @if(questions(catIndex).at(qIndex).get('answer')?.invalid && questions(catIndex).at(qIndex).get('answer')?.touched) {
-                        <div class="text-red-600 text-sm mt-1 dark:text-red-400">La respuesta es requerida.</div>
-                      }
-                    </div>
-                  </div>
-                </div>
-              }
-            </div>
           </div>
-        }
-      </div>
-
-      <div class="flex items-center justify-between mt-8">
-        <div class="flex gap-4">
-          <button type="button" (click)="addCategory()" [disabled]="categories.length >= 6" class="px-4 py-2 font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-gray-400">+ Añadir Categoría</button>
-          <button type="button" (click)="addCategoryWithIA()" [disabled]="categories.length >= 6" class="px-4 py-2 font-medium text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400" style="background-color: #4285F4;">
-            + Añadir Categoría con IA
-          </button>
-        </div>
-        <button type="submit" [disabled]="jeopardyForm.invalid || loading()" class="px-6 py-2 font-semibold text-white bg-green-600 rounded-md hover:bg-green-700 disabled:bg-gray-400 flex items-center">
-          @if(loading()) {
-            <svg class="w-5 h-5 mr-2 text-white animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <span>Guardando...</span>
-          } @else {
-            <span>
-              @if (isEditMode()) {
-                Guardar Cambios
-              } @else {
-                Guardar Jeopardy
-              }
-            </span>
           }
+        </div>
+      </div>
+      }
+    </div>
+
+    <div class="flex items-center justify-between mt-8">
+      <div class="flex gap-4">
+        <button
+          type="button"
+          (click)="addCategory()"
+          [disabled]="categories.length >= 6"
+          class="px-4 py-2 font-medium text-white bg-blue-500 rounded-md hover:bg-blue-600 disabled:bg-gray-400 cursor-pointer"
+        >
+          + Añadir Categoría
+        </button>
+        <button
+          type="button"
+          (click)="addCategoryWithIA()"
+          [disabled]="categories.length >= 6"
+          class="px-4 py-2 font-medium text-white rounded-md bg-pink-500 hover:bg-pink-600 disabled:bg-gray-400 cursor-pointer"
+        >
+          + Añadir Categoría con IA
         </button>
       </div>
-      @if(error()) {
-        <div class="p-4 mt-4 text-sm text-red-800 bg-red-100 rounded-lg dark:bg-red-900 dark:text-red-300" role="alert">
-          {{ error() }}
-        </div>
-      }
-    </form>
+      <button
+        type="submit"
+        [disabled]="jeopardyForm.invalid || loading()"
+        class="px-6 py-2 font-semibold text-white bg-green-600 rounded-md hover:bg-green-700 disabled:bg-gray-400 flex items-center"
+      >
+        @if(loading()) {
+        <svg
+          class="w-5 h-5 mr-2 text-white animate-spin"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            class="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            stroke-width="4"
+          ></circle>
+          <path
+            class="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+          ></path>
+        </svg>
+        <span>Guardando...</span>
+        } @else {
+        <span>
+          @if (isEditMode()) { Guardar Cambios } @else { Guardar Jeopardy }
+        </span>
+        }
+      </button>
+    </div>
+    @if(error()) {
+    <div
+      class="p-4 mt-4 text-sm text-red-800 bg-red-100 rounded-lg dark:bg-red-900 dark:text-red-300"
+      role="alert"
+    >
+      {{ error() }}
+    </div>
+    }
+  </form>
   }
 </div>
