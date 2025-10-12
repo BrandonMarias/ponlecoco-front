@@ -4,6 +4,7 @@ export interface Question {
   answer: string;
   value: number;
   doublePoints?: boolean;
+  imageUrl?: string;
 }
 
 export interface Category {

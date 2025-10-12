@@ -24,6 +24,16 @@
 
     <p class="text-3xl font-bold mb-8">{{ question.question }}</p>
 
+    @if(question.imageUrl) {
+    <div class="my-4 flex justify-center">
+      <img
+        [src]="question.imageUrl"
+        alt="Imagen de la pregunta"
+        class="max-h-64 rounded-lg"
+      />
+    </div>
+    }
+
     @if (showAnswer()) {
       <div class="bg-gray-900 p-4 rounded-md">
         <p class="text-4xl font-bold text-yellow-400">{{ question.answer }}</p>
