@@ -15,6 +15,7 @@ import { Jeopardy } from '../jeopardy';
 import { AiService } from '../../shared/ai.service';
 import { ModalService } from '../../shared/modal.service';
 import { AiCategoryResponse } from '../../shared/ai.interface';
+import { ImageCompressionService } from '../../shared/image-compression.service';
 
 @Component({
   selector: 'app-create-jeopardy',
@@ -29,10 +30,12 @@ export default class CreateJeopardyComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private aiService = inject(AiService);
   private modalService = inject(ModalService);
+  private imageCompressionService = inject(ImageCompressionService);
 
   jeopardyForm: FormGroup;
   loading = signal(false);
   error = signal<string | null>(null);
+  compressingImages = signal<Set<string>>(new Set());
   isEditMode = signal(false);
   private jeopardyId: string | null = null;
   private previewUrls = new Map<FormGroup, string>();
@@ -207,26 +210,84 @@ export default class CreateJeopardyComponent implements OnInit, OnDestroy {
     }
   }
 
-  onFileSelected(event: Event, catIndex: number, qIndex: number) {
+
+
+
+  async onFileSelected(event: Event, catIndex: number, qIndex: number) {
     const fileInput = event.target as HTMLInputElement;
     if (!fileInput.files || fileInput.files.length === 0) {
       return;
     }
 
     const file = fileInput.files[0];
-    const questionGroup = this.questions(catIndex).at(qIndex) as FormGroup;
+    const imageId = `${catIndex}-${qIndex}`;
 
-    if (this.previewUrls.has(questionGroup)) {
-      URL.revokeObjectURL(this.previewUrls.get(questionGroup)!);
+    // First validate file type
+    if (!file.type.startsWith('image/')) {
+      this.error.set('Por favor, selecciona un archivo de imagen válido.');
+      fileInput.value = '';
+      return;
     }
 
-    const previewUrl = URL.createObjectURL(file);
-    this.previewUrls.set(questionGroup, previewUrl);
+    // Clear any previous error
+    this.error.set(null);
 
-    questionGroup.patchValue({
-      imageFile: file,
-      imageUrl: null, // Clear existing URL when a new file is selected
-    });
+    try {
+      // Add to compressing set if file is large
+      const maxSizeBytes = 3 * 1024 * 1024; // 3 MB
+      if (file.size > maxSizeBytes) {
+        this.compressingImages.update(set => new Set(set).add(imageId));
+      }
+
+      // Compress image using the service
+      const result = await this.imageCompressionService.compressImage(file);
+
+      // Remove from compressing set
+      this.compressingImages.update(set => {
+        const newSet = new Set(set);
+        newSet.delete(imageId);
+        return newSet;
+      });
+
+      // Log compression results if compression occurred
+      if (result.wasCompressed) {
+        console.log(`Imagen comprimida: ${this.imageCompressionService.formatFileSize(result.originalSize)} → ${this.imageCompressionService.formatFileSize(result.compressedSize)} (${result.compressionRatio.toFixed(1)}% reducción)`);
+      }
+
+      // Final validation after compression
+      const validation = this.imageCompressionService.validateImageFile(result.file);
+      if (!validation.isValid) {
+        this.error.set(validation.errorMessage!);
+        fileInput.value = '';
+        return;
+      }
+
+      const questionGroup = this.questions(catIndex).at(qIndex) as FormGroup;
+
+      if (this.previewUrls.has(questionGroup)) {
+        URL.revokeObjectURL(this.previewUrls.get(questionGroup)!);
+      }
+
+      const previewUrl = URL.createObjectURL(result.file);
+      this.previewUrls.set(questionGroup, previewUrl);
+
+      questionGroup.patchValue({
+        imageFile: result.file,
+        imageUrl: null, // Clear existing URL when a new file is selected
+      });
+
+    } catch (error) {
+      // Remove from compressing set on error
+      this.compressingImages.update(set => {
+        const newSet = new Set(set);
+        newSet.delete(imageId);
+        return newSet;
+      });
+
+      console.error('Error al procesar la imagen:', error);
+      this.error.set('Error al procesar la imagen. Por favor, intenta con otra imagen.');
+      fileInput.value = '';
+    }
   }
 
   removeImage(catIndex: number, qIndex: number) {
@@ -244,6 +305,11 @@ export default class CreateJeopardyComponent implements OnInit, OnDestroy {
   getPreviewUrl(catIndex: number, qIndex: number): string | null {
     const questionGroup = this.questions(catIndex).at(qIndex) as FormGroup;
     return this.previewUrls.get(questionGroup) || null;
+  }
+
+  isImageCompressing(catIndex: number, qIndex: number): boolean {
+    const imageId = `${catIndex}-${qIndex}`;
+    return this.compressingImages().has(imageId);
   }
 
   onSubmit() {

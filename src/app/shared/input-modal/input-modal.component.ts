@@ -1,6 +1,7 @@
-import { Component, inject } from '@angular/core';
+import { Component, effect, inject } from '@angular/core';
 import { ModalService } from '../modal.service';
 import { FormsModule } from '@angular/forms';
+
 
 @Component({
   selector: 'app-input-modal',
@@ -31,6 +32,14 @@ import { FormsModule } from '@angular/forms';
 export class InputModalComponent {
   modalService = inject(ModalService);
   inputValue = '';
+
+  constructor() {
+    effect(() => {
+      if (this.modalService.isInputOpen()) {
+        this.inputValue = '';
+      }
+    });
+  }
 
   onConfirm() {
     this.modalService.confirmInput(this.inputValue);
