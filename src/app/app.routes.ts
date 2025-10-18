@@ -18,6 +18,11 @@ export const routes: Routes = [
     canActivate: [authGuard], // Or apply to individual child routes
   },
   {
+    path: 'roulette',
+    loadChildren: () => import('./roulette/roulette.routes'),
+    canActivate: [authGuard],
+  },
+  {
     path: 'play/:id',
     loadComponent: () => import('./game-play/game-play.component'),
     canActivate: [authGuard],

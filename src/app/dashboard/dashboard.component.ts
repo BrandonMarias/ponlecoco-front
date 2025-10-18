@@ -4,9 +4,19 @@ import { Router } from '@angular/router';
 import { HeaderComponent } from '../shared/header/header.component';
 import { TriviaPartyService } from '../triviaparty/triviaparty.service';
 import { TriviaParty } from '../triviaparty/triviaparty';
+import { RouletteService } from '../roulette/roulette.service';
+import { Roulette } from '../roulette/roulette';
 import { ModalService } from '../shared/modal.service';
-import { filter } from 'rxjs';
+import { forkJoin } from 'rxjs';
 import { FormsModule } from '@angular/forms';
+
+// Unified interface for dashboard items
+interface DashboardItem {
+  id: string;
+  title: string;
+  type: 'triviaparty' | 'ruleta';
+  gameType?: 'triviaparty' | 'ruleta'; // For TriviaParty items that can be either type
+}
 
 @Component({
   selector: 'app-dashboard',
@@ -16,16 +26,18 @@ import { FormsModule } from '@angular/forms';
 })
 export default class DashboardComponent implements OnInit {
   private triviaPartyService = inject(TriviaPartyService);
+  private rouletteService = inject(RouletteService);
   private router = inject(Router);
   private modalService = inject(ModalService);
 
-  triviaParties = signal<TriviaParty[]>([]);
+  dashboardItems = signal<DashboardItem[]>([]);
   loading = signal(true);
   error = signal<string | null>(null);
   openMenuId = signal<string | null>(null);
 
   showTeamSelection = signal(false);
-  selectedTriviaPartyId = signal<string | null>(null);
+  showCreateOptions = signal(false);
+  selectedItemId = signal<string | null>(null);
   teamCount = signal(2);
   timePerQuestion = signal(30);
 
@@ -35,15 +47,32 @@ export default class DashboardComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.loadTriviaParties();
+    this.loadAllTrivias();
   }
 
-  loadTriviaParties() {
+  loadAllTrivias() {
     this.loading.set(true);
     this.error.set(null);
-    this.triviaPartyService.getTriviaParties().subscribe({
-      next: (data) => {
-        this.triviaParties.set(data);
+
+    forkJoin({
+      triviaParties: this.triviaPartyService.getTriviaParties(),
+      roulettes: this.rouletteService.getRoulettes()
+    }).subscribe({
+      next: ({ triviaParties, roulettes }) => {
+        const items: DashboardItem[] = [
+          ...triviaParties.map(tp => ({
+            id: tp.id!,
+            title: tp.title,
+            type: 'triviaparty' as const,
+            gameType: tp.type || 'triviaparty'
+          })),
+          ...roulettes.map(r => ({
+            id: r.id!,
+            title: r.title,
+            type: 'ruleta' as const
+          }))
+        ];
+        this.dashboardItems.set(items);
         this.loading.set(false);
       },
       error: (err) => {
@@ -58,12 +87,16 @@ export default class DashboardComponent implements OnInit {
     this.openMenuId.set(this.openMenuId() === id ? null : id);
   }
 
-  editTriviaParty(id: string) {
-    this.router.navigate(['/triviaparty/edit', id]);
+  editItem(item: DashboardItem) {
+    if (item.type === 'triviaparty') {
+      this.router.navigate(['/triviaparty/edit', item.id]);
+    } else {
+      this.router.navigate(['/roulette/edit', item.id]);
+    }
     this.openMenuId.set(null);
   }
 
-  async deleteTriviaParty(id: string) {
+  async deleteItem(item: DashboardItem) {
     this.openMenuId.set(null);
     const confirmed = await this.modalService.open({
       title: 'Confirmar Eliminación',
@@ -71,9 +104,13 @@ export default class DashboardComponent implements OnInit {
     });
 
     if (confirmed) {
-      this.triviaPartyService.deleteTriviaParty(id).subscribe({
+      const deleteObservable = item.type === 'triviaparty'
+        ? this.triviaPartyService.deleteTriviaParty(item.id)
+        : this.rouletteService.deleteRoulette(item.id);
+
+      deleteObservable.subscribe({
         next: () => {
-          this.triviaParties.update(current => current.filter(j => j.id !== id));
+          this.dashboardItems.update(current => current.filter(i => i.id !== item.id));
         },
         error: (err) => {
           this.error.set('Failed to delete trivia. Please try again.');
@@ -83,23 +120,33 @@ export default class DashboardComponent implements OnInit {
     }
   }
 
-  navigateToCreateTriviaParty() {
-    this.router.navigateByUrl('/triviaparty/create');
+  toggleCreateOptions() {
+    this.showCreateOptions.update(current => !current);
   }
 
-  openTeamSelection(triviaPartyId: string) {
-    this.selectedTriviaPartyId.set(triviaPartyId);
+  navigateToCreateTriviaParty() {
+    this.router.navigateByUrl('/triviaparty/create');
+    this.showCreateOptions.set(false);
+  }
+
+  navigateToCreateRoulette() {
+    this.router.navigateByUrl('/roulette/create');
+    this.showCreateOptions.set(false);
+  }
+
+  openTeamSelection(itemId: string) {
+    this.selectedItemId.set(itemId);
     this.showTeamSelection.set(true);
   }
 
   closeTeamSelection() {
     this.showTeamSelection.set(false);
-    this.selectedTriviaPartyId.set(null);
+    this.selectedItemId.set(null);
   }
 
   startGame() {
-    if (!this.selectedTriviaPartyId() || !this.teamCount()) return;
-    this.router.navigate(['/play', this.selectedTriviaPartyId()], {
+    if (!this.selectedItemId() || !this.teamCount()) return;
+    this.router.navigate(['/play', this.selectedItemId()], {
       queryParams: {
         teams: this.teamCount(),
         time: this.timePerQuestion()

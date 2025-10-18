@@ -11,35 +11,35 @@
         {{ error() }}
       </div>
     } @else {
-      @if (triviaParties().length > 0) {
+      @if (dashboardItems().length > 0) {
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          @for (triviaParty of triviaParties(); track triviaParty.id) {
+          @for (item of dashboardItems(); track item.id) {
             <div class="bg-white dark:bg-gray-900 p-4 rounded-lg shadow hover:shadow-lg transition-shadow flex flex-col justify-between">
               <div class="flex items-center gap-2 mb-2">
                 <img
-                  [src]="triviaParty.type === 'triviaparty' ? '/media/img/triviaparty.png' : '/media/img/ruleta.png'"
-                  [alt]="triviaParty.type"
+                  [src]="item.type === 'triviaparty' ? '/media/img/triviaparty.png' : '/media/img/ruleta.png'"
+                  [alt]="item.type"
                   class="w-8 h-8 object-contain"
                 />
                 <span class="text-sm text-gray-500 dark:text-gray-400">
-                  {{ triviaParty.type === 'triviaparty' ? 'TriviaParty' : 'Ruleta' }}
+                  {{ item.type === 'triviaparty' ? 'TriviaParty' : 'Ruleta' }}
                 </span>
               </div>
-              <h2 class="text-lg font-semibold mb-4">{{ triviaParty.title }}</h2>
+              <h2 class="text-lg font-semibold mb-4">{{ item.title }}</h2>
               <div class="flex items-center justify-between">
-                <button (click)="openTeamSelection(triviaParty.id!)" class="text-green-500 hover:text-green-600">
+                <button (click)="openTeamSelection(item.id)" class="text-green-500 hover:text-green-600">
                   <svg class="w-10 h-10" fill="currentColor" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
                     <path d="M11.596 8.697l-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/>
                   </svg>
                 </button>
                 <div class="relative">
-                  <button (click)="toggleMenu(triviaParty.id!); $event.stopPropagation()" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
+                  <button (click)="toggleMenu(item.id); $event.stopPropagation()" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
                     <svg class="w-6 h-6 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path></svg>
                   </button>
-                  @if (openMenuId() === triviaParty.id) {
+                  @if (openMenuId() === item.id) {
                     <div (click)="$event.stopPropagation()" class="absolute right-0 bottom-full mb-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-xl z-20">
-                      <a (click)="editTriviaParty(triviaParty.id!)" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">Editar</a>
-                      <a (click)="deleteTriviaParty(triviaParty.id!)" class="block px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">Eliminar</a>
+                      <a (click)="editItem(item)" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">Editar</a>
+                      <a (click)="deleteItem(item)" class="block px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">Eliminar</a>
                     </div>
                   }
                 </div>
@@ -57,9 +57,32 @@
   </main>
 
   <!-- FAB -->
-  <button (click)="navigateToCreateTriviaParty()" class="fixed bottom-6 right-6 bg-indigo-600 text-white p-4 rounded-full shadow-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-  </button>
+  <div class="fixed bottom-6 right-6">
+    <!-- Create Options -->
+    @if (showCreateOptions()) {
+      <div class="mb-4 space-y-2">
+        <!-- TriviaParty Option -->
+        <button (click)="navigateToCreateTriviaParty()" class="flex items-center gap-2 bg-indigo-600 text-white px-4 py-3 rounded-full shadow-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all">
+          <img src="/media/img/triviaparty.png" alt="TriviaParty" class="w-6 h-6 object-contain">
+          <span class="font-medium">TriviaParty</span>
+        </button>
+
+        <!-- Ruleta Option -->
+        <button (click)="navigateToCreateRoulette()" class="flex items-center gap-2 bg-purple-600 text-white px-4 py-3 rounded-full shadow-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-all">
+          <img src="/media/img/ruleta.png" alt="Ruleta" class="w-6 h-6 object-contain">
+          <span class="font-medium">Ruleta</span>
+        </button>
+      </div>
+    }
+
+    <!-- Main FAB Button -->
+    <button (click)="toggleCreateOptions()" class="bg-indigo-600 text-white p-4 rounded-full shadow-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-transform"
+            [class.rotate-45]="showCreateOptions()">
+      <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+      </svg>
+    </button>
+  </div>
 
   <!-- Team Selection Modal -->
   @if (showTeamSelection()) {
