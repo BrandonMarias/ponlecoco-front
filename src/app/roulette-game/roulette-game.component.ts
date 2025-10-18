@@ -51,35 +51,36 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
   private timerInterval: any = null;
 
   // Roulette positions with their angles and values
-  // private roulettePositions: RoulettePosition[] = [
-  //   { angle: 15, value: 200, questionIndex: 0 },
-  //   { angle: 45, value: 400, questionIndex: 1 },
-  //   { angle: 75, value: 100, questionIndex: 2 },
-  //   { angle: 105, value: 200, questionIndex: 3 },
-  //   { angle: 135, value: 300, questionIndex: 4 },
-  //   { angle: 165, value: 400, questionIndex: 5 },
-  //   { angle: 195, value: 100, questionIndex: 6 },
-  //   { angle: 225, value: 500, questionIndex: 7 },
-  //   { angle: 255, value: 400, questionIndex: 8 },
-  //   { angle: 285, value: 300, questionIndex: 9 },
-  //   { angle: 315, value: 500, questionIndex: 10 },
-  //   { angle: 345, value: 100, questionIndex: 11 }
-  // ];
-
+  // Angles are measured from the top (arrow position) clockwise
   private roulettePositions: RoulettePosition[] = [
-    { angle: 15, value: 100, questionIndex: 0 },
-    { angle: 45, value: 500, questionIndex: 1 },
-    { angle: 75, value: 300, questionIndex: 2 },
-    { angle: 105, value: 400, questionIndex: 3 },
-    { angle: 135, value: 500, questionIndex: 4 },
-    { angle: 165, value: 100, questionIndex: 5 },
-    { angle: 195, value: 400, questionIndex: 6 },
-    { angle: 225, value: 300, questionIndex: 7 },
-    { angle: 255, value: 200, questionIndex: 8 },
-    { angle: 285, value: 100, questionIndex: 9 },
-    { angle: 315, value: 400, questionIndex: 10 },
-    { angle: 345, value: 200, questionIndex: 11 }
+    { angle: 0, value: 200, questionIndex: 0 },    // Top
+    { angle: 30, value: 400, questionIndex: 1 },   // 1 o'clock
+    { angle: 60, value: 100, questionIndex: 2 },   // 2 o'clock
+    { angle: 90, value: 200, questionIndex: 3 },   // 3 o'clock
+    { angle: 120, value: 300, questionIndex: 4 },  // 4 o'clock
+    { angle: 150, value: 400, questionIndex: 5 },  // 5 o'clock
+    { angle: 180, value: 100, questionIndex: 6 },  // 6 o'clock
+    { angle: 210, value: 500, questionIndex: 7 },  // 7 o'clock
+    { angle: 240, value: 400, questionIndex: 8 },  // 8 o'clock
+    { angle: 270, value: 300, questionIndex: 9 },  // 9 o'clock
+    { angle: 300, value: 500, questionIndex: 10 }, // 10 o'clock
+    { angle: 330, value: 100, questionIndex: 11 }  // 11 o'clock
   ];
+
+  // private roulettePositions: RoulettePosition[] = [
+  //   { angle: 15, value: 100, questionIndex: 0 },
+  //   { angle: 45, value: 500, questionIndex: 1 },
+  //   { angle: 75, value: 300, questionIndex: 2 },
+  //   { angle: 105, value: 400, questionIndex: 3 },
+  //   { angle: 135, value: 500, questionIndex: 4 },
+  //   { angle: 165, value: 100, questionIndex: 5 },
+  //   { angle: 195, value: 400, questionIndex: 6 },
+  //   { angle: 225, value: 300, questionIndex: 7 },
+  //   { angle: 255, value: 200, questionIndex: 8 },
+  //   { angle: 285, value: 100, questionIndex: 9 },
+  //   { angle: 315, value: 400, questionIndex: 10 },
+  //   { angle: 345, value: 200, questionIndex: 11 }
+  // ];
 
   private gameState = signal<GameState>({
     currentQuestionIndex: 0,
@@ -232,10 +233,11 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
     const targetPosition = Math.floor(Math.random() * 12);
     const targetAngle = this.roulettePositions[targetPosition].angle;
 
-    // Add multiple full rotations for spinning effect (counter-clockwise)
+    // Add multiple full rotations for spinning effect
+    // Since the arrow points up (0 degrees), we need to rotate TO the target angle
     const fullRotations = 5 + Math.random() * 3; // 5-8 rotations
     const currentRotation = this.wheelRotation();
-    const finalRotation = currentRotation + (fullRotations * 360) + (360 - targetAngle);
+    const finalRotation = currentRotation + (fullRotations * 360) + targetAngle;
 
     this.wheelRotation.set(finalRotation);
 
