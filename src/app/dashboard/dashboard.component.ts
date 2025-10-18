@@ -146,7 +146,15 @@ export default class DashboardComponent implements OnInit {
 
   startGame() {
     if (!this.selectedItemId() || !this.teamCount()) return;
-    this.router.navigate(['/play', this.selectedItemId()], {
+
+    // Find the selected item to determine its type
+    const selectedItem = this.dashboardItems().find(item => item.id === this.selectedItemId());
+    if (!selectedItem) return;
+
+    // Navigate to the appropriate game based on item type
+    const route = selectedItem.type === 'ruleta' ? '/play-roulette' : '/play';
+
+    this.router.navigate([route, this.selectedItemId()], {
       queryParams: {
         teams: this.teamCount(),
         time: this.timePerQuestion()

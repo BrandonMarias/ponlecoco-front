@@ -29,6 +29,11 @@ export const routes: Routes = [
     canDeactivate: [CanDeactivateGameGuard],
   },
   {
+    path: 'play-roulette/:id',
+    loadComponent: () => import('./roulette-game/roulette-game.component').then(m => m.RouletteGameComponent),
+    canActivate: [authGuard],
+  },
+  {
     path: '',
     redirectTo: 'dashboard', // Changed from 'auth' to 'dashboard'
     pathMatch: 'full',
