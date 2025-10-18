@@ -234,8 +234,8 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
     // Stop spinning after 7 seconds and ensure correct final position
     setTimeout(() => {
       // Force exact positioning after spin animation completes
-      const exactFinalRotation = Math.floor(finalRotation / 360) * 360 - targetAngle;
-      this.wheelRotation.set(exactFinalRotation);
+      //const exactFinalRotation = Math.floor(finalRotation / 360) * 360 - targetAngle;
+      //this.wheelRotation.set(exactFinalRotation);
 
       // Play points double sound when roulette stops
       this.playPointsDoubleSound();
