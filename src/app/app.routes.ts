@@ -13,8 +13,8 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
-    path: 'jeopardy',
-    loadChildren: () => import('./jeopardy/jeopardy.routes'),
+    path: 'triviaparty',
+    loadChildren: () => import('./triviaparty/triviaparty.routes'),
     canActivate: [authGuard], // Or apply to individual child routes
   },
   {

@@ -11,6 +11,6 @@ export class AiService {
   private apiUrl = environment.apiUrl;
 
   generateCategory(topic: string) {
-    return this.http.post<AiCategoryResponse>(`${this.apiUrl}/ai/jeopardy`, { topic });
+    return this.http.post<AiCategoryResponse>(`${this.apiUrl}/ai/triviaparty`, { topic });
   }
 }

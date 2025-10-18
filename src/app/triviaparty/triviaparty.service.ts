@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { environment } from '../../environments/environment';
-import { Jeopardy } from './jeopardy';
+import { TriviaParty } from './triviaparty';
 import { Observable, map } from 'rxjs';
 
 interface ImageUploadData {
@@ -17,28 +17,28 @@ interface ApiImageUploadResponse {
 @Injectable({
   providedIn: 'root',
 })
-export class JeopardyService {
+export class TriviaPartyService {
   private http = inject(HttpClient);
-  private apiUrl = `${environment.apiUrl}/jeopardy`;
+  private apiUrl = `${environment.apiUrl}/triviaparty`;
 
-  getJeopardies() {
-    return this.http.get<Jeopardy[]>(this.apiUrl);
+  getTriviaParties() {
+    return this.http.get<TriviaParty[]>(this.apiUrl);
   }
 
-  createJeopardy(jeopardyData: Omit<Jeopardy, 'id' | 'userId'>) {
-    return this.http.post<Jeopardy>(this.apiUrl, jeopardyData);
+  createTriviaParty(triviaPartyData: Omit<TriviaParty, 'id' | 'userId'>) {
+    return this.http.post<TriviaParty>(this.apiUrl, triviaPartyData);
   }
 
-  deleteJeopardy(id: string) {
+  deleteTriviaParty(id: string) {
     return this.http.delete(`${this.apiUrl}/${id}`);
   }
 
-  getJeopardyById(id: string) {
-    return this.http.get<Jeopardy>(`${this.apiUrl}/${id}`);
+  getTriviaPartyById(id: string) {
+    return this.http.get<TriviaParty>(`${this.apiUrl}/${id}`);
   }
 
-  updateJeopardy(id: string, jeopardyData: Omit<Jeopardy, 'id' | 'userId'>) {
-    return this.http.patch<Jeopardy>(`${this.apiUrl}/${id}`, jeopardyData);
+  updateTriviaParty(id: string, triviaPartyData: Omit<TriviaParty, 'id' | 'userId'>) {
+    return this.http.patch<TriviaParty>(`${this.apiUrl}/${id}`, triviaPartyData);
   }
 
   uploadQuestionImage(image: File): Observable<ImageUploadData> {

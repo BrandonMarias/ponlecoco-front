@@ -9,40 +9,42 @@ import {
   Validators,
 } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { JeopardyService } from '../jeopardy.service';
+import { TriviaPartyService } from '../triviaparty.service';
 import { finalize, switchMap, of, Observable, forkJoin, map, tap } from 'rxjs';
-import { Jeopardy } from '../jeopardy';
+import { TriviaParty } from '../triviaparty';
 import { AiService } from '../../shared/ai.service';
 import { ModalService } from '../../shared/modal.service';
 import { AiCategoryResponse } from '../../shared/ai.interface';
 import { ImageCompressionService } from '../../shared/image-compression.service';
 
 @Component({
-  selector: 'app-create-jeopardy',
+  selector: 'app-create-triviaparty',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: './create-jeopardy.component.html',
+  templateUrl: './create-triviaparty.component.html',
 })
-export default class CreateJeopardyComponent implements OnInit, OnDestroy {
+export default class CreateTriviaPartyComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
-  private jeopardyService = inject(JeopardyService);
+  private triviaPartyService = inject(TriviaPartyService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private aiService = inject(AiService);
   private modalService = inject(ModalService);
   private imageCompressionService = inject(ImageCompressionService);
 
-  jeopardyForm: FormGroup;
+  triviaPartyForm: FormGroup;
   loading = signal(false);
   error = signal<string | null>(null);
   compressingImages = signal<Set<string>>(new Set());
   isEditMode = signal(false);
-  private jeopardyId: string | null = null;
+  selectedTriviaType = signal<'triviaparty' | 'ruleta' | null>(null);
+  private triviaPartyId: string | null = null;
   private previewUrls = new Map<FormGroup, string>();
 
   constructor() {
-    this.jeopardyForm = this.fb.group({
+    this.triviaPartyForm = this.fb.group({
       title: ['', Validators.required],
+      type: ['', Validators.required],
       categories: this.fb.array(
         [],
         [Validators.required, Validators.minLength(1)]
@@ -54,24 +56,24 @@ export default class CreateJeopardyComponent implements OnInit, OnDestroy {
     this.route.paramMap
       .pipe(
         switchMap((params) => {
-          this.jeopardyId = params.get('id');
-          if (this.jeopardyId) {
+          this.triviaPartyId = params.get('id');
+          if (this.triviaPartyId) {
             this.isEditMode.set(true);
             this.loading.set(true);
-            return this.jeopardyService.getJeopardyById(this.jeopardyId);
+            return this.triviaPartyService.getTriviaPartyById(this.triviaPartyId);
           }
           return of(null);
         })
       )
       .subscribe({
-        next: (jeopardy) => {
-          if (jeopardy) {
-            this.patchForm(jeopardy);
+        next: (triviaParty) => {
+          if (triviaParty) {
+            this.patchForm(triviaParty);
             this.loading.set(false);
           }
         },
         error: (err) => {
-          this.error.set('Failed to load jeopardy data.');
+          this.error.set('Failed to load trivia party data.');
           this.loading.set(false);
           console.error(err);
         },
@@ -82,12 +84,20 @@ export default class CreateJeopardyComponent implements OnInit, OnDestroy {
     this.previewUrls.forEach(url => URL.revokeObjectURL(url));
   }
 
-  patchForm(jeopardy: Jeopardy) {
-    this.jeopardyForm.patchValue({
-      title: jeopardy.title,
+  selectTriviaType(type: 'triviaparty' | 'ruleta') {
+    this.selectedTriviaType.set(type);
+    this.triviaPartyForm.patchValue({ type });
+  }
+
+  patchForm(triviaParty: TriviaParty) {
+    this.triviaPartyForm.patchValue({
+      title: triviaParty.title,
+      type: triviaParty.type || 'triviaparty',
     });
 
-    jeopardy.categories.forEach((cat) => {
+    this.selectedTriviaType.set(triviaParty.type || 'triviaparty');
+
+    triviaParty.categories.forEach((cat) => {
       const questionsFGs = cat.questions.map((q) => {
         return this.fb.group({
           question: [q.question, Validators.required],
@@ -115,7 +125,7 @@ export default class CreateJeopardyComponent implements OnInit, OnDestroy {
   }
 
   get categories() {
-    return this.jeopardyForm.get('categories') as FormArray;
+    return this.triviaPartyForm.get('categories') as FormArray;
   }
 
   addCategory() {
@@ -209,9 +219,6 @@ export default class CreateJeopardyComponent implements OnInit, OnDestroy {
       doublePointsControl?.setValue(questionIndex);
     }
   }
-
-
-
 
   async onFileSelected(event: Event, catIndex: number, qIndex: number) {
     const fileInput = event.target as HTMLInputElement;
@@ -313,8 +320,8 @@ export default class CreateJeopardyComponent implements OnInit, OnDestroy {
   }
 
   onSubmit() {
-    this.jeopardyForm.markAllAsTouched();
-    if (this.jeopardyForm.invalid) {
+    this.triviaPartyForm.markAllAsTouched();
+    if (this.triviaPartyForm.invalid) {
       this.error.set('Por favor, completa todos los campos requeridos.');
       return;
     }
@@ -323,7 +330,7 @@ export default class CreateJeopardyComponent implements OnInit, OnDestroy {
     this.error.set(null);
 
     this.uploadImages().pipe(
-      switchMap(() => this.saveJeopardy())
+      switchMap(() => this.saveTriviaParty())
     ).subscribe({
       next: () => {
         this.router.navigateByUrl('/dashboard');
@@ -361,7 +368,7 @@ export default class CreateJeopardyComponent implements OnInit, OnDestroy {
     }
 
     const uploadObservables = uploadTasks.map((task) =>
-      this.jeopardyService.uploadQuestionImage(task.imageFile)
+      this.triviaPartyService.uploadQuestionImage(task.imageFile)
     );
 
     return forkJoin(uploadObservables).pipe(
@@ -378,11 +385,12 @@ export default class CreateJeopardyComponent implements OnInit, OnDestroy {
     );
   }
 
-  private saveJeopardy(): Observable<Jeopardy> {
-    const formValue = this.jeopardyForm.getRawValue();
+  private saveTriviaParty(): Observable<TriviaParty> {
+    const formValue = this.triviaPartyForm.getRawValue();
 
-    const jeopardyData = {
+    const triviaPartyData = {
       title: formValue.title,
+      type: formValue.type,
       categories: formValue.categories.map((cat: any) => ({
         title: cat.title,
         questions: cat.questions.map((q: any, qIndex: number) => {
@@ -400,9 +408,9 @@ export default class CreateJeopardyComponent implements OnInit, OnDestroy {
       })),
     };
 
-    const saveObservable: Observable<Jeopardy> = this.isEditMode()
-      ? this.jeopardyService.updateJeopardy(this.jeopardyId!, jeopardyData)
-      : this.jeopardyService.createJeopardy(jeopardyData);
+    const saveObservable: Observable<TriviaParty> = this.isEditMode()
+      ? this.triviaPartyService.updateTriviaParty(this.triviaPartyId!, triviaPartyData)
+      : this.triviaPartyService.createTriviaParty(triviaPartyData);
 
     return saveObservable;
   }

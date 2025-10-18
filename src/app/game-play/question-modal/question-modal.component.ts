@@ -1,6 +1,6 @@
-import { Component, Input, Output, EventEmitter, signal, OnInit, OnDestroy, computed } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Question } from '../../jeopardy/jeopardy';
+import { Question } from '../../triviaparty/triviaparty';
 
 @Component({
   selector: 'app-question-modal',

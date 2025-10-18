@@ -13,9 +13,10 @@ export interface Category {
   questions: Question[];
 }
 
-export interface Jeopardy {
+export interface TriviaParty {
   id?: string;
   title: string;
   categories: Category[];
-  userId?: string; // Assuming backend links jeopardy to a user
+  userId?: string; // Assuming backend links triviaparty to a user
+  type?: 'triviaparty' | 'ruleta'; // New field to distinguish between trivia types
 }

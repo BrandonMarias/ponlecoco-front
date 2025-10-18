@@ -1,8 +1,8 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { JeopardyService } from '../jeopardy/jeopardy.service';
-import { Jeopardy, Question } from '../jeopardy/jeopardy';
+import { TriviaPartyService } from '../triviaparty/triviaparty.service';
+import { TriviaParty, Question } from '../triviaparty/triviaparty';
 import { switchMap } from 'rxjs';
 import { QuestionModalComponent } from './question-modal/question-modal.component';
 import { ModalService } from '../shared/modal.service';
@@ -22,13 +22,13 @@ interface Team {
 })
 export default class GamePlayComponent implements OnInit, CanComponentDeactivate {
   private route = inject(ActivatedRoute);
-  private jeopardyService = inject(JeopardyService);
+  private triviaPartyService = inject(TriviaPartyService);
   private router = inject(Router);
   private modalService = inject(ModalService);
   private suspenseSound?: HTMLAudioElement;
   private doublePointsSound?: HTMLAudioElement;
 
-  jeopardy = signal<Jeopardy | null>(null);
+  triviaParty = signal<TriviaParty | null>(null);
   teams = signal<Team[]>([]);
   loading = signal(true);
   error = signal<string | null>(null);
@@ -56,11 +56,11 @@ export default class GamePlayComponent implements OnInit, CanComponentDeactivate
           throw new Error('Jeopardy ID is required');
         }
         this.initializeTeams();
-        return this.jeopardyService.getJeopardyById(id);
+        return this.triviaPartyService.getTriviaPartyById(id);
       })
     ).subscribe({
       next: (data) => {
-        this.jeopardy.set(data);
+        this.triviaParty.set(data);
         this.loading.set(false);
       },
       error: (err) => {
@@ -98,7 +98,7 @@ export default class GamePlayComponent implements OnInit, CanComponentDeactivate
     if (this.answeredQuestions().has(questionId) || this.selectedQuestion()) {
       return;
     }
-    const allQuestions = this.jeopardy()?.categories.flatMap(c => c.questions) || [];
+    const allQuestions = this.triviaParty()?.categories.flatMap(c => c.questions) || [];
     const question = allQuestions.find(q => q.id === questionId);
     if (question) {
       this.selectedQuestion.set(question);
@@ -163,7 +163,7 @@ export default class GamePlayComponent implements OnInit, CanComponentDeactivate
   }
 
   async confirmEndGame() {
-    const totalQuestions = this.jeopardy()?.categories.flatMap(c => c.questions).length || 0;
+    const totalQuestions = this.triviaParty()?.categories.flatMap(c => c.questions).length || 0;
     const answeredCount = this.answeredQuestions().size;
 
     let confirmed = false;
@@ -192,7 +192,7 @@ export default class GamePlayComponent implements OnInit, CanComponentDeactivate
   }
 
   canDeactivate(): boolean | Promise<boolean> {
-    const totalQuestions = this.jeopardy()?.categories.flatMap(c => c.questions).length || 0;
+    const totalQuestions = this.triviaParty()?.categories.flatMap(c => c.questions).length || 0;
     const answeredCount = this.answeredQuestions().size;
 
     if (this.showWinnerScreen() || (totalQuestions > 0 && answeredCount === totalQuestions)) {

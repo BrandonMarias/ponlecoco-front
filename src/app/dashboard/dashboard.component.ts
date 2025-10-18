@@ -2,8 +2,8 @@ import { Component, inject, signal, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { HeaderComponent } from '../shared/header/header.component';
-import { JeopardyService } from '../jeopardy/jeopardy.service';
-import { Jeopardy } from '../jeopardy/jeopardy';
+import { TriviaPartyService } from '../triviaparty/triviaparty.service';
+import { TriviaParty } from '../triviaparty/triviaparty';
 import { ModalService } from '../shared/modal.service';
 import { filter } from 'rxjs';
 import { FormsModule } from '@angular/forms';
@@ -15,17 +15,17 @@ import { FormsModule } from '@angular/forms';
   templateUrl: './dashboard.component.html',
 })
 export default class DashboardComponent implements OnInit {
-  private jeopardyService = inject(JeopardyService);
+  private triviaPartyService = inject(TriviaPartyService);
   private router = inject(Router);
   private modalService = inject(ModalService);
 
-  jeopardies = signal<Jeopardy[]>([]);
+  triviaParties = signal<TriviaParty[]>([]);
   loading = signal(true);
   error = signal<string | null>(null);
   openMenuId = signal<string | null>(null);
 
   showTeamSelection = signal(false);
-  selectedJeopardyId = signal<string | null>(null);
+  selectedTriviaPartyId = signal<string | null>(null);
   teamCount = signal(2);
   timePerQuestion = signal(30);
 
@@ -35,15 +35,15 @@ export default class DashboardComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.loadJeopardies();
+    this.loadTriviaParties();
   }
 
-  loadJeopardies() {
+  loadTriviaParties() {
     this.loading.set(true);
     this.error.set(null);
-    this.jeopardyService.getJeopardies().subscribe({
+    this.triviaPartyService.getTriviaParties().subscribe({
       next: (data) => {
-        this.jeopardies.set(data);
+        this.triviaParties.set(data);
         this.loading.set(false);
       },
       error: (err) => {
@@ -58,12 +58,12 @@ export default class DashboardComponent implements OnInit {
     this.openMenuId.set(this.openMenuId() === id ? null : id);
   }
 
-  editJeopardy(id: string) {
-    this.router.navigate(['/jeopardy/edit', id]);
+  editTriviaParty(id: string) {
+    this.router.navigate(['/triviaparty/edit', id]);
     this.openMenuId.set(null);
   }
 
-  async deleteJeopardy(id: string) {
+  async deleteTriviaParty(id: string) {
     this.openMenuId.set(null);
     const confirmed = await this.modalService.open({
       title: 'Confirmar Eliminación',
@@ -71,9 +71,9 @@ export default class DashboardComponent implements OnInit {
     });
 
     if (confirmed) {
-      this.jeopardyService.deleteJeopardy(id).subscribe({
+      this.triviaPartyService.deleteTriviaParty(id).subscribe({
         next: () => {
-          this.jeopardies.update(current => current.filter(j => j.id !== id));
+          this.triviaParties.update(current => current.filter(j => j.id !== id));
         },
         error: (err) => {
           this.error.set('Failed to delete trivia. Please try again.');
@@ -83,23 +83,23 @@ export default class DashboardComponent implements OnInit {
     }
   }
 
-  navigateTocreateJeopardy() {
-    this.router.navigateByUrl('/jeopardy/create');
+  navigateToCreateTriviaParty() {
+    this.router.navigateByUrl('/triviaparty/create');
   }
 
-  openTeamSelection(jeopardyId: string) {
-    this.selectedJeopardyId.set(jeopardyId);
+  openTeamSelection(triviaPartyId: string) {
+    this.selectedTriviaPartyId.set(triviaPartyId);
     this.showTeamSelection.set(true);
   }
 
   closeTeamSelection() {
     this.showTeamSelection.set(false);
-    this.selectedJeopardyId.set(null);
+    this.selectedTriviaPartyId.set(null);
   }
 
   startGame() {
-    if (!this.selectedJeopardyId() || !this.teamCount()) return;
-    this.router.navigate(['/play', this.selectedJeopardyId()], {
+    if (!this.selectedTriviaPartyId() || !this.teamCount()) return;
+    this.router.navigate(['/play', this.selectedTriviaPartyId()], {
       queryParams: {
         teams: this.teamCount(),
         time: this.timePerQuestion()
