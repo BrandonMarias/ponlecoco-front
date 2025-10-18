@@ -206,7 +206,7 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
   }
 
   
-  spinWheel() {
+    spinWheel() {
     if (this.getGameState().spinning) return;
 
     // 1. Poner el estado en 'spinning' para que inicie la transición de CSS
@@ -219,47 +219,56 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
 
     this.playRouletteSound();
 
-    // 2. Calcular la rotación final (esta lógica no cambia)
+    // 2. Calcular la rotación final
     const targetPosition = Math.floor(Math.random() * 12);
     const targetAngle = this.roulettePositions[targetPosition].angle;
 
     const fullRotations = 5 + Math.random() * 3;
     const currentRotation = this.wheelRotation();
-    const finalRotation = (currentRotation - (currentRotation % 360)) + (fullRotations * 360) - targetAngle;
+    // Aseguramos que la base de la rotación sea un múltiplo de 360 para evitar acumulaciones de ángulo
+    const rotationBase = Math.ceil(currentRotation / 360) * 360;
+    const finalRotation = rotationBase + (fullRotations * 360) - targetAngle;
 
-    // 3. Asignar la rotación final para que comience la animación de 7 segundos
+    // 3. Asignar la rotación para que comience la animación
     this.wheelRotation.set(finalRotation);
 
-    // 4. Después de 7 segundos, ejecutar la lógica de parada
+    // 4. Después de que la animación DEBERÍA terminar...
     setTimeout(() => {
       // ---- INICIO DE LA PARTE CORREGIDA ----
 
       // 4A. PRIMERO, apagar la animación en el estado.
-      // La transición de CSS ahora será 'none'.
+      // Esto le pide a Angular que cambie el estilo de transición a 'none'.
       this.gameState.update(state => ({
         ...state,
         spinning: false,
-        selectedPosition: targetPosition, // Actualizamos la posición ganadora
+        selectedPosition: targetPosition,
       }));
 
-      // 4B. AHORA, con la animación ya quitada, re-aplicamos el valor final.
-      // Esto corrige cualquier mínima desviación de la animación de forma INSTANTÁNEA y sin saltos.
-      this.wheelRotation.set(finalRotation);
-
-      // ---- FIN DE LA PARTE CORREGIDA ----
-
-      this.playPointsDoubleSound();
-
-      // Mostrar el botón de "Ver Pregunta" después del sonido de puntos
+      // 4B. AÑADIMOS UN PEQUEÑO RETRASO (10ms es suficiente)
+      // Esto le da al navegador un respiro para procesar el cambio de estilo anterior.
       setTimeout(() => {
-        this.gameState.update(state => ({
-          ...state,
-          showViewQuestionButton: true,
-          showQuestion: false
-        }));
-      }, 1000);
-    }, 7000); // 7 segundos para el giro
+        // 4C. AHORA, con la transición ya quitada, aplicamos la corrección final.
+        // Será un ajuste instantáneo e invisible.
+        this.wheelRotation.set(finalRotation);
+
+        // ---- FIN DE LA PARTE CORREGIDA ----
+
+        // El resto de la lógica continúa aquí adentro
+        this.playPointsDoubleSound();
+
+        setTimeout(() => {
+          this.gameState.update(state => ({
+            ...state,
+            showViewQuestionButton: true,
+            showQuestion: false
+          }));
+        }, 1000);
+
+      }, 10); // Un retraso mínimo es suficiente
+
+    }, 7000); // Duración de la animación
   }
+
 
 
   viewQuestion() {
