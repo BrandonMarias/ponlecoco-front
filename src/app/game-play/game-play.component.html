@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-gray-800 text-white p-4">
+<div class="min-h-screen bg-gray-800 text-white">
   @if (showWinnerScreen()) {
     <app-winner
       [winners]="winners()"
@@ -7,71 +7,162 @@
     ></app-winner>
   } @else {
     @if (loading()) {
-      <p>Cargando juego...</p>
+      <div class="flex items-center justify-center min-h-screen">
+        <div class="text-center">
+          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p class="text-lg">Cargando juego...</p>
+        </div>
+      </div>
     } @else if (error()) {
-      <div class="text-red-400">{{ error() }}</div>
+      <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="text-red-400 text-center bg-red-900/20 border border-red-600 rounded-lg p-6 max-w-md">
+          <svg class="w-12 h-12 mx-auto mb-4" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+          </svg>
+          <p class="text-lg">{{ error() }}</p>
+        </div>
+      </div>
     } @else if (triviaParty(); as game) {
-      <div class="flex flex-col md:flex-row gap-4">
-        <!-- Game Board -->
-        <div class="flex-grow">
-          <h1 class="text-4xl font-bold text-center mb-8">{{ game.title }}</h1>
-          <div class="flex gap-2 md:gap-8">
-            <!-- Single loop to create each category column -->
-            @for (category of game.categories; track category.id; let catIndex = $index) {
-              <div class="flex flex-col gap-2 md:gap-4 flex-1">
-                <!-- Category Title -->
-                <div class="h-16 flex items-center justify-center p-2 text-center font-bold rounded-lg text-shadow-md text-2xl" [ngClass]="categoryColors[catIndex % categoryColors.length]">
-                  {{ category.title }}
-                </div>
-                <!-- Questions for this category -->
-                @for (question of category.questions; track question.id) {
-                  <div
-                    class="h-32 flex items-center justify-center p-2 text-3xl font-bold rounded-2xl shadow-lg transition-transform"
-                    [ngClass]="!answeredQuestions().has(question.id!) ? 'cursor-pointer hover:scale-105 ' + categoryColors[catIndex % categoryColors.length] : 'bg-gray-700 text-gray-500 cursor-not-allowed'"
-                    (click)="onQuestionClick(question.id!)">
-                    @if (!answeredQuestions().has(question.id!)) {
-                      <span>{{ question.value }}</span>
+      <!-- Mobile/Tablet Layout -->
+      <div class="flex flex-col h-screen">
+        <!-- Header with game title - Fixed at top -->
+        <div class="bg-gray-900 border-b-2 border-gray-700 p-4 flex-shrink-0">
+          <div class="flex items-center justify-between">
+            <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold truncate flex-1 mr-4">{{ game.title }}</h1>
+            <button
+              (click)="confirmEndGame()"
+              class="bg-red-600 hover:bg-red-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors touch-manipulation">
+              Terminar
+            </button>
+          </div>
+        </div>
+
+        <!-- Main content area -->
+        <div class="flex-1 flex flex-col lg:flex-row overflow-hidden">
+          <!-- Game Board -->
+          <div class="flex-1 p-2 sm:p-4 overflow-hidden">
+            <!-- Horizontal scroll container for mobile -->
+            <div class="overflow-x-auto pb-4">
+              <div class="flex gap-2 sm:gap-3 lg:gap-6 min-w-fit">
+                <!-- Single loop to create each category column -->
+                @for (category of game.categories; track category.id; let catIndex = $index) {
+                  <div class="flex flex-col gap-2 sm:gap-3 lg:gap-4 flex-shrink-0" [style.min-width.px]="120">
+                    <!-- Category Title -->
+                    <div
+                      class="h-12 sm:h-14 lg:h-16 flex items-center justify-center p-1 sm:p-2 text-center font-bold rounded-lg text-xs sm:text-sm lg:text-xl xl:text-2xl leading-tight"
+                      [ngClass]="categoryColors[catIndex % categoryColors.length]">
+                      <span class="break-words">{{ category.title }}</span>
+                    </div>
+                    <!-- Questions for this category -->
+                    @for (question of category.questions; track question.id) {
+                      <div
+                        class="h-16 sm:h-20 lg:h-28 xl:h-32 flex items-center justify-center p-1 sm:p-2 font-bold rounded-lg sm:rounded-xl shadow-lg transition-all duration-200 touch-manipulation"
+                        [ngClass]="!answeredQuestions().has(question.id!) ?
+                          'cursor-pointer hover:scale-105 active:scale-95 ' + categoryColors[catIndex % categoryColors.length] :
+                          'bg-gray-700 text-gray-500 cursor-not-allowed'"
+                        (click)="onQuestionClick(question.id!)">
+                        @if (!answeredQuestions().has(question.id!)) {
+                          <span class="text-lg sm:text-xl lg:text-2xl xl:text-3xl">{{ question.value }}</span>
+                        }
+                      </div>
                     }
                   </div>
                 }
               </div>
-            }
+            </div>
           </div>
-        </div>
 
-        <!-- Scoreboard -->
-        <div class="w-full md:w-64 flex-shrink-0 bg-gray-900 p-4 rounded-lg">
-          <h2 class="text-2xl font-bold mb-4 text-center">Puntuación</h2>
-          <div class="space-y-4">
-            @for (team of teams(); track team.name; let i = $index) {
-              <div>
-                <div class="flex justify-between items-center font-bold text-lg">
-                  @if (editingTeamIndex() === i) {
-                    <input
-                      type="text"
-                      [value]="team.name"
-                      (blur)="saveTeamName(i, $event)"
-                      (keydown.enter)="saveTeamName(i, $event)"
-                      (keydown.escape)="cancelEditing()"
-                      class="bg-gray-700 text-white rounded px-2 py-1 w-full"
-                      autofocus
-                    />
-                  } @else {
-                    <span (dblclick)="startEditingTeam(i)" class="cursor-pointer">{{ team.name }}</span>
+          <!-- Scoreboard -->
+          <div class="w-full lg:w-80 xl:w-96 flex-shrink-0 bg-gray-900 border-t-2 lg:border-t-0 lg:border-l-2 border-gray-700">
+            <!-- Mobile: Horizontal scrollable teams -->
+            <div class="lg:hidden">
+              <div class="p-3 border-b border-gray-700">
+                <h2 class="text-lg font-bold text-center">Puntuación</h2>
+              </div>
+              <div class="overflow-x-auto">
+                <div class="flex gap-4 p-3 min-w-fit">
+                  @for (team of teams(); track team.name; let i = $index) {
+                    <div class="flex-shrink-0 bg-gray-800 rounded-lg p-3 min-w-[140px]">
+                      <div class="text-center">
+                        @if (editingTeamIndex() === i) {
+                          <input
+                            type="text"
+                            [value]="team.name"
+                            (blur)="saveTeamName(i, $event)"
+                            (keydown.enter)="saveTeamName(i, $event)"
+                            (keydown.escape)="cancelEditing()"
+                            class="bg-gray-700 text-white rounded px-2 py-1 w-full text-sm text-center"
+                            autofocus
+                          />
+                        } @else {
+                          <div (dblclick)="startEditingTeam(i)" class="cursor-pointer font-semibold text-sm mb-1 truncate">
+                            {{ team.name }}
+                          </div>
+                        }
+                        <div class="text-xl font-bold mb-2 text-yellow-400">{{ team.score }}</div>
+                        <div class="flex justify-center space-x-2">
+                          <button
+                            (click)="adjustScore(i, -100)"
+                            class="w-10 h-10 bg-red-600 hover:bg-red-700 rounded-full font-bold text-lg touch-manipulation transition-colors active:scale-95">
+                            -
+                          </button>
+                          <button
+                            (click)="adjustScore(i, 100)"
+                            class="w-10 h-10 bg-green-600 hover:bg-green-700 rounded-full font-bold text-lg touch-manipulation transition-colors active:scale-95">
+                            +
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   }
-                  <span>{{ team.score }}</span>
-                </div>
-                <div class="flex justify-end items-center mt-1 space-x-2">
-                  <button (click)="adjustScore(i, -100)" class="w-8 h-8 bg-red-600 rounded-full font-bold text-xl cursor-pointer">-</button>
-                  <button (click)="adjustScore(i, 100)" class="w-8 h-8 bg-green-600 rounded-full font-bold text-xl cursor-pointer">+</button>
                 </div>
               </div>
-            }
-          </div>
-          <div class="mt-8 text-center">
-            <button (click)="confirmEndGame()" class="text-sm text-gray-400 hover:text-red-400 transition-colors cursor-pointer">
-              Terminar Juego
-            </button>
+            </div>
+
+            <!-- Desktop/Tablet: Vertical layout -->
+            <div class="hidden lg:flex h-full flex-col">
+              <div class="p-4 border-b border-gray-700 flex-shrink-0">
+                <h2 class="text-xl xl:text-2xl font-bold text-center">Puntuación</h2>
+              </div>
+              <div class="flex-1 overflow-y-auto p-4">
+                <div class="space-y-4">
+                  @for (team of teams(); track team.name; let i = $index) {
+                    <div class="bg-gray-800 rounded-lg p-4">
+                      <div class="flex justify-between items-center font-bold text-lg mb-3">
+                        @if (editingTeamIndex() === i) {
+                          <input
+                            type="text"
+                            [value]="team.name"
+                            (blur)="saveTeamName(i, $event)"
+                            (keydown.enter)="saveTeamName(i, $event)"
+                            (keydown.escape)="cancelEditing()"
+                            class="bg-gray-700 text-white rounded px-3 py-2 flex-1 mr-3"
+                            autofocus
+                          />
+                        } @else {
+                          <span (dblclick)="startEditingTeam(i)" class="cursor-pointer flex-1 mr-3 truncate">
+                            {{ team.name }}
+                          </span>
+                        }
+                        <span class="text-2xl text-yellow-400">{{ team.score }}</span>
+                      </div>
+                      <div class="flex justify-center items-center space-x-4">
+                        <button
+                          (click)="adjustScore(i, -100)"
+                          class="w-12 h-12 bg-red-600 hover:bg-red-700 rounded-full font-bold text-xl touch-manipulation transition-colors active:scale-95">
+                          -
+                        </button>
+                        <button
+                          (click)="adjustScore(i, 100)"
+                          class="w-12 h-12 bg-green-600 hover:bg-green-700 rounded-full font-bold text-xl touch-manipulation transition-colors active:scale-95">
+                          +
+                        </button>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
