@@ -4,14 +4,24 @@ import { AuthService } from './auth.service';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
-  const token = authService.currentToken();
+  const isAuthenticated = authService.isAuthenticated();
 
-  if (token) {
+  // For httpOnly cookies, we just need to include credentials with requests
+  // The browser will automatically send the cookie
+  if (isAuthenticated) {
     const cloned = req.clone({
-      headers: req.headers.set('Authorization', `Bearer ${token}`),
+      setHeaders: {
+        'Content-Type': 'application/json'
+      },
+      withCredentials: true
     });
     return next(cloned);
   }
 
-  return next(req);
+  // For unauthenticated requests, still include credentials to allow login/register
+  const cloned = req.clone({
+    withCredentials: true
+  });
+
+  return next(cloned);
 };

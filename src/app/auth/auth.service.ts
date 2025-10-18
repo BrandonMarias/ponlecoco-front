@@ -13,13 +13,12 @@ interface User {
 }
 
 interface AuthResponse {
-  access_token: string;
   user: User;
 }
 
 interface AuthState {
   user: User | null;
-  token: string | null;
+  isAuthenticated: boolean;
 }
 
 @Injectable({
@@ -30,73 +29,104 @@ export class AuthService {
   private router = inject(Router);
   private apiUrl = environment.apiUrl;
 
-  private authState = signal<AuthState>({ user: null, token: null });
+  private authState = signal<AuthState>({ user: null, isAuthenticated: false });
 
   currentUser = computed(() => this.authState().user);
-  currentToken = computed(() => this.authState().token);
-  isAuthenticated = computed(() => !!this.authState().token);
+  isAuthenticated = computed(() => this.authState().isAuthenticated);
 
   constructor() {
-    // This synchronous load is still useful for the initial paint
-    // before the APP_INITIALIZER completes.
-    const storedState = localStorage.getItem('auth_state');
-    if (storedState) {
-      this.authState.set(JSON.parse(storedState));
+    console.log('🏗️ AuthService constructor called');
+    // Check if user data exists in localStorage (for UI optimization only)
+    // We'll validate the actual session with refreshTokenOnLoad()
+    const storedUser = localStorage.getItem('user_data');
+    if (storedUser) {
+      console.log('👤 Found stored user data:', JSON.parse(storedUser));
+      this.authState.set({
+        user: JSON.parse(storedUser),
+        isAuthenticated: false // Will be set to true only after session validation
+      });
+    } else {
+      console.log('🚫 No stored user data found');
     }
   }
 
   refreshTokenOnLoad(): Observable<any> {
-    const token = this.currentToken();
-    if (!token) {
-      return of(null); // No token, nothing to refresh. Complete the initializer.
-    }
-
-    return this.http.get<AuthResponse>(`${this.apiUrl}/auth/refresh`).pipe(
+    console.log('🔄 Starting session validation...');
+    // Since we're using httpOnly cookies, we just try to validate the session
+    return this.http.get<AuthResponse>(`${this.apiUrl}/auth/refresh`, {
+      withCredentials: true
+    }).pipe(
       tap(response => {
-        // If refresh is successful, update the state with the new token and user data
-        console.log('Token refreshed successfully.');
-        this.setAuthState({ user: response.user, token: response.access_token });
+        console.log('✅ Session validated successfully:', response);
+        this.setAuthState({ user: response.user, isAuthenticated: true });
       }),
       catchError((error) => {
-        // If token is invalid/expired, backend returns an error. Logout the user.
-        console.log('Failed to refresh token, logging out.');
-        this.logout();
-        return of(null); // Complete the initializer even on error.
+        console.log('❌ No valid session found:', error);
+        console.log('🧹 Clearing local state without redirect');
+        // Clear local state without redirecting (since this is app initialization)
+        this.clearAuthState();
+        return of(null);
       })
     );
   }
 
   login(credentials: { email: string, password: string }) {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/login`, credentials).pipe(
-      tap(response => this.setAuthState({ user: response.user, token: response.access_token }))
+    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/login`, credentials, {
+      withCredentials: true
+    }).pipe(
+      tap(response => this.setAuthState({ user: response.user, isAuthenticated: true }))
     );
   }
 
   googleLogin(token: string) {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/google`, { token }).pipe(
-      tap(response => this.setAuthState({ user: response.user, token: response.access_token }))
+    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/google`, { token }, {
+      withCredentials: true
+    }).pipe(
+      tap(response => this.setAuthState({ user: response.user, isAuthenticated: true }))
     );
   }
 
   register(credentials: { name: string, email: string, password: string }) {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/users`, credentials).pipe(
-      tap(response => this.setAuthState({ user: response.user, token: response.access_token }))
+    return this.http.post<AuthResponse>(`${this.apiUrl}/users`, credentials, {
+      withCredentials: true
+    }).pipe(
+      tap(response => this.setAuthState({ user: response.user, isAuthenticated: true }))
     );
   }
 
   logout() {
-    this.setAuthState({ user: null, token: null });
-    this.router.navigateByUrl('/auth/login');
+    // Call the logout endpoint to clear the httpOnly cookie
+    this.http.post(`${this.apiUrl}/auth/logout`, {}, {
+      withCredentials: true
+    }).subscribe({
+      next: () => {
+        console.log('Logout successful, cookie cleared');
+      },
+      error: (error) => {
+        console.error('Error during logout:', error);
+      },
+      complete: () => {
+        // Clear local state and redirect to login
+        this.clearAuthState();
+        this.router.navigateByUrl('/auth/login');
+      }
+    });
+  }
+
+  private clearAuthState() {
+    this.setAuthState({ user: null, isAuthenticated: false });
   }
 
   private setAuthState(state: AuthState) {
+    console.log('🔄 Setting auth state:', state);
     this.authState.set(state);
-    if (state.token) {
-      // For a "remember me" feature, localStorage is appropriate. 
-      // For higher security, consider sessionStorage which clears when the tab is closed.
-      localStorage.setItem('auth_state', JSON.stringify(state));
+    if (state.isAuthenticated && state.user) {
+      // Store only user data (not tokens) for UI state persistence
+      console.log('💾 Storing user data in localStorage');
+      localStorage.setItem('user_data', JSON.stringify(state.user));
     } else {
-      localStorage.removeItem('auth_state');
+      console.log('🗑️ Removing user data from localStorage');
+      localStorage.removeItem('user_data');
     }
   }
 }
