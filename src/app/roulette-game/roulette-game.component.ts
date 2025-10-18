@@ -205,9 +205,11 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
     }));
   }
 
+  
   spinWheel() {
     if (this.getGameState().spinning) return;
 
+    // 1. Poner el estado en 'spinning' para que inicie la transición de CSS
     this.gameState.update(state => ({
       ...state,
       spinning: true,
@@ -215,43 +217,50 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
       showQuestion: false
     }));
 
-    // Play roulette sound for 7 seconds
     this.playRouletteSound();
 
-    // Calculate random position
+    // 2. Calcular la rotación final (esta lógica no cambia)
     const targetPosition = Math.floor(Math.random() * 12);
     const targetAngle = this.roulettePositions[targetPosition].angle;
 
-    // Add multiple full rotations for spinning effect
-    const fullRotations = 5 + Math.random() * 3; // 5-8 rotations
+    const fullRotations = 5 + Math.random() * 3;
     const currentRotation = this.wheelRotation();
-    // Calculate final rotation to end exactly at the target angle
-    const spinRotation = currentRotation + (fullRotations * 360);
-    const finalRotation = spinRotation - targetAngle;
+    const finalRotation = (currentRotation - (currentRotation % 360)) + (fullRotations * 360) - targetAngle;
 
+    // 3. Asignar la rotación final para que comience la animación de 7 segundos
     this.wheelRotation.set(finalRotation);
 
-    // Stop spinning after 7 seconds and ensure correct final position
+    // 4. Después de 7 segundos, ejecutar la lógica de parada
     setTimeout(() => {
-      // Force exact positioning after spin animation completes
-      //const exactFinalRotation = Math.floor(finalRotation / 360) * 360 - targetAngle;
-      //this.wheelRotation.set(exactFinalRotation);
+      // ---- INICIO DE LA PARTE CORREGIDA ----
 
-      // Play points double sound when roulette stops
+      // 4A. PRIMERO, apagar la animación en el estado.
+      // La transición de CSS ahora será 'none'.
+      this.gameState.update(state => ({
+        ...state,
+        spinning: false,
+        selectedPosition: targetPosition, // Actualizamos la posición ganadora
+      }));
+
+      // 4B. AHORA, con la animación ya quitada, re-aplicamos el valor final.
+      // Esto corrige cualquier mínima desviación de la animación de forma INSTANTÁNEA y sin saltos.
+      this.wheelRotation.set(finalRotation);
+
+      // ---- FIN DE LA PARTE CORREGIDA ----
+
       this.playPointsDoubleSound();
 
-      // Show "View Question" button after points double sound
+      // Mostrar el botón de "Ver Pregunta" después del sonido de puntos
       setTimeout(() => {
         this.gameState.update(state => ({
           ...state,
-          spinning: false,
-          selectedPosition: targetPosition,
           showViewQuestionButton: true,
           showQuestion: false
         }));
-      }, 1000); // Wait 1 second after points double sound
-    }, 7000); // 7 seconds for roulette spinning
+      }, 1000);
+    }, 7000); // 7 segundos para el giro
   }
+
 
   viewQuestion() {
 
