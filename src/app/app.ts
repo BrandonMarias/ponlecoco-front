@@ -11,5 +11,5 @@ import { InputModalComponent } from './shared/input-modal/input-modal.component'
   styleUrl: './app.css'
 })
 export class App {
-  protected title = 'jeopardimania-front';
+  protected title = 'dalecoco';
 }
