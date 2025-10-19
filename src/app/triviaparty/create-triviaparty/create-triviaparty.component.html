@@ -1,6 +1,6 @@
 <div class="container mx-auto p-4 pb-20 text-gray-800 dark:text-white">
   <!-- Dynamic Title -->
-  <h1 class="text-3xl font-bold mb-6">
+  <h1 class="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6">
     @if (isEditMode()) { Editar TriviaParty } @else { Crear una Nueva TriviaParty }
   </h1>
 
@@ -9,22 +9,22 @@
   } @else {
     <!-- Trivia Type Selection (only for new trivias) -->
     @if (!isEditMode() && !selectedTriviaType()) {
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-8">
-      <h2 class="text-2xl font-semibold mb-4 text-center">Selecciona el tipo de trivia</h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 mb-6 sm:mb-8">
+      <h2 class="text-xl sm:text-2xl font-semibold mb-4 text-center">Selecciona el tipo de trivia</h2>
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
         <!-- TriviaParty Option -->
         <button
           type="button"
           (click)="selectTriviaType('triviaparty')"
-          class="flex flex-col items-center p-6 border-2 border-gray-300 rounded-lg hover:border-blue-500 hover:shadow-md transition-all duration-200 dark:border-gray-600 dark:hover:border-blue-400"
+          class="flex flex-col items-center p-4 sm:p-6 border-2 border-gray-300 rounded-lg hover:border-blue-500 hover:shadow-md transition-all duration-200 dark:border-gray-600 dark:hover:border-blue-400 touch-manipulation min-h-[140px] sm:min-h-auto"
         >
-          <img 
-            src="/media/img/triviaparty.png" 
-            alt="TriviaParty" 
-            class="w-24 h-24 mb-4 object-contain"
+          <img
+            src="/media/img/triviaparty.png"
+            alt="TriviaParty"
+            class="w-16 h-16 sm:w-24 sm:h-24 mb-3 sm:mb-4 object-contain"
           />
-          <h3 class="text-xl font-semibold mb-2">TriviaParty</h3>
-          <p class="text-gray-600 dark:text-gray-400 text-center">
+          <h3 class="text-lg sm:text-xl font-semibold mb-2">TriviaParty</h3>
+          <p class="text-gray-600 dark:text-gray-400 text-center text-sm sm:text-base">
             Trivia clásica con categorías y preguntas de diferentes valores
           </p>
         </button>
@@ -33,15 +33,15 @@
         <button
           type="button"
           (click)="selectTriviaType('ruleta')"
-          class="flex flex-col items-center p-6 border-2 border-gray-300 rounded-lg hover:border-green-500 hover:shadow-md transition-all duration-200 dark:border-gray-600 dark:hover:border-green-400"
+          class="flex flex-col items-center p-4 sm:p-6 border-2 border-gray-300 rounded-lg hover:border-green-500 hover:shadow-md transition-all duration-200 dark:border-gray-600 dark:hover:border-green-400 touch-manipulation min-h-[140px] sm:min-h-auto"
         >
-          <img 
-            src="/media/img/ruleta.png" 
-            alt="Ruleta" 
-            class="w-24 h-24 mb-4 object-contain"
+          <img
+            src="/media/img/ruleta.png"
+            alt="Ruleta"
+            class="w-16 h-16 sm:w-24 sm:h-24 mb-3 sm:mb-4 object-contain"
           />
-          <h3 class="text-xl font-semibold mb-2">Ruleta</h3>
-          <p class="text-gray-600 dark:text-gray-400 text-center">
+          <h3 class="text-lg sm:text-xl font-semibold mb-2">Ruleta</h3>
+          <p class="text-gray-600 dark:text-gray-400 text-center text-sm sm:text-base">
             Trivia con formato de ruleta de la fortuna
           </p>
         </button>
@@ -49,25 +49,25 @@
     </div>
     } @else {
     <!-- Main Form (shown after type selection or in edit mode) -->
-    <form [formGroup]="triviaPartyForm" (ngSubmit)="onSubmit()" class="space-y-8">
+    <form [formGroup]="triviaPartyForm" (ngSubmit)="onSubmit()" class="space-y-6 sm:space-y-8">
       <!-- Selected Type Display -->
       @if (selectedTriviaType()) {
-      <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-600 rounded-lg p-4 mb-6">
-        <div class="flex items-center gap-4">
-          <img 
-            [src]="selectedTriviaType() === 'triviaparty' ? '/media/img/triviaparty.png' : '/media/img/ruleta.png'" 
-            [alt]="selectedTriviaType()" 
-            class="w-12 h-12 object-contain"
+      <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-600 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
+        <div class="flex items-center gap-3 sm:gap-4">
+          <img
+            [src]="selectedTriviaType() === 'triviaparty' ? '/media/img/triviaparty.png' : '/media/img/ruleta.png'"
+            [alt]="selectedTriviaType()"
+            class="w-10 h-10 sm:w-12 sm:h-12 object-contain"
           />
           <div>
-            <h3 class="text-lg font-semibold text-blue-800 dark:text-blue-200">
+            <h3 class="text-base sm:text-lg font-semibold text-blue-800 dark:text-blue-200">
               Tipo: {{ selectedTriviaType() === 'triviaparty' ? 'TriviaParty' : 'Ruleta' }}
             </h3>
             @if (!isEditMode()) {
             <button
               type="button"
               (click)="selectedTriviaType.set(null); triviaPartyForm.patchValue({type: ''})"
-              class="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+              class="text-sm text-blue-600 dark:text-blue-400 hover:underline touch-manipulation"
             >
               Cambiar tipo
             </button>
@@ -81,14 +81,14 @@
       <div>
         <label
           for="title"
-          class="block text-lg font-medium text-gray-700 dark:text-gray-300"
+          class="block text-base sm:text-lg font-medium text-gray-700 dark:text-gray-300 mb-2"
           >Título de la {{ selectedTriviaType() === 'triviaparty' ? 'TriviaParty' : 'Ruleta' }}</label
         >
         <input
           type="text"
           id="title"
           formControlName="title"
-          class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+          class="mt-1 block w-full px-3 py-3 sm:py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-base sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
         />
         @if (triviaPartyForm.get('title')?.invalid &&
         triviaPartyForm.get('title')?.touched) {
@@ -99,12 +99,12 @@
       </div>
 
       <!-- Categories -->
-      <div formArrayName="categories" class="space-y-6">
-        <h2 class="text-2xl font-semibold">Categorías</h2>
+      <div formArrayName="categories" class="space-y-4 sm:space-y-6">
+        <h2 class="text-xl sm:text-2xl font-semibold">Categorías</h2>
         @if(categories.invalid && categories.touched &&
         categories.errors?.['minlength']) {
         <div
-          class="p-4 text-sm text-red-800 bg-red-100 rounded-lg dark:bg-red-900 dark:text-red-300"
+          class="p-3 sm:p-4 text-sm text-red-800 bg-red-100 rounded-lg dark:bg-red-900 dark:text-red-300"
           role="alert"
         >
           Debes añadir al menos una categoría.
@@ -113,31 +113,31 @@
         $index) {
         <div
           [formGroupName]="catIndex"
-          class="p-4 border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700"
+          class="p-3 sm:p-4 border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700"
         >
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xl font-medium">Categoría {{ catIndex + 1 }}</h3>
+          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-3 sm:gap-0">
+            <h3 class="text-lg sm:text-xl font-medium">Categoría {{ catIndex + 1 }}</h3>
             <button
               type="button"
               (click)="removeCategory(catIndex)"
-              class="px-3 py-1 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700"
+              class="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 touch-manipulation min-h-[44px]"
             >
-              - Eliminar Categoría
+              🗑️ Eliminar Categoría
             </button>
           </div>
 
           <!-- Category Title -->
-          <div>
+          <div class="mb-4">
             <label
               [for]="'cat-title-' + catIndex"
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
               >Título de la Categoría</label
             >
             <input
               [id]="'cat-title-' + catIndex"
               type="text"
               formControlName="title"
-              class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+              class="mt-1 block w-full px-3 py-3 sm:py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-base sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
             />
             @if(categories.at(catIndex).get('title')?.invalid &&
             categories.at(catIndex).get('title')?.touched) {
@@ -149,15 +149,15 @@
 
           <!-- Double Points Selection -->
           <div class="mt-4">
-            <h4 class="text-lg font-medium">
+            <h4 class="text-base sm:text-lg font-medium mb-3">
               Pregunta con Puntos Dobles (Opcional)
             </h4>
-            <div class="flex flex-wrap gap-x-4 gap-y-2 mt-2">
+            <div class="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-x-4 sm:gap-y-2">
               @for (question of questions(catIndex).controls; track $index; let
               qIndex = $index) {
               <label
                 [for]="'dp-' + catIndex + '-' + qIndex"
-                class="flex items-center space-x-2 cursor-pointer"
+                class="flex items-center space-x-2 cursor-pointer p-2 rounded border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 touch-manipulation min-h-[44px]"
               >
                 <input
                   [id]="'dp-' + catIndex + '-' + qIndex"
@@ -171,7 +171,7 @@
                   (click)="toggleDoublePoints(catIndex, qIndex.toString())"
                   class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 dark:border-gray-600"
                 />
-                <span class="dark:text-gray-300"
+                <span class="dark:text-gray-300 text-sm sm:text-base"
                   >{{
                     questions(catIndex).at(qIndex).get("value")?.value
                   }}
@@ -184,29 +184,29 @@
 
           <!-- Questions -->
           <div formArrayName="questions" class="mt-4 space-y-4">
-            <h4 class="text-lg font-medium">Preguntas</h4>
+            <h4 class="text-base sm:text-lg font-medium">Preguntas</h4>
             @for (question of questions(catIndex).controls; track $index; let
             qIndex = $index) {
             <div
               [formGroupName]="qIndex"
               class="p-3 border border-gray-200 rounded bg-white dark:bg-gray-700 dark:border-gray-600"
             >
-              <p class="font-semibold dark:text-white">
+              <p class="font-semibold dark:text-white mb-3">
                 Pregunta por
                 {{ questions(catIndex).at(qIndex).get("value")?.value }} puntos
               </p>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+              <div class="grid grid-cols-1 gap-4">
                 <div>
                   <label
                     [for]="'q-' + catIndex + '-' + qIndex"
-                    class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                     >Pregunta</label
                   >
                   <textarea
                     [id]="'q-' + catIndex + '-' + qIndex"
                     formControlName="question"
-                    rows="2"
-                    class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                    rows="3"
+                    class="mt-1 block w-full px-3 py-3 sm:py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-base sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
                   ></textarea>
                   @if(questions(catIndex).at(qIndex).get('question')?.invalid &&
                   questions(catIndex).at(qIndex).get('question')?.touched) {
@@ -218,14 +218,14 @@
                 <div>
                   <label
                     [for]="'a-' + catIndex + '-' + qIndex"
-                    class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                     >Respuesta</label
                   >
                   <textarea
                     [id]="'a-' + catIndex + '-' + qIndex"
                     formControlName="answer"
-                    rows="2"
-                    class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+                    rows="3"
+                    class="mt-1 block w-full px-3 py-3 sm:py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-base sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
                   ></textarea>
                   @if(questions(catIndex).at(qIndex).get('answer')?.invalid &&
                   questions(catIndex).at(qIndex).get('answer')?.touched) {
@@ -238,14 +238,14 @@
               <!-- Image Upload Section -->
               <div class="mt-4">
                 <label
-                  class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                 >
                   Imagen (Opcional)
                 </label>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
                   Formatos soportados: JPG, PNG, GIF, etc.
                 </p>
-                <div class="mt-1 flex items-center gap-4">
+                <div class="flex flex-col gap-3">
                   <input
                     type="file"
                     [id]="'img-' + catIndex + '-' + qIndex"
@@ -259,13 +259,13 @@
                   <button
                     type="button"
                     (click)="fileInput.click()"
-                    class="cursor-pointer px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
+                    class="w-full sm:w-auto cursor-pointer px-4 py-3 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700 touch-manipulation min-h-[44px] flex items-center justify-center"
                   >
-                    <span>Seleccionar Imagen</span>
+                    <span>📷 Seleccionar Imagen</span>
                   </button>
                   }
                   @if (isImageCompressing(catIndex, qIndex)) {
-                  <div class="flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-md dark:bg-blue-900/20 dark:border-blue-600">
+                  <div class="flex items-center gap-2 px-3 py-3 bg-blue-50 border border-blue-200 rounded-md dark:bg-blue-900/20 dark:border-blue-600">
                     <svg class="animate-spin h-4 w-4 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24">
                       <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                       <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -274,18 +274,18 @@
                   </div>
                   }
                   @if (getPreviewUrl(catIndex, qIndex) || questions(catIndex).at(qIndex).get('imageUrl')?.value) {
-                  <div class="flex items-center gap-2">
+                  <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                     <img
                       [src]="getPreviewUrl(catIndex, qIndex) || questions(catIndex).at(qIndex).get('imageUrl')?.value"
                       alt="Preview"
-                      class="h-16 w-16 object-cover rounded"
+                      class="h-20 w-20 sm:h-16 sm:w-16 object-cover rounded"
                     />
                     <button
                       type="button"
                       (click)="removeImage(catIndex, qIndex)"
-                      class="px-2 py-1 text-xs font-medium text-white bg-red-600 rounded-md hover:bg-red-700"
+                      class="w-full sm:w-auto px-3 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 touch-manipulation min-h-[44px]"
                     >
-                      Quitar
+                      🗑️ Quitar Imagen
                     </button>
                   </div>
                   }
@@ -298,29 +298,29 @@
         }
       </div>
 
-      <div class="flex items-center justify-between mt-8">
-        <div class="flex gap-4">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mt-6 sm:mt-8 gap-4">
+        <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
           <button
             type="button"
             (click)="addCategory()"
             [disabled]="categories.length >= 6"
-            class="px-4 py-2 font-medium text-white bg-blue-500 rounded-md hover:bg-blue-600 disabled:bg-gray-400 cursor-pointer"
+            class="w-full sm:w-auto px-4 py-3 font-medium text-white bg-blue-500 rounded-md hover:bg-blue-600 disabled:bg-gray-400 cursor-pointer touch-manipulation min-h-[44px] flex items-center justify-center"
           >
-            + Añadir Categoría
+            ➕ Añadir Categoría
           </button>
           <button
             type="button"
             (click)="addCategoryWithIA()"
             [disabled]="categories.length >= 6"
-            class="px-4 py-2 font-medium text-white rounded-md bg-pink-500 hover:bg-pink-600 disabled:bg-gray-400 cursor-pointer"
+            class="w-full sm:w-auto px-4 py-3 font-medium text-white rounded-md bg-pink-500 hover:bg-pink-600 disabled:bg-gray-400 cursor-pointer touch-manipulation min-h-[44px] flex items-center justify-center"
           >
-            + Añadir Categoría con IA
+            🤖 Añadir Categoría con IA
           </button>
         </div>
         <button
           type="submit"
           [disabled]="triviaPartyForm.invalid || loading()"
-          class="px-6 py-2 font-semibold text-white bg-green-600 rounded-md hover:bg-green-700 disabled:bg-gray-400 flex items-center"
+          class="w-full sm:w-auto px-6 py-3 font-semibold text-white bg-green-600 rounded-md hover:bg-green-700 disabled:bg-gray-400 flex items-center justify-center touch-manipulation min-h-[44px]"
         >
           @if(loading()) {
           <svg
@@ -346,14 +346,14 @@
           <span>Guardando...</span>
           } @else {
           <span>
-            @if (isEditMode()) { Guardar Cambios } @else { Guardar {{ selectedTriviaType() === 'triviaparty' ? 'TriviaParty' : 'Ruleta' }} }
+            @if (isEditMode()) { 💾 Guardar Cambios } @else { 💾 Guardar {{ selectedTriviaType() === 'triviaparty' ? 'TriviaParty' : 'Ruleta' }} }
           </span>
           }
         </button>
       </div>
       @if(error()) {
       <div
-        class="p-4 mt-4 text-sm text-red-800 bg-red-100 rounded-lg dark:bg-red-900 dark:text-red-300"
+        class="p-3 sm:p-4 mt-4 text-sm text-red-800 bg-red-100 rounded-lg dark:bg-red-900 dark:text-red-300"
         role="alert"
       >
         {{ error() }}

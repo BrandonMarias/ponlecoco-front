@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { environment } from '../../environments/environment';
 import { TriviaParty } from './triviaparty';
-import { Observable, map } from 'rxjs';
+import { Observable, catchError, map } from 'rxjs';
 
 interface ImageUploadData {
   imageUrl: string;
@@ -38,7 +38,19 @@ export class TriviaPartyService {
   }
 
   updateTriviaParty(id: string, triviaPartyData: Omit<TriviaParty, 'id' | 'userId'>) {
-    return this.http.patch<TriviaParty>(`${this.apiUrl}/${id}`, triviaPartyData);
+    // Remove the 'type' property as backend doesn't expect it for updates
+    const { type, ...dataWithoutType } = triviaPartyData;
+
+    return this.http.patch<TriviaParty>(`${this.apiUrl}/${id}`, dataWithoutType).pipe(
+      catchError((error) => {
+        console.error('Error updating trivia party:', error);
+        console.error('Request data sent:', dataWithoutType);
+        if (error.error && error.error.message) {
+          console.error('Backend validation errors:', error.error.message);
+        }
+        throw error;
+      })
+    );
   }
 
   uploadQuestionImage(image: File): Observable<ImageUploadData> {
@@ -49,6 +61,9 @@ export class TriviaPartyService {
         `${this.apiUrl}/question-image`,
         formData
       )
-      .pipe(map((response) => response.data));
+      .pipe(map((response) => response.data), catchError((error) => {
+        console.error('Error uploading question image:', error);
+        throw error;
+      }));
   }
 }
