@@ -1,5 +1,12 @@
 <div class="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white">
-  @if (loading()) {
+  <!-- Winner Screen -->
+  @if (showWinnerScreen()) {
+    <app-winner
+      [winners]="winners()"
+      [score]="winnerScore()"
+      (close)="onWinnerClose()"
+    ></app-winner>
+  } @else if (loading()) {
     <div class="flex items-center justify-center min-h-screen">
       <div class="text-center">
         <div class="animate-spin rounded-full h-32 w-32 border-b-2 border-white mx-auto"></div>
@@ -17,24 +24,24 @@
     </div>
   } @else {
     <!-- Game Header -->
-    <div class="bg-black/30 backdrop-blur-sm border-b border-white/20 p-4">
-      <div class="container mx-auto flex justify-between items-center">
-        <div class="flex items-center gap-4">
-          <button (click)="goBack()" class="p-2 hover:bg-white/10 rounded-lg transition-colors">
+    <div class="bg-black/30 backdrop-blur-sm border-b border-white/20 p-3 sm:p-4 flex-shrink-0">
+      <div class="container mx-auto flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-0">
+        <div class="flex items-center gap-4 w-full sm:w-auto">
+          <button (click)="goBack()" class="p-2 hover:bg-white/10 rounded-lg transition-colors touch-manipulation">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
             </svg>
           </button>
-          <h1 class="text-xl font-bold">{{ roulette()?.title }}</h1>
+          <h1 class="text-lg sm:text-xl font-bold truncate">{{ roulette()?.title }}</h1>
         </div>
 
         <!-- Scores -->
-        <div class="flex gap-4">
+        <div class="flex gap-2 sm:gap-4 w-full sm:w-auto justify-center sm:justify-end">
           @for (score of getGameState().scores; track $index) {
-            <div class="text-center px-4 py-2 rounded-lg"
+            <div class="text-center px-2 sm:px-4 py-2 rounded-lg flex-1 sm:flex-initial"
                  [class]="$index === getGameState().currentTeam ? 'bg-yellow-500 text-black' : 'bg-white/10'">
-              <div class="text-sm">Equipo {{ $index + 1 }}</div>
-              <div class="text-xl font-bold">{{ score }}</div>
+              <div class="text-xs sm:text-sm">Equipo {{ $index + 1 }}</div>
+              <div class="text-lg sm:text-xl font-bold">{{ score }}</div>
             </div>
           }
         </div>
@@ -42,68 +49,68 @@
     </div>
 
     <!-- Main Game Area -->
-    <div class="container mx-auto p-4 min-h-screen flex flex-col">
+    <div class="container mx-auto p-4 flex flex-col" style="min-height: calc(100vh - 80px)">
       @if (!getGameState().gameStarted) {
         <!-- Game Start Screen -->
-        <div class="flex-grow flex items-center justify-center">
-          <div class="text-center">
-            <h2 class="text-4xl font-bold mb-4">¡Bienvenidos a la Ruleta!</h2>
-            <p class="text-xl mb-8">{{ teamCount }} equipos van a jugar</p>
+        <div class="flex-grow flex items-center justify-center min-h-0">
+          <div class="text-center px-4">
+            <h2 class="text-3xl sm:text-4xl font-bold mb-4">¡Bienvenidos a la Ruleta!</h2>
+            <p class="text-lg sm:text-xl mb-8">{{ teamCount }} equipos van a jugar</p>
             <button (click)="startGame()"
-                    class="px-8 py-4 bg-yellow-500 text-black font-bold text-xl rounded-lg hover:bg-yellow-400 transition-colors">
+                    class="w-full max-w-xs px-8 py-4 bg-yellow-500 text-black font-bold text-lg sm:text-xl rounded-lg hover:bg-yellow-400 transition-colors touch-manipulation min-h-[56px]">
               Iniciar Juego
             </button>
           </div>
         </div>
       } @else if (getGameState().showQuestion && currentQuestion()) {
         <!-- Question Display -->
-        <div class="flex-grow flex items-center justify-center">
-          <div class="max-w-4xl w-full bg-black/50 backdrop-blur-sm rounded-xl p-8 border border-white/20">
-            <div class="text-center mb-6">
-              <div class="text-2xl font-bold mb-2">Equipo {{ getGameState().currentTeam + 1 }}</div>
-              <div class="text-lg text-yellow-400">{{ currentQuestion()?.value }} puntos</div>
+        <div class="flex-grow flex items-center justify-center p-2 min-h-0 overflow-y-auto">
+          <div class="max-w-4xl w-full bg-black/50 backdrop-blur-sm rounded-xl p-2 sm:p-4 border border-white/20">
+            <div class="text-center mb-4 sm:mb-6">
+              <div class="text-xl sm:text-2xl font-bold mb-2">Equipo {{ getGameState().currentTeam + 1 }}</div>
+              <div class="text-base sm:text-lg text-yellow-400">{{ currentQuestion()?.value }} puntos</div>
 
               <!-- Timer -->
               @if (timerActive()) {
                 <div class="mt-4">
-                  <div class="text-5xl font-mono font-bold text-yellow-300"
+                  <div class="text-3xl sm:text-5xl font-mono font-bold"
                        [class]="timeLeft() <= 10 ? 'text-red-400 animate-pulse' : 'text-yellow-300'">
                     {{ formattedTime() }}
                   </div>
-                  <div class="text-sm text-gray-400">Tiempo restante</div>
+                  <div class="text-xs sm:text-sm text-gray-400">Tiempo restante</div>
                 </div>
               }
             </div>
 
-            <div class="text-center mb-8">
-              <h3 class="text-3xl font-bold mb-4">{{ currentQuestion()?.question }}</h3>
+            <div class="text-center mb-6 sm:mb-8">
+              <h3 class="text-xl sm:text-3xl font-bold mb-4">{{ currentQuestion()?.question }}</h3>
               @if (currentQuestion()?.imageUrl) {
                 <img [src]="currentQuestion()?.imageUrl" alt="Pregunta"
-                     class="max-w-md mx-auto rounded-lg shadow-lg">
+                     class="max-w-xs sm:max-w-md mx-auto rounded-lg shadow-lg">
               }
             </div>
 
             @if (!showAnswer()) {
               <div class="text-center">
                 <button (click)="revealAnswer()"
-                        class="px-8 py-4 bg-blue-600 text-white font-bold text-xl rounded-lg hover:bg-blue-700 transition-colors">
+                        class="w-full max-w-xs px-6 sm:px-8 py-3 sm:py-4 bg-blue-600 text-white font-bold text-lg sm:text-xl rounded-lg hover:bg-blue-700 transition-colors touch-manipulation min-h-[56px]">
                   Mostrar Respuesta
                 </button>
               </div>
             } @else {
-              <div class="text-center mb-8">
-                <div class="bg-green-600/20 border border-green-400 rounded-lg p-6 mb-6">
-                  <h4 class="text-2xl font-bold text-green-400 mb-2">Respuesta:</h4>
-                  <p class="text-xl">{{ currentQuestion()?.answer }}</p>
+              <div class="text-center">
+                <div class="bg-green-600/20 border border-green-400 rounded-lg p-4 sm:p-6 mb-6">
+                  <h4 class="text-xl sm:text-2xl font-bold text-green-400 mb-2">Respuesta:</h4>
+                  <p class="text-lg sm:text-xl">{{ currentQuestion()?.answer }}</p>
                 </div>
 
-                <div class="flex justify-center gap-4">
+                <div class="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
                   <button (click)="markCorrect()"
-                          class="px-6 py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition-colors">
+                          class="px-6 py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition-colors touch-manipulation min-h-[56px]">
                     ✓ Correcto
                   </button>
                   <button (click)="markIncorrect()"
-                          class="px-6 py-3 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition-colors">
+                          class="px-6 py-3 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition-colors touch-manipulation min-h-[56px]">
                     ✗ Incorrecto
                   </button>
                 </div>
@@ -113,25 +120,20 @@
         </div>
       } @else if (!getGameState().gameEnded) {
         <!-- Roulette Wheel -->
-        <div class="flex-grow flex flex-col items-center justify-center py-8">
-          <div class="text-center mb-8">
-            <h2 class="text-3xl font-bold mb-2">Turno del Equipo {{ getGameState().currentTeam + 1 }}</h2>
-            @if (!getGameState().showViewQuestionButton) {
-              <p class="text-xl">¡Gira la ruleta para seleccionar una pregunta!</p>
-            } @else {
-              <p class="text-xl">¡La ruleta se ha detenido! Presiona para ver la pregunta</p>
-            }
+        <div class="flex-grow flex flex-col items-center justify-between py-4 sm:py-4 max-h-full">
+          <div class="text-center mb-4 sm:mb-6">
+            <h2 class="text-2xl sm:text-3xl font-bold mb-2">Turno del Equipo {{ getGameState().currentTeam + 1 }}</h2>
           </div>
 
           <!-- Roulette Container -->
-          <div class="relative mb-8">
+          <div class="relative mb-4 sm:mb-6 flex-shrink-0">
             <!-- Arrow Pointer -->
             <div class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2 z-10">
-              <div class="w-0 h-0 border-l-[20px] border-l-transparent border-r-[20px] border-r-transparent border-t-[40px] border-t-yellow-400 drop-shadow-lg"></div>
+              <div class="w-0 h-0 border-l-[15px] border-l-transparent border-r-[15px] border-r-transparent border-t-[30px] border-t-yellow-400 drop-shadow-lg sm:border-l-[20px] sm:border-r-[20px] sm:border-t-[40px]"></div>
             </div>
 
             <!-- Roulette Wheel -->
-            <div class="relative w-96 h-96 mx-auto">
+            <div class="relative w-60 h-60 sm:w-70 sm:h-70 lg:w-96 lg:h-96 mx-auto">
               <img src="/media/img/ruleta.png"
                    alt="Ruleta"
                    class="w-full h-full object-contain"
@@ -140,42 +142,44 @@
           </div>
 
           <!-- Action Buttons -->
-          @if (!getGameState().showViewQuestionButton) {
-            <!-- Spin Button -->
-            <button (click)="spinWheel()"
-                    [disabled]="getGameState().spinning"
-                    class="px-12 py-6 bg-yellow-500 text-black font-bold text-2xl rounded-full hover:bg-yellow-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg">
-              {{ getGameState().spinning ? 'Girando...' : 'GIRAR' }}
-            </button>
-          } @else {
-            <!-- View Question Button -->
-            <button (click)="viewQuestion()"
-                    class="px-12 py-6 bg-green-500 text-white font-bold text-2xl rounded-full hover:bg-green-400 transition-colors shadow-lg">
-              VER PREGUNTA
-            </button>
-          }
+          <div class="pb-4 sm:pb-8">
+            @if (!getGameState().showViewQuestionButton) {
+              <!-- Spin Button -->
+              <button (click)="spinWheel()"
+                      [disabled]="getGameState().spinning"
+                      class="w-full max-w-xs px-8 sm:px-12 py-2 sm:py-3 bg-yellow-500 text-black font-bold text-xl sm:text-2xl rounded-full hover:bg-yellow-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg touch-manipulation min-h-[56px] cursor-pointer">
+                {{ getGameState().spinning ? 'Girando...' : 'GIRAR' }}
+              </button>
+            } @else {
+              <!-- View Question Button -->
+              <button (click)="viewQuestion()"
+                      class="w-full max-w-xs px-8 sm:px-12 py-4 sm:py-6 bg-green-500 text-white font-bold text-xl sm:text-2xl rounded-full hover:bg-green-400 transition-colors shadow-lg touch-manipulation min-h-[56px] cursor-pointer">
+                VER PREGUNTA
+              </button>
+            }
+          </div>
         </div>
-      } @else {
-        <!-- Game End Screen -->
-        <div class="flex-grow flex items-center justify-center">
-          <div class="text-center">
-            <h2 class="text-4xl font-bold mb-8">¡Juego Terminado!</h2>
+      } @else if (getGameState().gameEnded && !showWinnerScreen()) {
+        <!-- Game End Screen (fallback - should not be shown when winner screen is active) -->
+        <div class="flex-grow flex items-center justify-center min-h-0">
+          <div class="text-center px-4">
+            <h2 class="text-3xl sm:text-4xl font-bold mb-6 sm:mb-8">¡Juego Terminado!</h2>
 
             <!-- Final Scores -->
-            <div class="mb-8">
+            <div class="mb-6 sm:mb-8">
               @for (score of getGameState().scores; track $index) {
-                <div class="text-2xl mb-2"
+                <div class="text-lg sm:text-2xl mb-2"
                      [class]="$index === winnerTeam() ? 'text-yellow-400 font-bold' : ''">
                   Equipo {{ $index + 1 }}: {{ score }} puntos
                   @if ($index === winnerTeam()) {
-                    <span class="text-3xl ml-2">🏆</span>
+                    <span class="text-2xl sm:text-3xl ml-2">🏆</span>
                   }
                 </div>
               }
             </div>
 
             <button (click)="goBack()"
-                    class="px-8 py-4 bg-indigo-600 text-white font-bold text-xl rounded-lg hover:bg-indigo-700 transition-colors">
+                    class="w-full max-w-xs px-6 sm:px-8 py-3 sm:py-4 bg-indigo-600 text-white font-bold text-lg sm:text-xl rounded-lg hover:bg-indigo-700 transition-colors touch-manipulation min-h-[56px]">
               Volver al Dashboard
             </button>
           </div>

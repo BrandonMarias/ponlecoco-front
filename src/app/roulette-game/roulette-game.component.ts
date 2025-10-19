@@ -5,6 +5,7 @@ import { RouletteService } from '../roulette/roulette.service';
 import { Roulette, RouletteQuestion } from '../roulette/roulette';
 import { FormsModule } from '@angular/forms';
 import { gsap } from 'gsap';
+import { WinnerComponent } from '../winner/winner.component';
 
 interface GameState {
   currentQuestionIndex: number;
@@ -25,10 +26,16 @@ interface RoulettePosition {
   questionIndex: number;
 }
 
+// Team interface for winner component
+interface Team {
+  name: string;
+  score: number;
+}
+
 @Component({
   selector: 'app-roulette-game',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, WinnerComponent],
   templateUrl: './roulette-game.component.html'
 })
 export class RouletteGameComponent implements OnInit, OnDestroy {
@@ -42,6 +49,11 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
   showAnswer = signal(false);
   teamCount = 1;
   timePerQuestion = 60;
+
+  // Winner screen signals
+  showWinnerScreen = signal(false);
+  winners = signal<Team[]>([]);
+  winnerScore = signal(0);
 
   // Audio management
   private currentSuspenseAudio: HTMLAudioElement | null = null;
@@ -293,7 +305,7 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
     setTimeout(() => {
       this.stopSuspenseSound();
       this.playDrumRollSound();
-      
+
       this.stopTimer();
       this.showAnswer.set(true);
     }, 1000); // 1 second of suspense music before drum roll
@@ -335,6 +347,10 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
       const nextTeam = (state.currentTeam + 1) % this.teamCount;
 
       if (nextQuestionIndex >= state.questionOrder.length) {
+        // Game ended - show winner screen
+        this.showWinnerScreen.set(true);
+        this.determineWinner();
+
         return {
           ...state,
           gameEnded: true,
@@ -353,7 +369,30 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
     });
 
     this.showAnswer.set(false);
-  }  goBack() {
+  }  determineWinner() {
+    const scores = this.getGameState().scores;
+    const maxScore = Math.max(...scores);
+    const winnerTeams: Team[] = [];
+
+    scores.forEach((score, index) => {
+      if (score === maxScore) {
+        winnerTeams.push({
+          name: `Equipo ${index + 1}`,
+          score: score
+        });
+      }
+    });
+
+    this.winners.set(winnerTeams);
+    this.winnerScore.set(maxScore);
+  }
+
+  onWinnerClose() {
+    this.showWinnerScreen.set(false);
+    this.router.navigate(['/dashboard']);
+  }
+
+  goBack() {
     this.router.navigate(['/dashboard']);
   }
 
