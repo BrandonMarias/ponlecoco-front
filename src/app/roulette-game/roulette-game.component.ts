@@ -1,9 +1,10 @@
-import { Component, signal, inject, OnInit, OnDestroy, computed } from '@angular/core';
+import { Component, signal, inject, OnInit, OnDestroy, computed, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { RouletteService } from '../roulette/roulette.service';
 import { Roulette, RouletteQuestion } from '../roulette/roulette';
 import { FormsModule } from '@angular/forms';
+import { gsap } from 'gsap';
 
 interface GameState {
   currentQuestionIndex: number;
@@ -16,8 +17,6 @@ interface GameState {
   spinning: boolean;
   selectedPosition: number;
   showViewQuestionButton: boolean;
-  timeRemaining: number;
-  timerActive: boolean;
 }
 
 interface RoulettePosition {
@@ -36,6 +35,7 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private rouletteService = inject(RouletteService);
+  private cdr = inject(ChangeDetectorRef);
 
   roulette = signal<Roulette | null>(null);
   loading = signal(true);
@@ -47,7 +47,9 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
   // Audio management
   private currentSuspenseAudio: HTMLAudioElement | null = null;
 
-  // Timer management
+  // Timer for questions - separate signal like in TriviaParty
+  timeLeft = signal(0);
+  timerActive = signal(false);
   private timerInterval: any = null;
 
   // Roulette positions with their angles and values
@@ -77,9 +79,7 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
     questionOrder: [],
     spinning: false,
     selectedPosition: 0,
-    showViewQuestionButton: false,
-    timeRemaining: 0,
-    timerActive: false
+    showViewQuestionButton: false
   });
 
   // Public getter for template access
@@ -95,6 +95,13 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
     // USA LA POSICIÓN DONDE CAYÓ LA RULETA
     const questionIndex = state.questionOrder[state.selectedPosition];
     return rouletteData.questions[questionIndex] || null;
+  });
+
+  // Formatted time like in TriviaParty
+  formattedTime = computed(() => {
+    const minutes = Math.floor(this.timeLeft() / 60);
+    const seconds = this.timeLeft() % 60;
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   });
 
   winnerTeam = computed(() => {
@@ -122,6 +129,9 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
     // Stop any playing sounds and timer
     this.stopSuspenseSound();
     this.stopTimer();
+
+    // Kill any active GSAP animations
+    gsap.killTweensOf("*"); // Kill all animations from this component
   }
 
   loadRoulette(id: string) {
@@ -159,9 +169,7 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
       questionOrder: questionOrder,
       spinning: false,
       selectedPosition: 0,
-      showViewQuestionButton: false,
-      timeRemaining: this.timePerQuestion,
-      timerActive: false
+      showViewQuestionButton: false
     });
   }
 
@@ -225,46 +233,57 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
     // Add multiple full rotations for spinning effect
     const fullRotations = 5 + Math.random() * 3; // 5-8 rotations
     const currentRotation = this.wheelRotation();
-    // Calculate final rotation to end exactly at the target angle
-    const spinRotation = currentRotation + (fullRotations * 360);
-    const finalRotation = spinRotation - targetAngle;
 
-    this.wheelRotation.set(finalRotation);
+    // Calculate final rotation to end exactly at the target position
+    // We want the animation to end as close as possible to avoid snapping
+    const exactFinalPosition = -targetAngle; // Exact position where arrow points to target
+    const totalRotation = currentRotation + (fullRotations * 360);
+    const finalRotation = totalRotation + exactFinalPosition - (totalRotation % 360);
 
-    // Stop spinning after 7 seconds and ensure correct final position
-    setTimeout(() => {
-      // Force exact positioning after spin animation completes
-      const exactFinalRotation = Math.floor(finalRotation / 360) * 360 - targetAngle;
-      this.wheelRotation.set(exactFinalRotation);
+    // Create animation object to animate
+    const animationTarget = { rotation: currentRotation };
 
-      // Play points double sound when roulette stops
-      this.playPointsDoubleSound();
+    // Use GSAP for smooth animation
+    gsap.to(animationTarget, {
+      rotation: finalRotation,
+      duration: 7,
+      ease: "power2.out", // Less aggressive deceleration than power3.out
+      onUpdate: () => {
+        // Update the signal with the current animated value
+        this.wheelRotation.set(animationTarget.rotation);
+      },
+      onComplete: () => {
+        // Ensure exact final position (should be minimal adjustment now)
+        this.wheelRotation.set(exactFinalPosition);
 
-      // Show "View Question" button after points double sound
-      setTimeout(() => {
-        this.gameState.update(state => ({
-          ...state,
-          spinning: false,
-          selectedPosition: targetPosition,
-          showViewQuestionButton: true,
-          showQuestion: false
-        }));
-      }, 500); // Wait 1 second after points double sound
-    }, 7000); // 7 seconds for roulette spinning
+        // Play points double sound when roulette stops
+        this.playPointsDoubleSound();        // Show "View Question" button after points double sound
+        setTimeout(() => {
+          this.gameState.update(state => ({
+            ...state,
+            spinning: false,
+            selectedPosition: targetPosition,
+            showViewQuestionButton: true,
+            showQuestion: false
+          }));
+        }, 500);
+      }
+    });
   }
 
   viewQuestion() {
-
     this.playSuspenseSound();
-    // Show the question and start timer (NO suspense sound yet)
+
+    // Show the question and start timer
     this.gameState.update(state => ({
       ...state,
       showViewQuestionButton: false,
-      showQuestion: true,
-      timeRemaining: this.timePerQuestion,
-      timerActive: true
+      showQuestion: true
     }));
 
+    // Initialize timer like in TriviaParty
+    this.timeLeft.set(this.timePerQuestion);
+    this.timerActive.set(true);
     this.showAnswer.set(false);
     this.startTimer();
   }
@@ -321,9 +340,7 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
           ...state,
           gameEnded: true,
           showQuestion: false,
-          showViewQuestionButton: false,
-          timeRemaining: 0,
-          timerActive: false
+          showViewQuestionButton: false
         };
       }
 
@@ -332,9 +349,7 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
         currentQuestionIndex: nextQuestionIndex,
         currentTeam: nextTeam,
         showQuestion: false,
-        showViewQuestionButton: false,
-        timeRemaining: this.timePerQuestion,
-        timerActive: false
+        showViewQuestionButton: false
       };
     });
 
@@ -343,42 +358,23 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
     this.router.navigate(['/dashboard']);
   }
 
-  formatTime(seconds: number): string {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  }
-
   private startTimer() {
     this.stopTimer(); // Clear any existing timer
 
     this.timerInterval = setInterval(() => {
-      this.gameState.update(state => {
-        const newTime = state.timeRemaining - 1;
+      this.timeLeft.update(t => t - 1);
 
-        if (newTime <= 0) {
-          // Time's up
-          this.stopTimer();
-          this.playTimeUpSound();
-          // Auto reveal answer when time is up
-          setTimeout(() => {
-            if (!this.showAnswer()) {
-              this.revealAnswer();
-            }
-          }, 1000);
-
-          return {
-            ...state,
-            timeRemaining: 0,
-            timerActive: false
-          };
-        }
-
-        return {
-          ...state,
-          timeRemaining: newTime
-        };
-      });
+      if (this.timeLeft() <= 0) {
+        // Time's up
+        this.stopTimer();
+        this.playTimeUpSound();
+        // Auto reveal answer when time is up
+        setTimeout(() => {
+          if (!this.showAnswer()) {
+            this.revealAnswer();
+          }
+        }, 1000);
+      }
     }, 1000);
   }
 
@@ -387,11 +383,7 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
       clearInterval(this.timerInterval);
       this.timerInterval = null;
     }
-
-    this.gameState.update(state => ({
-      ...state,
-      timerActive: false
-    }));
+    this.timerActive.set(false);
   }
 
   private playCorrectSound() {

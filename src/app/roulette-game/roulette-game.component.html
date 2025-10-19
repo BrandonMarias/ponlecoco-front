@@ -64,11 +64,11 @@
               <div class="text-lg text-yellow-400">{{ currentQuestion()?.value }} puntos</div>
 
               <!-- Timer -->
-              @if (getGameState().timerActive) {
+              @if (timerActive()) {
                 <div class="mt-4">
-                  <div class="text-3xl font-bold"
-                       [class]="getGameState().timeRemaining <= 10 ? 'text-red-400 animate-pulse' : 'text-white'">
-                    {{ formatTime(getGameState().timeRemaining) }}
+                  <div class="text-5xl font-mono font-bold text-yellow-300"
+                       [class]="timeLeft() <= 10 ? 'text-red-400 animate-pulse' : 'text-yellow-300'">
+                    {{ formattedTime() }}
                   </div>
                   <div class="text-sm text-gray-400">Tiempo restante</div>
                 </div>
@@ -135,8 +135,7 @@
               <img src="/media/img/ruleta.png"
                    alt="Ruleta"
                    class="w-full h-full object-contain"
-                   [style.transform]="'rotate(' + wheelRotation() + 'deg)'"
-                   [style.transition]="getGameState().spinning ? 'transform 7s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none'">
+                   [style.transform]="'rotate(' + wheelRotation() + 'deg)'">
             </div>
           </div>
 
