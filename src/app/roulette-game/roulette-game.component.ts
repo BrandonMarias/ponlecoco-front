@@ -1,4 +1,4 @@
-import { Component, signal, inject, OnInit, OnDestroy, computed, ChangeDetectorRef } from '@angular/core';
+import { Component, signal, inject, OnInit, OnDestroy, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { RouletteService } from '../roulette/roulette.service';
@@ -35,7 +35,6 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private rouletteService = inject(RouletteService);
-  private cdr = inject(ChangeDetectorRef);
 
   roulette = signal<Roulette | null>(null);
   loading = signal(true);
@@ -47,7 +46,7 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
   // Audio management
   private currentSuspenseAudio: HTMLAudioElement | null = null;
 
-  // Timer for questions - separate signal like in TriviaParty
+  // Timer signals
   timeLeft = signal(0);
   timerActive = signal(false);
   private timerInterval: any = null;
@@ -92,12 +91,12 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
     const rouletteData = this.roulette();
     if (!rouletteData || state.questionOrder.length === 0) return null;
 
-    // USA LA POSICIÓN DONDE CAYÓ LA RULETA
+    // Get question based on selected roulette position
     const questionIndex = state.questionOrder[state.selectedPosition];
     return rouletteData.questions[questionIndex] || null;
   });
 
-  // Formatted time like in TriviaParty
+  // Formatted time display
   formattedTime = computed(() => {
     const minutes = Math.floor(this.timeLeft() / 60);
     const seconds = this.timeLeft() % 60;
@@ -281,7 +280,7 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
       showQuestion: true
     }));
 
-    // Initialize timer like in TriviaParty
+    // Initialize timer
     this.timeLeft.set(this.timePerQuestion);
     this.timerActive.set(true);
     this.showAnswer.set(false);
@@ -289,13 +288,13 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
   }
 
   revealAnswer() {
-    // Stop timer first
-    this.stopTimer();
 
     // Small delay then play drum roll and show answer
     setTimeout(() => {
       this.stopSuspenseSound();
       this.playDrumRollSound();
+      
+      this.stopTimer();
       this.showAnswer.set(true);
     }, 1000); // 1 second of suspense music before drum roll
   }
@@ -359,7 +358,7 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
   }
 
   private startTimer() {
-    this.stopTimer(); // Clear any existing timer
+    this.clearTimer(); // Clear any existing timer without changing timerActive
 
     this.timerInterval = setInterval(() => {
       this.timeLeft.update(t => t - 1);
@@ -378,11 +377,15 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
     }, 1000);
   }
 
-  private stopTimer() {
+  private clearTimer() {
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
       this.timerInterval = null;
     }
+  }
+
+  private stopTimer() {
+    this.clearTimer();
     this.timerActive.set(false);
   }
 
