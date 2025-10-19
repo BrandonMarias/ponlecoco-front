@@ -4,7 +4,8 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { finalize } from 'rxjs';
 import { AuthService } from '../auth.service';
-import { SocialAuthService, GoogleLoginProvider } from '@abacritt/angularx-social-login';
+// Temporarily disable social auth
+// import { SocialAuthService, GoogleLoginProvider } from '@abacritt/angularx-social-login';
 
 declare global {
   interface Window {
@@ -23,7 +24,8 @@ export default class LoginComponent implements OnInit, AfterViewInit {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
-  private socialAuthService = inject(SocialAuthService);
+  // Temporarily disable social auth service
+  // private socialAuthService = inject(SocialAuthService);
 
   loading = signal(false);
   error = signal<string | null>(null);
@@ -34,6 +36,8 @@ export default class LoginComponent implements OnInit, AfterViewInit {
   });
 
   ngOnInit() {
+    // Temporarily disable Google Auth integration
+    /*
     this.socialAuthService.authState.subscribe((user) => {
       if (user && user.idToken) {
         this.loading.set(true);
@@ -48,6 +52,7 @@ export default class LoginComponent implements OnInit, AfterViewInit {
         });
       }
     });
+    */
   }
 
   ngAfterViewInit() {
@@ -94,12 +99,16 @@ export default class LoginComponent implements OnInit, AfterViewInit {
 
   // Fallback method for manual Google Sign-In (optional)
   signInWithGoogle(): void {
+    // Temporarily disable Google Sign-In
+    console.log('Google Sign-In temporally disabled');
+    /*
     if (typeof window !== 'undefined' && window.google) {
       window.google.accounts.id.prompt();
     } else {
       // Fallback to angularx-social-login if Google Identity Services is not available
       this.socialAuthService.signIn(GoogleLoginProvider.PROVIDER_ID);
     }
+    */
   }
 
   onSubmit() {
