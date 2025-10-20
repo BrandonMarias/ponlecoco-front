@@ -13,11 +13,12 @@ import { finalize, switchMap, of, Observable, forkJoin, map, tap } from 'rxjs';
 import { Roulette } from '../roulette';
 import { ModalService } from '../../shared/modal.service';
 import { ImageCompressionService } from '../../shared/image-compression.service';
+import QuestionFormComponent from '../../shared/question-form/question-form.component';
 
 @Component({
   selector: 'app-create-roulette',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, QuestionFormComponent],
   templateUrl: './create-roulette.component.html',
 })
 export default class CreateRouletteComponent implements OnInit, OnDestroy {
@@ -149,19 +150,23 @@ export default class CreateRouletteComponent implements OnInit, OnDestroy {
     return this.questions.controls.indexOf(questionGroup);
   }
 
-  async onFileSelected(event: Event, questionIndex: number) {
-    const fileInput = event.target as HTMLInputElement;
-    if (!fileInput.files || fileInput.files.length === 0) {
-      return;
-    }
+  async onFileSelected(eventOrFile: Event | File, questionIndex: number) {
+    let file: File;
 
-    const file = fileInput.files[0];
+    if (eventOrFile instanceof File) {
+      file = eventOrFile;
+    } else {
+      const fileInput = eventOrFile.target as HTMLInputElement;
+      if (!fileInput.files || fileInput.files.length === 0) {
+        return;
+      }
+      file = fileInput.files[0];
+    }
     const imageId = `question-${questionIndex}`;
 
     // First validate file type
     if (!file.type.startsWith('image/')) {
       this.error.set('Por favor, selecciona un archivo de imagen válido.');
-      fileInput.value = '';
       return;
     }
 
@@ -194,7 +199,6 @@ export default class CreateRouletteComponent implements OnInit, OnDestroy {
       const validation = this.imageCompressionService.validateImageFile(result.file);
       if (!validation.isValid) {
         this.error.set(validation.errorMessage!);
-        fileInput.value = '';
         return;
       }
 
@@ -222,7 +226,6 @@ export default class CreateRouletteComponent implements OnInit, OnDestroy {
 
       console.error('Error al procesar la imagen:', error);
       this.error.set('Error al procesar la imagen. Por favor, intenta con otra imagen.');
-      fileInput.value = '';
     }
   }
 
@@ -246,6 +249,11 @@ export default class CreateRouletteComponent implements OnInit, OnDestroy {
   isImageCompressing(questionIndex: number): boolean {
     const imageId = `question-${questionIndex}`;
     return this.compressingImages().has(imageId);
+  }
+
+  generateRouletteWithAI() {
+    // TODO: Implementar generación de ruleta con IA
+    console.log('Generar ruleta con IA - Próximamente');
   }
 
   onSubmit() {

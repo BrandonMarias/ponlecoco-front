@@ -1,88 +1,24 @@
 <div class="container mx-auto p-4 pb-20 text-gray-800 dark:text-white">
   <!-- Dynamic Title -->
   <h1 class="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6">
-    @if (isEditMode()) { Editar TriviaParty } @else { Crear una Nueva TriviaParty }
+    @if (isEditMode()) {
+      Editar TriviaParty
+    } @else {
+      Crear Nueva TriviaParty
+    }
   </h1>
 
   @if (loading() && isEditMode()) {
-  <p class="dark:text-gray-300">Cargando datos de la trivia...</p>
+    <p class="dark:text-gray-300">Cargando datos de la trivia...</p>
   } @else {
-    <!-- Trivia Type Selection (only for new trivias) -->
-    @if (!isEditMode() && !selectedTriviaType()) {
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 mb-6 sm:mb-8">
-      <h2 class="text-xl sm:text-2xl font-semibold mb-4 text-center">Selecciona el tipo de trivia</h2>
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
-        <!-- TriviaParty Option -->
-        <button
-          type="button"
-          (click)="selectTriviaType('triviaparty')"
-          class="flex flex-col items-center p-4 sm:p-6 border-2 border-gray-300 rounded-lg hover:border-blue-500 hover:shadow-md transition-all duration-200 dark:border-gray-600 dark:hover:border-blue-400 touch-manipulation min-h-[140px] sm:min-h-auto"
-        >
-          <img
-            src="/media/img/triviaparty.png"
-            alt="TriviaParty"
-            class="w-16 h-16 sm:w-24 sm:h-24 mb-3 sm:mb-4 object-contain"
-          />
-          <h3 class="text-lg sm:text-xl font-semibold mb-2">TriviaParty</h3>
-          <p class="text-gray-600 dark:text-gray-400 text-center text-sm sm:text-base">
-            Trivia clásica con categorías y preguntas de diferentes valores
-          </p>
-        </button>
-
-        <!-- Ruleta Option -->
-        <button
-          type="button"
-          (click)="selectTriviaType('ruleta')"
-          class="flex flex-col items-center p-4 sm:p-6 border-2 border-gray-300 rounded-lg hover:border-green-500 hover:shadow-md transition-all duration-200 dark:border-gray-600 dark:hover:border-green-400 touch-manipulation min-h-[140px] sm:min-h-auto"
-        >
-          <img
-            src="/media/img/ruleta.png"
-            alt="Ruleta"
-            class="w-16 h-16 sm:w-24 sm:h-24 mb-3 sm:mb-4 object-contain"
-          />
-          <h3 class="text-lg sm:text-xl font-semibold mb-2">Ruleta</h3>
-          <p class="text-gray-600 dark:text-gray-400 text-center text-sm sm:text-base">
-            Trivia con formato de ruleta de la fortuna
-          </p>
-        </button>
-      </div>
-    </div>
-    } @else {
-    <!-- Main Form (shown after type selection or in edit mode) -->
+    <!-- Main Form -->
     <form [formGroup]="triviaPartyForm" (ngSubmit)="onSubmit()" class="space-y-6 sm:space-y-8">
-      <!-- Selected Type Display -->
-      @if (selectedTriviaType()) {
-      <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-600 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
-        <div class="flex items-center gap-3 sm:gap-4">
-          <img
-            [src]="selectedTriviaType() === 'triviaparty' ? '/media/img/triviaparty.png' : '/media/img/ruleta.png'"
-            [alt]="selectedTriviaType()"
-            class="w-10 h-10 sm:w-12 sm:h-12 object-contain"
-          />
-          <div>
-            <h3 class="text-base sm:text-lg font-semibold text-blue-800 dark:text-blue-200">
-              Tipo: {{ selectedTriviaType() === 'triviaparty' ? 'TriviaParty' : 'Ruleta' }}
-            </h3>
-            @if (!isEditMode()) {
-            <button
-              type="button"
-              (click)="selectedTriviaType.set(null); triviaPartyForm.patchValue({type: ''})"
-              class="text-sm text-blue-600 dark:text-blue-400 hover:underline touch-manipulation"
-            >
-              Cambiar tipo
-            </button>
-            }
-          </div>
-        </div>
-      </div>
-      }
-
       <!-- TriviaParty Title -->
       <div>
         <label
           for="title"
           class="block text-base sm:text-lg font-medium text-gray-700 dark:text-gray-300 mb-2"
-          >Título de la {{ selectedTriviaType() === 'triviaparty' ? 'TriviaParty' : 'Ruleta' }}</label
+          >Título de la Trivia</label
         >
         <input
           type="text"
@@ -187,111 +123,17 @@
             <h4 class="text-base sm:text-lg font-medium">Preguntas</h4>
             @for (question of questions(catIndex).controls; track $index; let
             qIndex = $index) {
-            <div
-              [formGroupName]="qIndex"
-              class="p-3 border border-gray-200 rounded bg-white dark:bg-gray-700 dark:border-gray-600"
-            >
-              <p class="font-semibold dark:text-white mb-3">
-                Pregunta por
-                {{ questions(catIndex).at(qIndex).get("value")?.value }} puntos
-              </p>
-              <div class="grid grid-cols-1 gap-4">
-                <div>
-                  <label
-                    [for]="'q-' + catIndex + '-' + qIndex"
-                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                    >Pregunta</label
-                  >
-                  <textarea
-                    [id]="'q-' + catIndex + '-' + qIndex"
-                    formControlName="question"
-                    rows="3"
-                    class="mt-1 block w-full px-3 py-3 sm:py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-base sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
-                  ></textarea>
-                  @if(questions(catIndex).at(qIndex).get('question')?.invalid &&
-                  questions(catIndex).at(qIndex).get('question')?.touched) {
-                  <div class="text-red-600 text-sm mt-1 dark:text-red-400">
-                    La pregunta es requerida.
-                  </div>
-                  }
-                </div>
-                <div>
-                  <label
-                    [for]="'a-' + catIndex + '-' + qIndex"
-                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                    >Respuesta</label
-                  >
-                  <textarea
-                    [id]="'a-' + catIndex + '-' + qIndex"
-                    formControlName="answer"
-                    rows="3"
-                    class="mt-1 block w-full px-3 py-3 sm:py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-base sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
-                  ></textarea>
-                  @if(questions(catIndex).at(qIndex).get('answer')?.invalid &&
-                  questions(catIndex).at(qIndex).get('answer')?.touched) {
-                  <div class="text-red-600 text-sm mt-1 dark:text-red-400">
-                    La respuesta es requerida.
-                  </div>
-                  }
-                </div>
-              </div>
-              <!-- Image Upload Section -->
-              <div class="mt-4">
-                <label
-                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >
-                  Imagen (Opcional)
-                </label>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                  Formatos soportados: JPG, PNG, GIF, etc.
-                </p>
-                <div class="flex flex-col gap-3">
-                  <input
-                    type="file"
-                    [id]="'img-' + catIndex + '-' + qIndex"
-                    (change)="onFileSelected($event, catIndex, qIndex)"
-                    class="hidden"
-                    accept="image/*"
-                    #fileInput
-                  />
-
-                  @if (!getPreviewUrl(catIndex, qIndex) && !questions(catIndex).at(qIndex).get('imageUrl')?.value && !isImageCompressing(catIndex, qIndex)) {
-                  <button
-                    type="button"
-                    (click)="fileInput.click()"
-                    class="w-full sm:w-auto cursor-pointer px-4 py-3 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700 touch-manipulation min-h-[44px] flex items-center justify-center"
-                  >
-                    <span>📷 Seleccionar Imagen</span>
-                  </button>
-                  }
-                  @if (isImageCompressing(catIndex, qIndex)) {
-                  <div class="flex items-center gap-2 px-3 py-3 bg-blue-50 border border-blue-200 rounded-md dark:bg-blue-900/20 dark:border-blue-600">
-                    <svg class="animate-spin h-4 w-4 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24">
-                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    <span class="text-sm text-blue-700 dark:text-blue-300">Comprimiendo imagen...</span>
-                  </div>
-                  }
-                  @if (getPreviewUrl(catIndex, qIndex) || questions(catIndex).at(qIndex).get('imageUrl')?.value) {
-                  <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                    <img
-                      [src]="getPreviewUrl(catIndex, qIndex) || questions(catIndex).at(qIndex).get('imageUrl')?.value"
-                      alt="Preview"
-                      class="h-20 w-20 sm:h-16 sm:w-16 object-cover rounded"
-                    />
-                    <button
-                      type="button"
-                      (click)="removeImage(catIndex, qIndex)"
-                      class="w-full sm:w-auto px-3 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 touch-manipulation min-h-[44px]"
-                    >
-                      🗑️ Quitar Imagen
-                    </button>
-                  </div>
-                  }
-                </div>
-              </div>
-            </div>
+            <app-question-form
+              [questionForm]="$any(questions(catIndex).at(qIndex))"
+              [questionId]="catIndex + '-' + qIndex"
+              [questionTitle]="'Pregunta por ' + questions(catIndex).at(qIndex).get('value')?.value + ' puntos'"
+              [previewUrl]="getPreviewUrl(catIndex, qIndex)"
+              [isCompressing]="isImageCompressing(catIndex, qIndex)"
+              [questionRows]="3"
+              [answerRows]="3"
+              (fileSelected)="onFileSelectedFromComponent($event, catIndex, qIndex)"
+              (imageRemoved)="removeImage(catIndex, qIndex)"
+            />
             }
           </div>
         </div>
@@ -346,7 +188,7 @@
           <span>Guardando...</span>
           } @else {
           <span>
-            @if (isEditMode()) { 💾 Guardar Cambios } @else { 💾 Guardar {{ selectedTriviaType() === 'triviaparty' ? 'TriviaParty' : 'Ruleta' }} }
+            @if (isEditMode()) { 💾 Guardar Cambios } @else { 💾 Guardar Trivia }
           </span>
           }
         </button>
@@ -360,6 +202,5 @@
       </div>
       }
     </form>
-    }
   }
 </div>

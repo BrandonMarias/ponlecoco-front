@@ -16,11 +16,12 @@ import { AiService } from '../../shared/ai.service';
 import { ModalService } from '../../shared/modal.service';
 import { AiCategoryResponse } from '../../shared/ai.interface';
 import { ImageCompressionService } from '../../shared/image-compression.service';
+import QuestionFormComponent from '../../shared/question-form/question-form.component';
 
 @Component({
   selector: 'app-create-triviaparty',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, QuestionFormComponent],
   templateUrl: './create-triviaparty.component.html',
 })
 export default class CreateTriviaPartyComponent implements OnInit, OnDestroy {
@@ -37,14 +38,13 @@ export default class CreateTriviaPartyComponent implements OnInit, OnDestroy {
   error = signal<string | null>(null);
   compressingImages = signal<Set<string>>(new Set());
   isEditMode = signal(false);
-  selectedTriviaType = signal<'triviaparty' | 'ruleta' | null>(null);
   private triviaPartyId: string | null = null;
   private previewUrls = new Map<FormGroup, string>();
 
   constructor() {
     this.triviaPartyForm = this.fb.group({
       title: ['', Validators.required],
-      type: ['', Validators.required],
+      type: ['triviaparty'], // Siempre es triviaparty desde esta ruta
       categories: this.fb.array(
         [],
         [Validators.required, Validators.minLength(1)]
@@ -84,18 +84,11 @@ export default class CreateTriviaPartyComponent implements OnInit, OnDestroy {
     this.previewUrls.forEach(url => URL.revokeObjectURL(url));
   }
 
-  selectTriviaType(type: 'triviaparty' | 'ruleta') {
-    this.selectedTriviaType.set(type);
-    this.triviaPartyForm.patchValue({ type });
-  }
-
   patchForm(triviaParty: TriviaParty) {
     this.triviaPartyForm.patchValue({
       title: triviaParty.title,
-      type: triviaParty.type || 'triviaparty',
+      type: 'triviaparty', // Siempre es triviaparty
     });
-
-    this.selectedTriviaType.set(triviaParty.type || 'triviaparty');
 
     triviaParty.categories.forEach((cat) => {
       const questionsFGs = cat.questions.map((q) => {
@@ -218,6 +211,17 @@ export default class CreateTriviaPartyComponent implements OnInit, OnDestroy {
     } else {
       doublePointsControl?.setValue(questionIndex);
     }
+  }
+
+  // Wrapper method for the shared component
+  async onFileSelectedFromComponent(file: File, catIndex: number, qIndex: number) {
+    // Create a mock event for compatibility with existing method
+    const mockEvent = {
+      target: {
+        files: [file]
+      }
+    } as any;
+    await this.onFileSelected(mockEvent, catIndex, qIndex);
   }
 
   async onFileSelected(event: Event, catIndex: number, qIndex: number) {

@@ -1,237 +1,164 @@
 <div class="container mx-auto p-4 pb-20 text-gray-800 dark:text-white">
   <!-- Dynamic Title -->
-  <h1 class="text-3xl font-bold mb-6 flex items-center gap-3">
-    <img src="/media/img/ruleta.png" alt="Ruleta" class="w-10 h-10 object-contain" />
-    @if (isEditMode()) { Editar Ruleta } @else { Crear una Nueva Ruleta }
+  <h1 class="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6">
+    @if (isEditMode()) {
+      Editar Ruleta
+    } @else {
+      Crear Nueva Ruleta
+    }
   </h1>
 
   @if (loading() && isEditMode()) {
-  <p class="dark:text-gray-300">Cargando datos de la ruleta...</p>
+    <p class="dark:text-gray-300">Cargando datos de la ruleta...</p>
   } @else {
-  <form [formGroup]="rouletteForm" (ngSubmit)="onSubmit()" class="space-y-8">
-    <!-- Roulette Title -->
-    <div>
-      <label
-        for="title"
-        class="block text-lg font-medium text-gray-700 dark:text-gray-300"
-        >Título de la Ruleta</label
-      >
-      <input
-        type="text"
-        id="title"
-        formControlName="title"
-        class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
-        placeholder="Ej: Ruleta del Conocimiento"
-      />
-      @if (rouletteForm.get('title')?.invalid &&
-      rouletteForm.get('title')?.touched) {
-      <div class="text-red-600 text-sm mt-1 dark:text-red-400">
-        El título es requerido.
+    <!-- Main Form -->
+    <form [formGroup]="rouletteForm" (ngSubmit)="onSubmit()" class="space-y-6 sm:space-y-8">
+      <!-- Roulette Title -->
+      <div>
+        <label
+          for="title"
+          class="block text-base sm:text-lg font-medium text-gray-700 dark:text-gray-300 mb-2"
+        >
+          Título de la Ruleta
+        </label>
+        <input
+          type="text"
+          id="title"
+          formControlName="title"
+          class="mt-1 block w-full px-3 py-3 sm:py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-base sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+          placeholder="Ej: Ruleta del Conocimiento"
+        />
+        @if (rouletteForm.get('title')?.invalid && rouletteForm.get('title')?.touched) {
+        <div class="text-red-600 text-sm mt-1 dark:text-red-400">
+          El título es requerido.
+        </div>
+        }
       </div>
-      }
-    </div>
 
-    <!-- Instructions -->
-    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-600 rounded-lg p-4">
-      <div class="flex items-start gap-3">
-        <svg class="w-6 h-6 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-        </svg>
-        <div>
-          <h3 class="text-lg font-semibold text-blue-800 dark:text-blue-200 mb-2">
-            Estructura de la Ruleta
-          </h3>
-          <p class="text-blue-700 dark:text-blue-300 text-sm">
-            La ruleta contiene exactamente 12 preguntas distribuidas de la siguiente manera:
-          </p>
-          <ul class="text-blue-700 dark:text-blue-300 text-sm mt-2 list-disc list-inside">
-            <li>3 preguntas de 100 puntos</li>
-            <li>2 preguntas de 200 puntos</li>
-            <li>2 preguntas de 300 puntos</li>
-            <li>3 preguntas de 400 puntos</li>
-            <li>2 preguntas de 500 puntos</li>
-          </ul>
+      <!-- Instructions -->
+      <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-600 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
+        <div class="flex items-start gap-3 sm:gap-4">
+          <svg class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+          </svg>
+          <div>
+            <h3 class="text-base sm:text-lg font-semibold text-blue-800 dark:text-blue-200 mb-2">
+              Estructura de la Ruleta
+            </h3>
+            <p class="text-blue-700 dark:text-blue-300 text-sm">
+              La ruleta contiene exactamente 12 preguntas distribuidas de la siguiente manera:
+            </p>
+            <ul class="text-blue-700 dark:text-blue-300 text-sm mt-2 list-disc list-inside space-y-1">
+              <li>3 preguntas de 100 puntos</li>
+              <li>2 preguntas de 200 puntos</li>
+              <li>2 preguntas de 300 puntos</li>
+              <li>3 preguntas de 400 puntos</li>
+              <li>2 preguntas de 500 puntos</li>
+            </ul>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Questions by Value -->
-    <div formArrayName="questions" class="space-y-8">
-      @for (valueConfig of [
-        { value: 100, count: 3, color: 'bg-green-600' },
-        { value: 200, count: 2, color: 'bg-blue-600' },
-        { value: 300, count: 2, color: 'bg-purple-600' },
-        { value: 400, count: 3, color: 'bg-orange-600' },
-        { value: 500, count: 2, color: 'bg-red-600' }
-      ]; track valueConfig.value) {
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg border border-gray-200 dark:border-gray-700">
-          <div class="flex items-center gap-3 mb-6">
+      <!-- Questions by Value -->
+      <div formArrayName="questions" class="space-y-4 sm:space-y-6">
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+          <h2 class="text-xl sm:text-2xl font-semibold">Preguntas de la Ruleta</h2>
+          <button
+            type="button"
+            (click)="generateRouletteWithAI()"
+            [disabled]="true"
+            class="w-full sm:w-auto px-4 py-3 font-medium text-white rounded-md bg-pink-500 hover:bg-pink-600 disabled:bg-gray-400 cursor-pointer touch-manipulation min-h-[44px] flex items-center justify-center"
+          >
+            🤖 Generar Ruleta con IA (Próximamente)
+          </button>
+        </div>
+        
+        @for (valueConfig of [
+          { value: 100, count: 3, color: 'bg-green-600' },
+          { value: 200, count: 2, color: 'bg-blue-600' },
+          { value: 300, count: 2, color: 'bg-purple-600' },
+          { value: 400, count: 3, color: 'bg-orange-600' },
+          { value: 500, count: 2, color: 'bg-red-600' }
+        ]; track valueConfig.value) {
+        <div class="p-3 sm:p-4 border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
+          <div class="flex items-center gap-3 mb-4">
             <div class="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
                  [ngClass]="valueConfig.color">
               {{ valueConfig.value }}
             </div>
-            <h2 class="text-xl font-semibold">
+            <h3 class="text-lg sm:text-xl font-medium">
               Preguntas de {{ valueConfig.value }} puntos
               <span class="text-sm font-normal text-gray-500 dark:text-gray-400">
                 ({{ valueConfig.count }} preguntas)
               </span>
-            </h2>
+            </h3>
           </div>
 
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- Questions -->
+          <div class="mt-4 space-y-4">
             @for (questionGroup of getQuestionsByValue(valueConfig.value); track getQuestionIndex(questionGroup); let qIndex = $index) {
-              <div
-                [formGroupName]="getQuestionIndex(questionGroup)"
-                class="p-4 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700">
-                <h4 class="font-semibold mb-3 text-gray-900 dark:text-white">
-                  Pregunta {{ qIndex + 1 }} - {{ valueConfig.value }} pts
-                </h4>
-
-                <div class="space-y-4">
-                  <!-- Question -->
-                  <div>
-                    <label
-                      [for]="'question-' + getQuestionIndex(questionGroup)"
-                      class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                      >Pregunta</label
-                    >
-                    <textarea
-                      [id]="'question-' + getQuestionIndex(questionGroup)"
-                      formControlName="question"
-                      rows="2"
-                      class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
-                      placeholder="Escribe la pregunta aquí..."
-                    ></textarea>
-                    @if(questionGroup.get('question')?.invalid && questionGroup.get('question')?.touched) {
-                    <div class="text-red-600 text-sm mt-1 dark:text-red-400">
-                      La pregunta es requerida.
-                    </div>
-                    }
-                  </div>
-
-                  <!-- Answer -->
-                  <div>
-                    <label
-                      [for]="'answer-' + getQuestionIndex(questionGroup)"
-                      class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                      >Respuesta</label
-                    >
-                    <textarea
-                      [id]="'answer-' + getQuestionIndex(questionGroup)"
-                      formControlName="answer"
-                      rows="2"
-                      class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
-                      placeholder="Escribe la respuesta aquí..."
-                    ></textarea>
-                    @if(questionGroup.get('answer')?.invalid && questionGroup.get('answer')?.touched) {
-                    <div class="text-red-600 text-sm mt-1 dark:text-red-400">
-                      La respuesta es requerida.
-                    </div>
-                    }
-                  </div>
-
-                  <!-- Image Upload -->
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Imagen (Opcional)
-                    </label>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                      Formatos soportados: JPG, PNG, GIF, etc.
-                    </p>
-                    <div class="flex items-center gap-4">
-                      <input
-                        type="file"
-                        [id]="'img-' + getQuestionIndex(questionGroup)"
-                        (change)="onFileSelected($event, getQuestionIndex(questionGroup))"
-                        class="hidden"
-                        accept="image/*"
-                        #fileInput
-                      />
-
-                      @if (!getPreviewUrl(getQuestionIndex(questionGroup)) && !questionGroup.get('imageUrl')?.value && !isImageCompressing(getQuestionIndex(questionGroup))) {
-                      <button
-                        type="button"
-                        (click)="fileInput.click()"
-                        class="cursor-pointer px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700">
-                        <span>Seleccionar Imagen</span>
-                      </button>
-                      }
-
-                      @if (isImageCompressing(getQuestionIndex(questionGroup))) {
-                      <div class="flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-md dark:bg-blue-900/20 dark:border-blue-600">
-                        <svg class="animate-spin h-4 w-4 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24">
-                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        <span class="text-sm text-blue-700 dark:text-blue-300">Comprimiendo imagen...</span>
-                      </div>
-                      }
-
-                      @if (getPreviewUrl(getQuestionIndex(questionGroup)) || questionGroup.get('imageUrl')?.value) {
-                      <div class="flex items-center gap-2">
-                        <img
-                          [src]="getPreviewUrl(getQuestionIndex(questionGroup)) || questionGroup.get('imageUrl')?.value"
-                          alt="Preview"
-                          class="h-16 w-16 object-cover rounded"
-                        />
-                        <button
-                          type="button"
-                          (click)="removeImage(getQuestionIndex(questionGroup))"
-                          class="px-2 py-1 text-xs font-medium text-white bg-red-600 rounded-md hover:bg-red-700">
-                          Quitar
-                        </button>
-                      </div>
-                      }
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <app-question-form
+                [questionForm]="questionGroup"
+                [questionId]="getQuestionIndex(questionGroup).toString()"
+                [questionTitle]="'Pregunta ' + (qIndex + 1) + ' por ' + valueConfig.value + ' puntos'"
+                [previewUrl]="getPreviewUrl(getQuestionIndex(questionGroup))"
+                [isCompressing]="isImageCompressing(getQuestionIndex(questionGroup))"
+                [questionRows]="2"
+                [answerRows]="2"
+                (fileSelected)="onFileSelected($event, getQuestionIndex(questionGroup))"
+                (imageRemoved)="removeImage(getQuestionIndex(questionGroup))"
+              />
             }
           </div>
         </div>
       }
     </div>
 
-    <!-- Submit Button -->
-    <div class="flex justify-center mt-8">
-      <button
-        type="submit"
-        [disabled]="rouletteForm.invalid || loading()"
-        class="px-8 py-3 font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:bg-gray-400 flex items-center text-lg">
-        @if(loading()) {
-        <svg
-          class="w-5 h-5 mr-2 text-white animate-spin"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24">
-          <circle
-            class="opacity-25"
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="currentColor"
-            stroke-width="4"></circle>
-          <path
-            class="opacity-75"
-            fill="currentColor"
-            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-        <span>Guardando...</span>
-        } @else {
-        <span>
-          @if (isEditMode()) { Guardar Cambios } @else { Crear Ruleta }
-        </span>
-        }
-      </button>
-    </div>
+      <!-- Submit Button -->
+      <div class="flex justify-center mt-6 sm:mt-8">
+        <button
+          type="submit"
+          [disabled]="rouletteForm.invalid || loading()"
+          class="w-full sm:w-auto px-6 py-3 font-semibold text-white bg-red-600 rounded-md hover:bg-red-700 disabled:bg-gray-400 flex items-center justify-center touch-manipulation min-h-[44px]"
+        >
+          @if(loading()) {
+          <svg
+            class="w-5 h-5 mr-2 text-white animate-spin"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            ></circle>
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
+          </svg>
+          <span>Guardando...</span>
+          } @else {
+          <span>
+            @if (isEditMode()) { 💾 Guardar Cambios } @else { 💾 Crear Ruleta }
+          </span>
+          }
+        </button>
+      </div>
 
-    @if(error()) {
-    <div
-      class="p-4 mt-4 text-sm text-red-800 bg-red-100 rounded-lg dark:bg-red-900 dark:text-red-300"
-      role="alert">
-      {{ error() }}
-    </div>
-    }
+      @if(error()) {
+      <div
+        class="p-3 sm:p-4 mt-4 text-sm text-red-800 bg-red-100 rounded-lg dark:bg-red-900 dark:text-red-300"
+        role="alert"
+      >
+        {{ error() }}
+      </div>
+      }
   </form>
   }
 </div>
