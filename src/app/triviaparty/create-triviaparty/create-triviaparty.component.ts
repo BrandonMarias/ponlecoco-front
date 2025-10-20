@@ -44,7 +44,6 @@ export default class CreateTriviaPartyComponent implements OnInit, OnDestroy {
   constructor() {
     this.triviaPartyForm = this.fb.group({
       title: ['', Validators.required],
-      type: ['triviaparty'], // Siempre es triviaparty desde esta ruta
       categories: this.fb.array(
         [],
         [Validators.required, Validators.minLength(1)]
@@ -87,7 +86,6 @@ export default class CreateTriviaPartyComponent implements OnInit, OnDestroy {
   patchForm(triviaParty: TriviaParty) {
     this.triviaPartyForm.patchValue({
       title: triviaParty.title,
-      type: 'triviaparty', // Siempre es triviaparty
     });
 
     triviaParty.categories.forEach((cat) => {
@@ -394,7 +392,6 @@ export default class CreateTriviaPartyComponent implements OnInit, OnDestroy {
 
     const triviaPartyData = {
       title: formValue.title,
-      type: formValue.type,
       categories: formValue.categories.map((cat: any) => ({
         title: cat.title,
         questions: cat.questions.map((q: any, qIndex: number) => {
