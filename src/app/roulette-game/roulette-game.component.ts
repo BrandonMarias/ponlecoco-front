@@ -72,6 +72,7 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
   // Timer signals
   timeLeft = signal(0);
   timerActive = signal(false);
+  timeUp = signal(false);
   private timerInterval: any = null;
 
   // Roulette positions with their angles and values
@@ -314,6 +315,7 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
     // Initialize timer
     this.timeLeft.set(this.timePerQuestion);
     this.timerActive.set(true);
+    this.timeUp.set(false);
     this.showAnswer.set(false);
     this.startTimer();
   }
@@ -323,6 +325,7 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
     this.playDrumRollSound();
 
     this.stopTimer();
+    this.timeUp.set(false);
     this.showAnswer.set(true);
   }
 
@@ -353,6 +356,7 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
     // Stop timer and any playing suspense music
     this.stopTimer();
     this.stopSuspenseSound();
+    this.timeUp.set(false);
 
     // Reset wheel to original position (0 degrees)
     this.wheelRotation.set(0);
@@ -422,13 +426,9 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
       if (this.timeLeft() <= 0) {
         // Time's up
         this.stopTimer();
+        this.timeUp.set(true);
+        this.stopSuspenseSound();
         this.playTimeUpSound();
-        // Auto reveal answer when time is up
-        setTimeout(() => {
-          if (!this.showAnswer()) {
-            this.revealAnswer();
-          }
-        }, 1000);
       }
     }, 1000);
   }
