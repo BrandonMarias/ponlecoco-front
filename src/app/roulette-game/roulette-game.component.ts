@@ -26,6 +26,7 @@ interface GameState {
   spinning: boolean;
   selectedPosition: number;
   showViewQuestionButton: boolean;
+  usedPositions: Set<number>;
 }
 
 interface RoulettePosition {
@@ -104,6 +105,7 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
     spinning: false,
     selectedPosition: 0,
     showViewQuestionButton: false,
+    usedPositions: new Set<number>(),
   });
 
   // Public getter for template access
@@ -135,6 +137,16 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
     const maxScore = Math.max(...scores);
     return scores.findIndex((score) => score === maxScore);
   });
+
+  availablePositions = computed(() => {
+    const state = this.gameState();
+    return 12 - state.usedPositions.size;
+  });
+
+  // Helper method to check if a position has been used (for future UI enhancements)
+  isPositionUsed(positionIndex: number): boolean {
+    return this.getGameState().usedPositions.has(positionIndex);
+  }
 
   ngOnInit() {
     const rouletteId = this.route.snapshot.params['id'];
@@ -202,6 +214,7 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
       spinning: false,
       selectedPosition: 0,
       showViewQuestionButton: false,
+      usedPositions: new Set<number>(),
     });
   }
 
@@ -248,6 +261,27 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
   spinWheel() {
     if (this.getGameState().spinning) return;
 
+    const currentState = this.getGameState();
+
+    // Get available positions (not used yet)
+    const availablePositions = Array.from({ length: 12 }, (_, i) => i)
+      .filter(pos => !currentState.usedPositions.has(pos));
+
+    // Check if game should end (no more positions available)
+    if (availablePositions.length === 0) {
+      this.gameState.update((state) => ({
+        ...state,
+        gameEnded: true,
+        showQuestion: false,
+        showViewQuestionButton: false,
+      }));
+
+      // Show winner screen
+      this.showWinnerScreen.set(true);
+      this.determineWinner();
+      return;
+    }
+
     this.gameState.update((state) => ({
       ...state,
       spinning: true,
@@ -258,8 +292,9 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
     // Play roulette sound for 7 seconds
     this.playRouletteSound();
 
-    // Calculate random position
-    const targetPosition = Math.floor(Math.random() * 12);
+    // Calculate random position from available positions only
+    const randomIndex = Math.floor(Math.random() * availablePositions.length);
+    const targetPosition = availablePositions[randomIndex];
     const targetAngle = this.roulettePositions[targetPosition].angle;
 
     // Add multiple full rotations for spinning effect
@@ -290,14 +325,22 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
         this.wheelRotation.set(exactFinalPosition);
 
         // Play points double sound when roulette stops
-        this.playPointsDoubleSound(); // Show "View Question" button after points double sound
-          this.gameState.update((state) => ({
+        this.playPointsDoubleSound();
+
+        // Mark position as used and show "View Question" button
+        this.gameState.update((state) => {
+          const newUsedPositions = new Set(state.usedPositions);
+          newUsedPositions.add(targetPosition);
+
+          return {
             ...state,
             spinning: false,
             selectedPosition: targetPosition,
             showViewQuestionButton: true,
             showQuestion: false,
-          }));
+            usedPositions: newUsedPositions,
+          };
+        });
       },
     });
   }

@@ -252,8 +252,63 @@ export default class CreateRouletteComponent implements OnInit, OnDestroy {
   }
 
   generateRouletteWithAI() {
-    // TODO: Implementar generación de ruleta con IA
-    console.log('Generar ruleta con IA - Próximamente');
+    this.modalService.openInput({
+      title: 'Generar Ruleta con IA',
+      message: 'Ingresa el tema para generar una ruleta automáticamente:'
+    }).then((topic) => {
+      if (topic && topic.trim()) {
+        this.loading.set(true);
+        this.error.set(null);
+
+        this.rouletteService.generateRouletteWithAI(topic.trim()).subscribe({
+          next: (aiResponse) => {
+            // Update form title
+            this.rouletteForm.patchValue({
+              title: aiResponse.title
+            });
+
+            // Clear existing questions
+            while (this.questions.length !== 0) {
+              this.questions.removeAt(0);
+            }
+
+            // Add AI generated questions
+            aiResponse.questions.forEach((q) => {
+              const questionGroup = this.fb.group({
+                question: [q.question, Validators.required],
+                answer: [q.answer, Validators.required],
+                value: [q.value, Validators.required],
+                imageUrl: [null],
+                imageFile: [null],
+              });
+              this.questions.push(questionGroup);
+            });
+
+            // If less than 12 questions, fill with default structure
+            while (this.questions.length < 12) {
+              const defaultQuestions = this.createDefaultQuestions();
+              const needed = 12 - this.questions.length;
+              for (let i = 0; i < needed && i < defaultQuestions.length; i++) {
+                this.questions.push(defaultQuestions[i]);
+              }
+            }
+
+            this.loading.set(false);
+          },
+          error: (err) => {
+            console.error('Error generating roulette with AI:', err);
+            let errorMessage = 'Error al generar la ruleta con IA. Por favor, inténtalo de nuevo.';
+            if (err.error && err.error.message) {
+              errorMessage = Array.isArray(err.error.message)
+                ? err.error.message.join(', ')
+                : err.error.message;
+            }
+            this.error.set(errorMessage);
+            this.loading.set(false);
+          }
+        });
+      }
+    });
   }
 
   onSubmit() {
