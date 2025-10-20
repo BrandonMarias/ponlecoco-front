@@ -10,6 +10,7 @@ import { WinnerComponent } from '../winner/winner.component';
 interface GameState {
   currentQuestionIndex: number;
   scores: number[];
+  teamNames: string[];
   currentTeam: number;
   showQuestion: boolean;
   gameStarted: boolean;
@@ -55,6 +56,9 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
   winners = signal<Team[]>([]);
   winnerScore = signal(0);
 
+  // Team editing
+  editingTeamIndex = signal<number>(-1);
+
   // Audio management
   private currentSuspenseAudio: HTMLAudioElement | null = null;
 
@@ -83,6 +87,7 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
   private gameState = signal<GameState>({
     currentQuestionIndex: 0,
     scores: [],
+    teamNames: [],
     currentTeam: 0,
     showQuestion: false,
     gameStarted: false,
@@ -173,6 +178,7 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
     this.gameState.set({
       currentQuestionIndex: 0,
       scores: new Array(this.teamCount).fill(0),
+      teamNames: Array.from({length: this.teamCount}, (_, i) => `Equipo ${i + 1}`),
       currentTeam: 0,
       showQuestion: false,
       gameStarted: false,
@@ -370,14 +376,15 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
 
     this.showAnswer.set(false);
   }  determineWinner() {
-    const scores = this.getGameState().scores;
+    const state = this.getGameState();
+    const scores = state.scores;
     const maxScore = Math.max(...scores);
     const winnerTeams: Team[] = [];
 
     scores.forEach((score, index) => {
       if (score === maxScore) {
         winnerTeams.push({
-          name: `Equipo ${index + 1}`,
+          name: state.teamNames[index],
           score: score
         });
       }
@@ -502,5 +509,32 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
     } catch (e) {
       console.log('Could not play time up sound:', e);
     }
+  }
+
+  // Team editing methods
+  startEditingTeam(index: number) {
+    this.editingTeamIndex.set(index);
+  }
+
+  saveTeamName(index: number, event: Event) {
+    const input = event.target as HTMLInputElement;
+    const newName = input.value.trim();
+
+    if (newName) {
+      const state = this.gameState();
+      const newTeamNames = [...state.teamNames];
+      newTeamNames[index] = newName;
+
+      this.gameState.set({
+        ...state,
+        teamNames: newTeamNames
+      });
+    }
+
+    this.editingTeamIndex.set(-1);
+  }
+
+  cancelEditing() {
+    this.editingTeamIndex.set(-1);
   }
 }
