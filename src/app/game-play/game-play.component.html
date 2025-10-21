@@ -122,11 +122,11 @@
 
     <!-- Question Modal -->
     @if (selectedQuestion(); as question) {
-      <app-question-modal 
-        [question]="question" 
-        [timeLimit]="timePerQuestion()" 
-        (close)="closeQuestionModal($event)" 
-        (answerRevealed)="stopAllSounds()" 
+      <app-question-modal
+        [question]="question"
+        [timeLimit]="timePerQuestion()"
+        (close)="closeQuestionModal($event)"
+        (answerRevealed)="stopAllSounds()"
         (timeUp)="closeQuestionModal({ correct: false })" />
     }
   }
