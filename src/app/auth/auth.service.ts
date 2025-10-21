@@ -35,12 +35,10 @@ export class AuthService {
   isAuthenticated = computed(() => this.authState().isAuthenticated);
 
   constructor() {
-    console.log('🏗️ AuthService constructor called');
     // Check if user data exists in localStorage (for UI optimization only)
     // We'll validate the actual session with refreshTokenOnLoad()
     const storedUser = localStorage.getItem('user_data');
     if (storedUser) {
-      console.log('👤 Found stored user data:', JSON.parse(storedUser));
       this.authState.set({
         user: JSON.parse(storedUser),
         isAuthenticated: false // Will be set to true only after session validation
@@ -51,18 +49,14 @@ export class AuthService {
   }
 
   refreshTokenOnLoad(): Observable<any> {
-    console.log('🔄 Starting session validation...');
     // Since we're using httpOnly cookies, we just try to validate the session
     return this.http.get<AuthResponse>(`${this.apiUrl}/auth/refresh`, {
       withCredentials: true
     }).pipe(
       tap(response => {
-        console.log('✅ Session validated successfully:', response);
         this.setAuthState({ user: response.user, isAuthenticated: true });
       }),
-      catchError((error) => {
-        console.log('❌ No valid session found:', error);
-        console.log('🧹 Clearing local state without redirect');
+      catchError(() => {
         // Clear local state without redirecting (since this is app initialization)
         this.clearAuthState();
         return of(null);
@@ -118,14 +112,11 @@ export class AuthService {
   }
 
   private setAuthState(state: AuthState) {
-    console.log('🔄 Setting auth state:', state);
     this.authState.set(state);
     if (state.isAuthenticated && state.user) {
       // Store only user data (not tokens) for UI state persistence
-      console.log('💾 Storing user data in localStorage');
       localStorage.setItem('user_data', JSON.stringify(state.user));
     } else {
-      console.log('🗑️ Removing user data from localStorage');
       localStorage.removeItem('user_data');
     }
   }
