@@ -1,5 +1,5 @@
 {
-  "name": "PonleCoco - Trivias y Ruletas Interactivas",
+  "name": "PonleCoco - Trivias divertidas",
   "short_name": "PonleCoco",
   "description": "Crea trivias personalizadas y ruletas de preguntas para jugar con amigos",
   "start_url": "/",
@@ -13,7 +13,7 @@
       "type": "image/x-icon"
     },
     {
-      "src": "/media/img/ruleta.png",
+      "src": "web-app-manifest-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
