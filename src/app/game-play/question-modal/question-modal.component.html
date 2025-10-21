@@ -1,55 +1,122 @@
 <div class="fixed inset-0 bg-gray-900 bg-opacity-75 backdrop-blur-md z-40 flex items-center justify-center p-4">
   <div class="bg-blue-800 border-4 border-blue-400 text-white rounded-lg shadow-xl p-8 w-full max-w-3xl z-50 text-center relative">
 
-    <!-- Time's Up Banner -->
-    @if (showTimeUpBanner()) {
+    @if (modalState() === 'time_up_options' || modalState() === 'steal_failed_show_answer') {
       <div class="absolute inset-x-0 top-1/3 bg-red-600/90 text-white text-5xl font-bold p-8 z-10">
         ¡TIEMPO!
       </div>
     }
 
-    <div class="flex items-center justify-between gap-4 mb-6">
-      <!-- Points Display -->
-      <div class="flex items-center justify-center gap-4">
-        <span class="text-4xl font-bold text-yellow-300">X {{ question.value }}</span>
-        @if (question.doublePoints) {
-          <img src="/media/img/puntosdobles.png" alt="Puntos Dobles" class="h-16 double-points-animation">
+    @switch (modalState()) {
+      @case ('answering') {
+        <!-- Main View: Answering or Stealing -->
+        <div class="flex items-center justify-between gap-4 mb-6">
+          <div class="flex items-center justify-center gap-4">
+            <span class="text-4xl font-bold text-yellow-300">X {{ question.value }}</span>
+            @if (question.doublePoints) {
+              <img src="/media/img/puntosdobles.png" alt="Puntos Dobles" class="h-16 double-points-animation">
+            }
+          </div>
+          <div class="text-5xl font-mono font-bold" [class.text-yellow-300]="!isStealing()" [class.text-red-500]="isStealing()">
+            {{ formattedTime() }}
+          </div>
+        </div>
+
+        <p class="text-3xl font-bold mb-8">{{ question.question }}</p>
+
+        @if(question.imageUrl) {
+          <div class="my-4 flex justify-center">
+            <img [src]="question.imageUrl" alt="Imagen de la pregunta" class="max-h-64 rounded-lg" />
+          </div>
         }
-      </div>
-      <!-- Timer -->
-      <div class="text-5xl font-mono font-bold text-yellow-300">
-        {{ formattedTime() }}
-      </div>
-    </div>
 
-    <p class="text-3xl font-bold mb-8">{{ question.question }}</p>
+        @if (showAnswer()) {
+          <div class="bg-gray-900 p-4 rounded-md">
+            <p class="text-4xl font-bold text-yellow-400">{{ question.answer }}</p>
+          </div>
+          <div class="flex justify-center space-x-4 mt-8">
+            <button (click)="onIncorrect()" class="px-6 py-3 bg-red-600 rounded-md font-semibold text-lg cursor-pointer">Incorrecto</button>
+            <button (click)="onCorrect()" class="px-6 py-3 bg-green-600 rounded-md font-semibold text-lg cursor-pointer">Correcto</button>
+          </div>
+        } @else {
+          <button (click)="revealAnswer()" class="mt-8 px-6 py-3 bg-green-600 rounded-md font-semibold text-lg cursor-pointer">
+            Revelar Respuesta
+          </button>
+        }
+      }
+      @case ('steal_in_progress') {
+        <!-- Main View: Answering or Stealing -->
+        <div class="flex items-center justify-between gap-4 mb-6">
+          <div class="flex items-center justify-center gap-4">
+            <span class="text-4xl font-bold text-yellow-300">X {{ question.value }}</span>
+            @if (question.doublePoints) {
+              <img src="/media/img/puntosdobles.png" alt="Puntos Dobles" class="h-16 double-points-animation">
+            }
+          </div>
+          <div class="text-5xl font-mono font-bold" [class.text-yellow-300]="!isStealing()" [class.text-red-500]="isStealing()">
+            {{ formattedTime() }}
+          </div>
+        </div>
 
-    @if(question.imageUrl) {
-    <div class="my-4 flex justify-center">
-      <img
-        [src]="question.imageUrl"
-        alt="Imagen de la pregunta"
-        class="max-h-64 rounded-lg"
-      />
-    </div>
-    }
+        <p class="text-3xl font-bold mb-8">{{ question.question }}</p>
 
-    @if (showAnswer()) {
-      <div class="bg-gray-900 p-4 rounded-md">
-        <p class="text-4xl font-bold text-yellow-400">{{ question.answer }}</p>
-      </div>
-      <div class="flex justify-center space-x-4 mt-8">
-        <button (click)="onIncorrect()" class="px-6 py-3 bg-red-600 rounded-md font-semibold text-lg cursor-pointer">
-          Incorrecto
-        </button>
-        <button (click)="onCorrect()" class="px-6 py-3 bg-green-600 rounded-md font-semibold text-lg cursor-pointer">
-          Correcto
-        </button>
-      </div>
-    } @else {
-      <button (click)="revealAnswer()" class="mt-8 px-6 py-3 bg-green-600 rounded-md font-semibold text-lg cursor-pointer">
-        Revelar Respuesta
-      </button>
+        @if(question.imageUrl) {
+          <div class="my-4 flex justify-center">
+            <img [src]="question.imageUrl" alt="Imagen de la pregunta" class="max-h-64 rounded-lg" />
+          </div>
+        }
+
+        @if (showAnswer()) {
+          <div class="bg-gray-900 p-4 rounded-md">
+            <p class="text-4xl font-bold text-yellow-400">{{ question.answer }}</p>
+          </div>
+          <div class="flex justify-center space-x-4 mt-8">
+            <button (click)="onIncorrect()" class="px-6 py-3 bg-red-600 rounded-md font-semibold text-lg cursor-pointer">Incorrecto</button>
+            <button (click)="onCorrect()" class="px-6 py-3 bg-green-600 rounded-md font-semibold text-lg cursor-pointer">Correcto</button>
+          </div>
+        } @else {
+          <button (click)="revealAnswer()" class="mt-8 px-6 py-3 bg-green-600 rounded-md font-semibold text-lg cursor-pointer">
+            Revelar Respuesta
+          </button>
+        }
+      }
+
+      @case ('time_up_options') {
+        <p class="text-3xl font-bold mb-8 pt-16">{{ question.question }}</p>
+        <div class="flex justify-center space-x-4 mt-8">
+          <button (click)="onTimeUpFinish()" class="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-md font-semibold text-lg">Terminar</button>
+          <button (click)="onTimeUpSteal()" class="px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-md font-semibold text-lg">Robo de Puntos</button>
+        </div>
+      }
+
+      @case ('steal_team_select') {
+        <h2 class="text-3xl font-bold mb-6">Robo de Puntos</h2>
+        <p class="text-xl mb-8">Selecciona el equipo que intentará robar:</p>
+        <div class="grid grid-cols-2 gap-4 max-w-md mx-auto">
+          @for (team of availableStealTeams(); track team) {
+            <button (click)="selectTeamForSteal(teams.indexOf(team))" class="p-4 bg-blue-600 hover:bg-blue-500 rounded-lg text-lg font-semibold">
+              {{ team.name }}
+            </button>
+          }
+        </div>
+      }
+
+      @case ('showing_final_answer') {
+        <div class="bg-gray-900 p-4 rounded-md mb-8">
+          <p class="text-2xl mb-2">La respuesta correcta es:</p>
+          <p class="text-4xl font-bold text-yellow-400">{{ question.answer }}</p>
+        </div>
+        <button (click)="onTimeUpClose()" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-md font-semibold text-lg">Cerrar</button>
+      }
+
+      @case ('steal_failed_show_answer') {
+        <p class="text-2xl font-bold mb-4 pt-16">El equipo no respondió a tiempo.</p>
+        <p class="text-xl mb-8 text-red-400">-{{ question.value }} puntos.</p>
+        <div class="flex justify-center space-x-4">
+            <button (click)="showAnswerAfterFailedSteal()" class="px-6 py-3 bg-green-600 rounded-md font-semibold text-lg">Mostrar Respuesta</button>
+            <button (click)="onTimeUpClose()" class="px-6 py-3 bg-blue-600 rounded-md font-semibold text-lg">Cerrar</button>
+        </div>
+      }
     }
   </div>
 </div>

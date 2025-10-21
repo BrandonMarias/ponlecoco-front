@@ -105,24 +105,9 @@ export default class GamePlayComponent implements OnInit, CanComponentDeactivate
     }
   }
 
-  closeQuestionModal(result: { correct: boolean | null }) {
+  closeAndMarkQuestion() {
     this.stopAllSounds();
-
-    const question = this.selectedQuestion();
-    if (result.correct && question) {
-      const points = question.value * (question.doublePoints ? 2 : 1);
-      this.teams.update(currentTeams => {
-        const newTeams = [...currentTeams];
-        newTeams[this.currentTeam()].score += points;
-        return newTeams;
-      });
-    }
-
-    if (result.correct !== null) { // Advance team only if answered
-      this.currentTeam.update(t => (t + 1) % this.teams().length);
-    }
-
-    const questionId = question?.id;
+    const questionId = this.selectedQuestion()?.id;
     if (questionId) {
       this.answeredQuestions.update(set => {
         set.add(questionId);
@@ -130,6 +115,18 @@ export default class GamePlayComponent implements OnInit, CanComponentDeactivate
       });
     }
     this.selectedQuestion.set(null);
+  }
+
+  handleScoreUpdate(event: { teamIndex: number; points: number }) {
+    this.teams.update(currentTeams => {
+      const newTeams = [...currentTeams];
+      newTeams[event.teamIndex].score += event.points;
+      return newTeams;
+    });
+  }
+
+  advanceToNextTeam() {
+    this.currentTeam.update(t => (t + 1) % this.teams().length);
   }
 
   stopAllSounds() {

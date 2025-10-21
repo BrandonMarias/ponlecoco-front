@@ -125,9 +125,13 @@
       <app-question-modal
         [question]="question"
         [timeLimit]="timePerQuestion()"
-        (close)="closeQuestionModal($event)"
+        [teams]="teams()"
+        [currentTeamIndex]="currentTeam()"
+        (close)="closeAndMarkQuestion()"
         (answerRevealed)="stopAllSounds()"
-        (timeUp)="closeQuestionModal({ correct: false })" />
+        (updateScore)="handleScoreUpdate($event)"
+        (nextTurn)="advanceToNextTeam()"
+      />
     }
   }
 </div>
