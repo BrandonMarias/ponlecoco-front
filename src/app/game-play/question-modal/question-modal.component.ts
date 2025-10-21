@@ -11,7 +11,7 @@ import { Question } from '../../triviaparty/triviaparty';
 export class QuestionModalComponent implements OnInit, OnDestroy {
   @Input({ required: true }) question!: Question;
   @Input() timeLimit = 30;
-  @Output() close = new EventEmitter<void>();
+  @Output() close = new EventEmitter<{ correct: boolean | null }>();
   @Output() answerRevealed = new EventEmitter<void>();
   @Output() timeUp = new EventEmitter<void>();
 
@@ -76,18 +76,18 @@ export class QuestionModalComponent implements OnInit, OnDestroy {
     this.drumrollSound.pause();
     this.drumrollSound.currentTime = 0;
     this.winSound.play();
-    this.onClose();
+    this.onClose(true);
   }
 
   onIncorrect() {
     this.drumrollSound.pause();
     this.drumrollSound.currentTime = 0;
     this.loseSound.play();
-    this.onClose();
+    this.onClose(false);
   }
 
-  onClose() {
-    this.close.emit();
+  onClose(correct: boolean | null) {
+    this.close.emit({ correct });
     // Reset for next time it opens
     this.showAnswer.set(false);
     this.showTimeUpBanner.set(false);

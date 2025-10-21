@@ -8,16 +8,12 @@ import { QuestionModalComponent } from './question-modal/question-modal.componen
 import { ModalService } from '../shared/modal.service';
 import { WinnerComponent } from '../winner/winner.component';
 import { CanComponentDeactivate } from './can-deactivate-game.guard';
-
-interface Team {
-  name: string;
-  score: number;
-}
+import { Team, TeamScoreboardComponent } from '../shared/team-scoreboard/team-scoreboard.component';
 
 @Component({
   selector: 'app-game-play',
   standalone: true,
-  imports: [CommonModule, QuestionModalComponent, WinnerComponent],
+  imports: [CommonModule, QuestionModalComponent, WinnerComponent, TeamScoreboardComponent],
   templateUrl: './game-play.component.html',
 })
 export default class GamePlayComponent implements OnInit, CanComponentDeactivate {
@@ -36,6 +32,7 @@ export default class GamePlayComponent implements OnInit, CanComponentDeactivate
   selectedQuestion = signal<Question | null>(null);
   editingTeamIndex = signal<number | null>(null);
   timePerQuestion = signal(30);
+  currentTeam = signal(0);
 
   showWinnerScreen = signal(false);
   winners = signal<Team[]>([]);
@@ -86,14 +83,6 @@ export default class GamePlayComponent implements OnInit, CanComponentDeactivate
     });
   }
 
-  adjustScore(teamIndex: number, amount: number) {
-    this.teams.update(currentTeams => {
-      const newTeams = [...currentTeams];
-      newTeams[teamIndex].score += amount;
-      return newTeams;
-    });
-  }
-
   onQuestionClick(questionId: string) {
     if (this.answeredQuestions().has(questionId) || this.selectedQuestion()) {
       return;
@@ -116,9 +105,24 @@ export default class GamePlayComponent implements OnInit, CanComponentDeactivate
     }
   }
 
-  closeQuestionModal() {
+  closeQuestionModal(result: { correct: boolean | null }) {
     this.stopAllSounds();
-    const questionId = this.selectedQuestion()?.id;
+
+    const question = this.selectedQuestion();
+    if (result.correct && question) {
+      const points = question.value * (question.doublePoints ? 2 : 1);
+      this.teams.update(currentTeams => {
+        const newTeams = [...currentTeams];
+        newTeams[this.currentTeam()].score += points;
+        return newTeams;
+      });
+    }
+
+    if (result.correct !== null) { // Advance team only if answered
+      this.currentTeam.update(t => (t + 1) % this.teams().length);
+    }
+
+    const questionId = question?.id;
     if (questionId) {
       this.answeredQuestions.update(set => {
         set.add(questionId);
@@ -209,3 +213,4 @@ export default class GamePlayComponent implements OnInit, CanComponentDeactivate
     this.router.navigate(['/']);
   }
 }
+

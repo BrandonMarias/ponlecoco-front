@@ -1,0 +1,86 @@
+<!-- Scoreboard -->
+<div class="w-full lg:w-80 xl:w-96 flex-shrink-0 bg-gray-900 border-t-2 lg:border-t-0 lg:border-l-2 border-gray-700">
+  <!-- Mobile: Horizontal scrollable teams -->
+  <div class="lg:hidden">
+    <div class="p-3 border-b border-gray-700">
+      <h2 class="text-lg font-bold text-center">Puntuación</h2>
+    </div>
+    <div class="overflow-x-auto">
+      <div class="flex gap-4 p-3 min-w-fit">
+        @for (team of teams; track team.name; let i = $index) {
+          <div class="flex-shrink-0 bg-gray-800 rounded-lg p-3 min-w-[140px]" [class.outline-yellow-400]="currentTeamIndex === i" [class.outline]="currentTeamIndex === i">
+            <div class="text-center">
+              @if (editingTeamIndex === i) {
+                <input
+                  type="text"
+                  [value]="team.name"
+                  (blur)="onSaveTeam(i, $event)"
+                  (keydown.enter)="onSaveTeam(i, $event)"
+                  (keydown.escape)="cancelEdit.emit()"
+                  class="bg-gray-700 text-white rounded px-2 py-1 w-full text-sm text-center"
+                  autofocus
+                />
+              } @else {
+                <div class="flex items-center justify-between mb-1">
+                  <span class="font-semibold text-sm truncate flex-1">{{ team.name }}</span>
+                  <button
+                    (click)="editTeam.emit(i)"
+                    class="ml-2 p-1 hover:bg-gray-600 rounded transition-colors touch-manipulation"
+                    title="Editar nombre"
+                  >
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                    </svg>
+                  </button>
+                </div>
+              }
+              <div class="text-xl font-bold mb-2 text-yellow-400">{{ team.score }}</div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Desktop/Tablet: Vertical layout -->
+  <div class="hidden lg:flex h-full flex-col">
+    <div class="p-4 border-b border-gray-700 flex-shrink-0">
+      <h2 class="text-xl xl:text-2xl font-bold text-center">Puntuación</h2>
+    </div>
+    <div class="flex-1 overflow-y-auto p-4">
+      <div class="space-y-4">
+        @for (team of teams; track team.name; let i = $index) {
+          <div class="bg-gray-800 rounded-lg p-4" [class.outline-yellow-400]="currentTeamIndex === i" [class.outline]="currentTeamIndex === i">
+            <div class="flex justify-between items-center font-bold text-lg mb-3">
+              @if (editingTeamIndex === i) {
+                <input
+                  type="text"
+                  [value]="team.name"
+                  (blur)="onSaveTeam(i, $event)"
+                  (keydown.enter)="onSaveTeam(i, $event)"
+                  (keydown.escape)="cancelEdit.emit()"
+                  class="bg-gray-700 text-white rounded px-3 py-2 flex-1 mr-3"
+                  autofocus
+                />
+              } @else {
+                <div class="flex items-center flex-1 mr-3">
+                  <span class="truncate flex-1">{{ team.name }}</span>
+                  <button
+                    (click)="editTeam.emit(i)"
+                    class="ml-2 p-2 hover:bg-gray-600 rounded transition-colors touch-manipulation"
+                    title="Editar nombre"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                    </svg>
+                  </button>
+                </div>
+              }
+              <span class="text-2xl text-yellow-400">{{ team.score }}</span>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>
