@@ -1,0 +1,22 @@
+{
+  "name": "PonleCoco - Trivias y Ruletas Interactivas",
+  "short_name": "PonleCoco",
+  "description": "Crea trivias personalizadas y ruletas de preguntas para jugar con amigos",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1f2937",
+  "theme_color": "#3b82f6",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "16x16 32x32 48x48",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/media/img/ruleta.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
