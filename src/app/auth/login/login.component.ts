@@ -168,11 +168,18 @@ export default class LoginComponent implements AfterViewInit {
       const testUrl = `${environment.apiUrl}/auth/refresh`;
       console.log('🎯 Testing URL:', testUrl);
 
-      const response = await this.http.get(testUrl, {
-        withCredentials: true,
-        observe: 'response', // Para obtener headers y status
+      // Usar las mismas opciones HTTP que el AuthService
+      const httpOptions = {
+        withCredentials: !Capacitor.isNativePlatform(), // No usar credentials en Android
+        observe: 'response' as const, // Para obtener headers y status
         timeout: 15000 // 15 segundos timeout
-      }).toPromise();
+      };
+
+      console.log('🔧 HTTP Options withCredentials:', httpOptions.withCredentials);
+      console.log('🔧 HTTP Options observe:', httpOptions.observe);
+      console.log('🔧 HTTP Options timeout:', httpOptions.timeout);
+
+      const response = await this.http.get(testUrl, httpOptions).toPromise();
 
       console.log('✅ Connectivity test successful');
       console.log('📊 Response status:', response?.status);
@@ -180,20 +187,26 @@ export default class LoginComponent implements AfterViewInit {
       return true;
     } catch (error: any) {
       console.error('❌ Connectivity test failed:', error);
-      console.error('🔍 Error details:', {
-        name: error.name,
-        message: error.message,
-        status: error.status,
-        statusText: error.statusText,
-        url: error.url,
-        error: error.error
-      });
+      console.error('🔍 Error name:', error.name);
+      console.error('🔍 Error message:', error.message);
+      console.error('🔍 Error status:', error.status);
+      console.error('🔍 Error statusText:', error.statusText);
+      console.error('🔍 Error url:', error.url);
+      console.error('🔍 Error error object:', error.error);
+
+      // Logging específico para diferentes tipos de errores
+      if (error.name === 'HttpErrorResponse') {
+        console.error('🌐 HTTP Error Status:', error.status);
+        console.error('🌐 HTTP Error StatusText:', error.statusText);
+        console.error('🌐 HTTP Error Message:', error.error?.message || error.message);
+      }
 
       // Si es error de red, intentar con un endpoint más simple
       if (error.status === 0 || error.name === 'TypeError') {
         console.log('🔄 Trying simple connectivity test...');
         try {
           const simpleResponse = await this.http.get(`${environment.apiUrl.replace('/api', '')}/`, {
+            withCredentials: !Capacitor.isNativePlatform(),
             timeout: 10000
           }).toPromise();
           console.log('✅ Simple connectivity successful');
