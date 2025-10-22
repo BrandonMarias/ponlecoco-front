@@ -39,6 +39,7 @@
     "@capacitor/angular": "2.0.3",
     "@capacitor/core": "latest",
     "@capacitor/ios": "^7.4.3",
+    "@codetrix-studio/capacitor-google-auth": "3.4.0-rc.4",
     "@tailwindcss/postcss": "^4.1.13",
     "gsap": "^3.13.0",
     "postcss": "^8.5.6",

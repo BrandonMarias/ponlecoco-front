@@ -5,7 +5,8 @@ import { CommonModule } from '@angular/common';
 import { finalize } from 'rxjs';
 import { AuthService } from '../auth.service';
 import { environment } from '../../../environments/environment';
-
+import { Capacitor } from '@capacitor/core';
+import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 
 declare global {
   interface Window {
@@ -25,9 +26,9 @@ export default class LoginComponent implements AfterViewInit {
   private authService = inject(AuthService);
   private router = inject(Router);
 
-
   loading = signal(false);
   error = signal<string | null>(null);
+  isNative = signal(Capacitor.isNativePlatform());
 
   loginForm = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
@@ -35,7 +36,17 @@ export default class LoginComponent implements AfterViewInit {
   });
 
   ngAfterViewInit() {
-    this.initializeGoogleSignIn();
+    if (this.isNative()) {
+      // Initialize native Google Auth
+      GoogleAuth.initialize({
+        clientId: environment.googleAndroidClientId,
+        scopes: ['profile', 'email'],
+        grantOfflineAccess: true,
+      });
+    } else {
+      // Initialize web Google Auth
+      this.initializeGoogleSignIn();
+    }
   }
 
   private initializeGoogleSignIn() {
@@ -73,6 +84,39 @@ export default class LoginComponent implements AfterViewInit {
           this.error.set(err.error?.message || 'Error en el inicio de sesión con Google. Por favor, inténtalo de nuevo.');
         }
       });
+    }
+  }
+
+  // Método para Google Sign-In nativo (Android/iOS)
+  async signInWithGoogleNative() {
+    try {
+      this.loading.set(true);
+      this.error.set(null);
+
+      const result = await GoogleAuth.signIn();
+      console.log('Native Google login result:', result);
+
+      // El resultado nativo tiene una estructura diferente
+      const idToken = result.authentication?.idToken;
+
+      if (idToken) {
+        this.authService.googleLogin(idToken).pipe(
+          finalize(() => this.loading.set(false))
+        ).subscribe({
+          next: () => this.router.navigateByUrl('/dashboard'),
+          error: (err) => {
+            console.error('Native Google login failed', err);
+            this.error.set(err.error?.message || 'Error en el inicio de sesión con Google. Por favor, inténtalo de nuevo.');
+          }
+        });
+      } else {
+        this.loading.set(false);
+        this.error.set('No se pudo obtener el token de Google');
+      }
+    } catch (error) {
+      this.loading.set(false);
+      console.error('Native Google Auth error:', error);
+      this.error.set('Error al iniciar sesión con Google');
     }
   }
 
