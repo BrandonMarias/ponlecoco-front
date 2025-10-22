@@ -164,8 +164,9 @@ export default class LoginComponent implements AfterViewInit {
         platform: Capacitor.getPlatform()
       });
 
-      // Probar conectividad básica
-      const testUrl = `${environment.apiUrl}/auth/refresh`;
+  // Probar conectividad básica con endpoint público para evitar 401 antes de login
+  // Usamos la raíz del proxy (/), que debería responder sin autenticar
+  const testUrl = `${environment.apiUrl.replace(/\/api\/?$/, '')}/`;
       console.log('🎯 Testing URL:', testUrl);
 
       // Usar configuración simple sin credentials (JWT en headers)
@@ -174,12 +175,14 @@ export default class LoginComponent implements AfterViewInit {
         timeout: 15000 // 15 segundos timeout
       };
 
-      console.log('🔧 HTTP Options observe:', httpOptions.observe);
-      console.log('🔧 HTTP Options timeout:', httpOptions.timeout);
+  console.log('🔧 HTTP Options observe:', httpOptions.observe);
+  console.log('🔧 HTTP Options timeout:', httpOptions.timeout);
+  console.log('🔑 Getting token before connectivity test:', localStorage.getItem('access_token') ? 'present' : 'null');
 
       const response = await this.http.get(testUrl, httpOptions).toPromise();
 
-      console.log('✅ Connectivity test successful');
+  console.log('✅ Connectivity test successful');
+  console.log('🔑 Getting token after connectivity test:', localStorage.getItem('access_token') ? 'present' : 'null');
       console.log('📊 Response status:', response?.status);
       console.log('📋 Response headers:', response?.headers);
       return true;
