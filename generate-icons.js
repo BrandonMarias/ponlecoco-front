@@ -39,12 +39,28 @@ async function generateIcons() {
 
   // Generar iconos para Android
   for (const [folder, size] of Object.entries(androidSizes)) {
+    // Icono principal
     const outputPath = path.join(androidDir, folder, 'ic_launcher.png');
     await sharp(logoPath)
       .resize(size, size, { fit: 'cover' })
       .png()
       .toFile(outputPath);
     console.log(`✅ Generado: ${outputPath} (${size}x${size})`);
+
+    // Icono foreground para adaptive icons (Android 8+)
+    const foregroundPath = path.join(androidDir, folder, 'ic_launcher_foreground.png');
+    await sharp(logoPath)
+      .resize(Math.round(size * 0.7), Math.round(size * 0.7), { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+      .extend({
+        top: Math.round(size * 0.15),
+        bottom: Math.round(size * 0.15),
+        left: Math.round(size * 0.15),
+        right: Math.round(size * 0.15),
+        background: { r: 0, g: 0, b: 0, alpha: 0 }
+      })
+      .png()
+      .toFile(foregroundPath);
+    console.log(`✅ Generado: ${foregroundPath} (${size}x${size} foreground)`);
   }
 
   // Generar iconos redondos para Android
