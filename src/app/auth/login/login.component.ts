@@ -158,14 +158,14 @@ export default class LoginComponent implements AfterViewInit {
 
     try {
       console.log('🔍 Testing connectivity to:', environment.apiUrl);
-      
+
       // Probar conectividad básica
       const testUrl = `${environment.apiUrl}/auth/refresh`;
       const response = await this.http.get(testUrl, {
         withCredentials: true,
         timeout: 10000 // 10 segundos timeout
       }).toPromise();
-      
+
       console.log('✅ Connectivity test successful');
       return true;
     } catch (error) {
@@ -202,7 +202,7 @@ export default class LoginComponent implements AfterViewInit {
           this.error.set(`No se puede conectar al servidor (${environment.apiUrl}). Verifica tu conexión a internet y configuración de red.`);
           return;
         }
-        
+
         // Si hay conectividad, proceder con el login
         this.performLogin(credentials);
       });
