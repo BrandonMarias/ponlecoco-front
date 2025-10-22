@@ -47,16 +47,18 @@ export default class LoginComponent implements AfterViewInit {
     if (this.isNative()) {
       console.log('📱 Initializing native Google Auth...');
       console.log('🔧 Android Client ID:', environment.googleAndroidClientId);
+      console.log('🔧 Server Client ID:', environment.googleClientId);
 
-      // Initialize native Google Auth
+      // Initialize native Google Auth with more explicit configuration
       GoogleAuth.initialize({
-        clientId: environment.googleAndroidClientId,
+        clientId: environment.googleClientId, // Usar el serverClientId en lugar del androidClientId
         scopes: ['profile', 'email'],
         grantOfflineAccess: true,
       }).then(() => {
         console.log('✅ Native Google Auth initialized successfully');
       }).catch((error) => {
         console.error('❌ Failed to initialize native Google Auth:', error);
+        console.error('Error details:', JSON.stringify(error, null, 2));
       });
     } else {
       console.log('🌐 Initializing web Google Auth...');
@@ -107,10 +109,24 @@ export default class LoginComponent implements AfterViewInit {
   async signInWithGoogleNative() {
     try {
       console.log('🚀 Starting native Google Sign-In...');
+      console.log('📋 Configuration check:');
+      console.log('   - Android Client ID:', environment.googleAndroidClientId);
+      console.log('   - Server Client ID:', environment.googleClientId);
+      console.log('   - App ID from Capacitor:', 'com.ponlecoco.app');
+
       this.loading.set(true);
       this.error.set(null);
 
       console.log('📱 Calling GoogleAuth.signIn()...');
+
+      // Intentar hacer sign out primero para limpiar cualquier sesión previa
+      try {
+        await GoogleAuth.signOut();
+        console.log('🧹 Previous session cleared');
+      } catch (signOutError) {
+        console.log('ℹ️ No previous session to clear:', signOutError);
+      }
+
       const result = await GoogleAuth.signIn();
       console.log('✅ Native Google login result:', JSON.stringify(result, null, 2));
 
@@ -142,83 +158,35 @@ export default class LoginComponent implements AfterViewInit {
         this.loading.set(false);
         this.error.set('No se pudo obtener el token de Google');
       }
-    } catch (error) {
+    } catch (error: any) {
       this.loading.set(false);
       console.error('💥 Native Google Auth error:', error);
+      console.error('Error code:', error.code);
+      console.error('Error message:', error.message);
       console.error('Error stack:', error instanceof Error ? error.stack : 'No stack available');
-      this.error.set(`Error al iniciar sesión con Google: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+
+      let errorMessage = 'Error al iniciar sesión con Google';
+
+      // Mapear códigos de error comunes
+      switch (error.code) {
+        case '10':
+          errorMessage = 'Error de configuración de Google. Verifica que la app esté correctamente configurada en Google Console.';
+          break;
+        case '12501':
+          errorMessage = 'Inicio de sesión cancelado por el usuario.';
+          break;
+        case '7':
+          errorMessage = 'Error de red. Verifica tu conexión a internet.';
+          break;
+        default:
+          errorMessage = `Error al iniciar sesión con Google: ${error.message || 'Error desconocido'}`;
+      }
+
+      this.error.set(errorMessage);
     }
   }
 
-  // Método para probar conectividad específicamente en Android
-  async testConnectivity(): Promise<boolean> {
-    if (!this.isNative()) {
-      return true; // No necesitamos test en web
-    }
-
-    try {
-      console.log('🔍 Testing connectivity to:', environment.apiUrl);
-      console.log('🌐 Platform:', Capacitor.getPlatform());
-      console.log('📱 Device info:', {
-        isNative: Capacitor.isNativePlatform(),
-        platform: Capacitor.getPlatform()
-      });
-
-  // Probar conectividad básica con endpoint público para evitar 401 antes de login
-  // Usamos la raíz del proxy (/), que debería responder sin autenticar
-  const testUrl = `${environment.apiUrl.replace(/\/api\/?$/, '')}/`;
-      console.log('🎯 Testing URL:', testUrl);
-
-      // Usar configuración simple sin credentials (JWT en headers)
-      const httpOptions = {
-        observe: 'response' as const, // Para obtener headers y status
-        timeout: 15000 // 15 segundos timeout
-      };
-
-  console.log('🔧 HTTP Options observe:', httpOptions.observe);
-  console.log('🔧 HTTP Options timeout:', httpOptions.timeout);
-  console.log('🔑 Getting token before connectivity test:', localStorage.getItem('access_token') ? 'present' : 'null');
-
-      const response = await this.http.get(testUrl, httpOptions).toPromise();
-
-  console.log('✅ Connectivity test successful');
-  console.log('🔑 Getting token after connectivity test:', localStorage.getItem('access_token') ? 'present' : 'null');
-      console.log('📊 Response status:', response?.status);
-      console.log('📋 Response headers:', response?.headers);
-      return true;
-    } catch (error: any) {
-      console.error('❌ Connectivity test failed:', error);
-      console.error('🔍 Error name:', error.name);
-      console.error('🔍 Error message:', error.message);
-      console.error('🔍 Error status:', error.status);
-      console.error('🔍 Error statusText:', error.statusText);
-      console.error('🔍 Error url:', error.url);
-      console.error('🔍 Error error object:', error.error);
-
-      // Logging específico para diferentes tipos de errores
-      if (error.name === 'HttpErrorResponse') {
-        console.error('🌐 HTTP Error Status:', error.status);
-        console.error('🌐 HTTP Error StatusText:', error.statusText);
-        console.error('🌐 HTTP Error Message:', error.error?.message || error.message);
-      }
-
-      // Si es error de red, intentar con un endpoint más simple
-      if (error.status === 0 || error.name === 'TypeError') {
-        console.log('🔄 Trying simple connectivity test...');
-        try {
-          const simpleResponse = await this.http.get(`${environment.apiUrl.replace('/api', '')}/`, {
-            timeout: 10000
-          }).toPromise();
-          console.log('✅ Simple connectivity successful');
-          return true;
-        } catch (simpleError) {
-          console.error('❌ Simple connectivity also failed:', simpleError);
-        }
-      }
-
-      return false;
-    }
-  }  onSubmit() {
+  onSubmit() {
     if (this.loginForm.invalid) {
       this.loginForm.markAllAsTouched();
       return;
@@ -238,22 +206,8 @@ export default class LoginComponent implements AfterViewInit {
       platform: Capacitor.getPlatform()
     });
 
-    // Si es Android, primero probar conectividad
-    if (this.isNative()) {
-      this.testConnectivity().then(isConnected => {
-        if (!isConnected) {
-          this.loading.set(false);
-          this.error.set(`No se puede conectar al servidor (${environment.apiUrl}). Verifica tu conexión a internet y configuración de red.`);
-          return;
-        }
-
-        // Si hay conectividad, proceder con el login
-        this.performLogin(credentials);
-      });
-    } else {
-      // En web, proceder directamente
-      this.performLogin(credentials);
-    }
+    // Proceder directamente con el login en todas las plataformas
+    this.performLogin(credentials);
   }
 
   private performLogin(credentials: { email: string, password: string }) {

@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "793028581863",
+    "project_id": "jeopardimania-front",
+    "storage_bucket": "jeopardimania-front.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:793028581863:android:f6i66dqk89pscpj9b3n9lf6jmuhv5du9",
+        "android_client_info": {
+          "package_name": "com.ponlecoco.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "793028581863-f6i66dqk89pscpj9b3n9lf6jmuhv5du9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ponlecoco.app",
+            "certificate_hash": "SHA1_CERTIFICATE_FINGERPRINT_HERE"
+          }
+        },
+        {
+          "client_id": "793028581863-psmf3our0ip9snb792gbfqfto465dknm.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "YOUR_API_KEY_HERE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "793028581863-psmf3our0ip9snb792gbfqfto465dknm.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
