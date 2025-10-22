@@ -1,9 +1,8 @@
 import { Injectable, signal, inject, computed } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { catchError, Observable, of, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { Capacitor } from '@capacitor/core';
 
 interface User {
   id: string;
@@ -15,6 +14,7 @@ interface User {
 
 interface AuthResponse {
   user: User;
+  access_token: string;
 }
 
 interface AuthState {
@@ -36,35 +36,48 @@ export class AuthService {
   isAuthenticated = computed(() => this.authState().isAuthenticated);
 
   constructor() {
-    // Check if user data exists in localStorage (for UI optimization only)
-    // We'll validate the actual session with refreshTokenOnLoad()
     const storedUser = localStorage.getItem('user_data');
-    if (storedUser) {
+    const storedToken = localStorage.getItem('access_token');
+
+    if (storedUser && storedToken) {
       this.authState.set({
         user: JSON.parse(storedUser),
-        isAuthenticated: false // Will be set to true only after session validation
+        isAuthenticated: true
       });
-    } else {
-      console.log('🚫 No stored user data found');
     }
   }
 
-  // Helper para opciones HTTP según la plataforma
-  private getHttpOptions() {
-    // Ahora usamos credentials en todas las plataformas ya que configuramos CORS específicamente
-    return {
-      withCredentials: true
-    };
+  getToken(): string | null {
+    return localStorage.getItem('access_token');
+  }
+
+  private getAuthHeaders(): HttpHeaders {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      return new HttpHeaders({
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      });
+    }
+    return new HttpHeaders({
+      'Content-Type': 'application/json'
+    });
   }
 
   refreshTokenOnLoad(): Observable<any> {
-    // Since we're using httpOnly cookies, we just try to validate the session
-    return this.http.get<AuthResponse>(`${this.apiUrl}/auth/refresh`, this.getHttpOptions()).pipe(
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      this.clearAuthState();
+      return of(null);
+    }
+
+    return this.http.get<AuthResponse>(`${this.apiUrl}/auth/refresh`, {
+      headers: this.getAuthHeaders()
+    }).pipe(
       tap(response => {
-        this.setAuthState({ user: response.user, isAuthenticated: true });
+        this.setAuthState(response.user, response.access_token);
       }),
       catchError(() => {
-        // Clear local state without redirecting (since this is app initialization)
         this.clearAuthState();
         return of(null);
       })
@@ -72,71 +85,45 @@ export class AuthService {
   }
 
   login(credentials: { email: string, password: string }) {
-    console.log('🔐 AuthService.login called with:', {
-      email: credentials.email,
-      apiUrl: this.apiUrl,
-      fullUrl: `${this.apiUrl}/auth/login`,
-      isNative: Capacitor.isNativePlatform(),
-      useCredentials: !Capacitor.isNativePlatform()
-    });
-
-    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/login`, credentials, this.getHttpOptions()).pipe(
+    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/login`, credentials, {
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' })
+    }).pipe(
       tap(response => {
-        console.log('✅ Login successful, setting auth state:', response);
-        this.setAuthState({ user: response.user, isAuthenticated: true });
-      }),
-      catchError(error => {
-        console.error('❌ Login error in AuthService:', error);
-        console.error('Error details:', {
-          name: error.name,
-          message: error.message,
-          status: error.status,
-          statusText: error.statusText,
-          url: error.url
-        });
-        throw error;
+        this.setAuthState(response.user, response.access_token);
       })
     );
-  }  googleLogin(token: string) {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/google`, { token }, this.getHttpOptions()).pipe(
-      tap(response => this.setAuthState({ user: response.user, isAuthenticated: true }))
+  }
+
+  googleLogin(token: string) {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/google`, { token }, {
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' })
+    }).pipe(
+      tap(response => this.setAuthState(response.user, response.access_token))
     );
   }
 
   register(credentials: { name: string, email: string, password: string }) {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/users`, credentials, this.getHttpOptions()).pipe(
-      tap(response => this.setAuthState({ user: response.user, isAuthenticated: true }))
+    return this.http.post<AuthResponse>(`${this.apiUrl}/users`, credentials, {
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' })
+    }).pipe(
+      tap(response => this.setAuthState(response.user, response.access_token))
     );
   }
 
   logout() {
-    // Call the logout endpoint to clear the httpOnly cookie
-    this.http.post(`${this.apiUrl}/auth/logout`, {}, this.getHttpOptions()).subscribe({
-      next: () => {
-        console.log('Logout successful, cookie cleared');
-      },
-      error: (error) => {
-        console.error('Error during logout:', error);
-      },
-      complete: () => {
-        // Clear local state and redirect to login
-        this.clearAuthState();
-        this.router.navigateByUrl('/auth/login');
-      }
-    });
+    this.clearAuthState();
+    this.router.navigateByUrl('/auth/login');
   }
 
   private clearAuthState() {
-    this.setAuthState({ user: null, isAuthenticated: false });
+    this.authState.set({ user: null, isAuthenticated: false });
+    localStorage.removeItem('user_data');
+    localStorage.removeItem('access_token');
   }
 
-  private setAuthState(state: AuthState) {
-    this.authState.set(state);
-    if (state.isAuthenticated && state.user) {
-      // Store only user data (not tokens) for UI state persistence
-      localStorage.setItem('user_data', JSON.stringify(state.user));
-    } else {
-      localStorage.removeItem('user_data');
-    }
+  private setAuthState(user: User, accessToken: string) {
+    this.authState.set({ user, isAuthenticated: true });
+    localStorage.setItem('user_data', JSON.stringify(user));
+    localStorage.setItem('access_token', accessToken);
   }
 }

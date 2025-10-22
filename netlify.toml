@@ -4,21 +4,14 @@
   status = 200
   force = true
 
-# Headers CORS específicos para aplicaciones móviles con cookies
+# Headers CORS simples para JWT (no necesitamos cookies)
 [[headers]]
   for = "/api/*"
   [headers.values]
-    Access-Control-Allow-Origin = "https://localhost"
+    Access-Control-Allow-Origin = "*"
     Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS, HEAD, PATCH"
-    Access-Control-Allow-Headers = "Accept, Authorization, Content-Type, Origin, X-Requested-With, Cache-Control, Pragma, Cookie"
-    Access-Control-Allow-Credentials = "true"
+    Access-Control-Allow-Headers = "Accept, Authorization, Content-Type, Origin, X-Requested-With"
     Access-Control-Max-Age = "86400"
-
-# Headers adicionales para otros orígenes
-[[headers]]
-  for = "/api/*"
-  [headers.values]
-    Vary = "Origin"
 
 # Headers para la aplicación principal
 [[headers]]

@@ -168,14 +168,12 @@ export default class LoginComponent implements AfterViewInit {
       const testUrl = `${environment.apiUrl}/auth/refresh`;
       console.log('🎯 Testing URL:', testUrl);
 
-      // Usar las mismas opciones HTTP que el AuthService
+      // Usar configuración simple sin credentials (JWT en headers)
       const httpOptions = {
-        withCredentials: true, // Ahora usamos credentials en todas las plataformas
         observe: 'response' as const, // Para obtener headers y status
         timeout: 15000 // 15 segundos timeout
       };
 
-      console.log('🔧 HTTP Options withCredentials:', httpOptions.withCredentials);
       console.log('🔧 HTTP Options observe:', httpOptions.observe);
       console.log('🔧 HTTP Options timeout:', httpOptions.timeout);
 
@@ -206,7 +204,6 @@ export default class LoginComponent implements AfterViewInit {
         console.log('🔄 Trying simple connectivity test...');
         try {
           const simpleResponse = await this.http.get(`${environment.apiUrl.replace('/api', '')}/`, {
-            withCredentials: true,
             timeout: 10000
           }).toPromise();
           console.log('✅ Simple connectivity successful');
