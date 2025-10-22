@@ -74,8 +74,8 @@ export class AuthService {
   }
 
   login(credentials: { email: string, password: string }) {
-    console.log('🔐 AuthService.login called with:', { 
-      email: credentials.email, 
+    console.log('🔐 AuthService.login called with:', {
+      email: credentials.email,
       apiUrl: this.apiUrl,
       fullUrl: `${this.apiUrl}/auth/login`,
       isNative: Capacitor.isNativePlatform(),
