@@ -1,12 +1,20 @@
 {
   "name": "ponlecoco",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "cap:add": "npx cap add",
+    "cap:copy": "npx cap copy",
+    "cap:sync": "npx cap sync",
+    "cap:open": "npx cap open",
+    "cap:run": "npx cap run",
+    "cap:build": "ng build && npx cap sync",
+    "android:build": "ng build && npx cap copy android && npx cap open android",
+    "android:run": "ng build && npx cap run android"
   },
   "prettier": {
     "overrides": [
@@ -27,6 +35,10 @@
     "@angular/forms": "^20.0.0",
     "@angular/platform-browser": "^20.0.0",
     "@angular/router": "^20.0.0",
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/angular": "2.0.3",
+    "@capacitor/core": "latest",
+    "@capacitor/ios": "^7.4.3",
     "@tailwindcss/postcss": "^4.1.13",
     "gsap": "^3.13.0",
     "postcss": "^8.5.6",
@@ -39,6 +51,7 @@
     "@angular/build": "^20.0.4",
     "@angular/cli": "^20.0.4",
     "@angular/compiler-cli": "^20.0.0",
+    "@capacitor/cli": "latest",
     "@types/jasmine": "~5.1.0",
     "jasmine-core": "~5.7.0",
     "karma": "~6.4.0",

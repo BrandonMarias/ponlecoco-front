@@ -1,11 +1,11 @@
-import { Component, inject, signal, OnInit, AfterViewInit, ElementRef, ViewChild } from '@angular/core';
+import { Component, inject, signal, AfterViewInit, ElementRef, ViewChild } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { finalize } from 'rxjs';
 import { AuthService } from '../auth.service';
-// Temporarily disable social auth
-// import { SocialAuthService, GoogleLoginProvider } from '@abacritt/angularx-social-login';
+import { environment } from '../../../environments/environment';
+
 
 declare global {
   interface Window {
@@ -19,13 +19,12 @@ declare global {
   imports: [RouterLink, ReactiveFormsModule, CommonModule],
   templateUrl: './login.component.html',
 })
-export default class LoginComponent implements OnInit, AfterViewInit {
+export default class LoginComponent implements AfterViewInit {
   @ViewChild('googleSignInDiv', { static: false }) googleSignInDiv!: ElementRef;
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
-  // Temporarily disable social auth service
-  // private socialAuthService = inject(SocialAuthService);
+
 
   loading = signal(false);
   error = signal<string | null>(null);
@@ -35,26 +34,6 @@ export default class LoginComponent implements OnInit, AfterViewInit {
     password: ['', Validators.required],
   });
 
-  ngOnInit() {
-    // Temporarily disable Google Auth integration
-    /*
-    this.socialAuthService.authState.subscribe((user) => {
-      if (user && user.idToken) {
-        this.loading.set(true);
-        this.authService.googleLogin(user.idToken).pipe(
-          finalize(() => this.loading.set(false))
-        ).subscribe({
-          next: () => this.router.navigateByUrl('/dashboard'),
-          error: (err) => {
-            console.error('Google login failed', err);
-            this.error.set(err.error?.message || 'Error en el inicio de sesión con Google. Por favor, inténtalo de nuevo.');
-          }
-        });
-      }
-    });
-    */
-  }
-
   ngAfterViewInit() {
     this.initializeGoogleSignIn();
   }
@@ -62,7 +41,7 @@ export default class LoginComponent implements OnInit, AfterViewInit {
   private initializeGoogleSignIn() {
     if (typeof window !== 'undefined' && window.google) {
       window.google.accounts.id.initialize({
-        client_id: '793028581863-psmf3our0ip9snb792gbfqfto465dknm.apps.googleusercontent.com',
+        client_id: environment.googleClientId,
         callback: (response: any) => this.handleGoogleResponse(response),
         auto_select: false,
         cancel_on_tap_outside: true
@@ -95,20 +74,6 @@ export default class LoginComponent implements OnInit, AfterViewInit {
         }
       });
     }
-  }
-
-  // Fallback method for manual Google Sign-In (optional)
-  signInWithGoogle(): void {
-    // Temporarily disable Google Sign-In
-    console.log('Google Sign-In temporally disabled');
-    /*
-    if (typeof window !== 'undefined' && window.google) {
-      window.google.accounts.id.prompt();
-    } else {
-      // Fallback to angularx-social-login if Google Identity Services is not available
-      this.socialAuthService.signIn(GoogleLoginProvider.PROVIDER_ID);
-    }
-    */
   }
 
   onSubmit() {
