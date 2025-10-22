@@ -13,11 +13,15 @@ const config: CapacitorConfig = {
       launchShowDuration: 2000,
       backgroundColor: "#1f2937",
       showSpinner: false,
-      androidScaleType: 'CENTER_CROP'
+      androidScaleType: 'CENTER_CROP',
+      launchAutoHide: true,
+      splashFullScreen: true,
+      splashImmersive: true
     },
     StatusBar: {
       style: 'DARK',
-      backgroundColor: '#1f2937'
+      backgroundColor: '#1f2937',
+      overlaysWebView: false
     },
     GoogleAuth: {
       scopes: ['profile', 'email'],

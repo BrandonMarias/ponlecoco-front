@@ -50,9 +50,7 @@ export class AuthService {
   }
 
   getToken(): string | null {
-    const token = localStorage.getItem('access_token');
-    console.log('🔑 Getting token from localStorage:', token ? `${token.substring(0, 20)}...` : 'null');
-    return token;
+    return localStorage.getItem('access_token');
   }
 
   private getAuthHeaders(): HttpHeaders {
@@ -136,18 +134,15 @@ export class AuthService {
   private extractToken(response: AuthResponse): string {
     const token = response.access_token || response.accessToken || response.token;
     if (!token) {
-      console.error('❌ No token found in response:', response);
+      console.error('No token found in response:', response);
       throw new Error('No authentication token received');
     }
-    console.log('🔑 Token extracted from response:', `${token.substring(0, 20)}...`);
     return token;
   }
 
   private setAuthState(user: User, accessToken: string) {
-    console.log('💾 Setting auth state with user:', user.email, 'and token:', accessToken ? `${accessToken.substring(0, 20)}...` : 'null');
     this.authState.set({ user, isAuthenticated: true });
     localStorage.setItem('user_data', JSON.stringify(user));
     localStorage.setItem('access_token', accessToken);
-    console.log('✅ Auth state set, localStorage updated');
   }
 }

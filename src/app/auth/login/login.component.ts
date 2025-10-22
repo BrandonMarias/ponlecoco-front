@@ -38,30 +38,16 @@ export default class LoginComponent implements AfterViewInit {
   });
 
   ngAfterViewInit() {
-    console.log('🏁 ngAfterViewInit - Platform check:', {
-      isNative: this.isNative(),
-      platform: Capacitor.getPlatform(),
-      isNativePlatform: Capacitor.isNativePlatform()
-    });
-
     if (this.isNative()) {
-      console.log('📱 Initializing native Google Auth...');
-      console.log('🔧 Android Client ID:', environment.googleAndroidClientId);
-      console.log('🔧 Server Client ID:', environment.googleClientId);
-
-      // Initialize native Google Auth with more explicit configuration
+      // Initialize native Google Auth
       GoogleAuth.initialize({
-        clientId: environment.googleClientId, // Usar el serverClientId en lugar del androidClientId
+        clientId: environment.googleClientId,
         scopes: ['profile', 'email'],
         grantOfflineAccess: true,
-      }).then(() => {
-        console.log('✅ Native Google Auth initialized successfully');
       }).catch((error) => {
-        console.error('❌ Failed to initialize native Google Auth:', error);
-        console.error('Error details:', JSON.stringify(error, null, 2));
+        console.error('Failed to initialize native Google Auth:', error);
       });
     } else {
-      console.log('🌐 Initializing web Google Auth...');
       // Initialize web Google Auth
       this.initializeGoogleSignIn();
     }
@@ -98,7 +84,7 @@ export default class LoginComponent implements AfterViewInit {
       ).subscribe({
         next: () => this.router.navigateByUrl('/dashboard'),
         error: (err) => {
-          console.error('Google login failed', err);
+          console.error('Google login failed:', err);
           this.error.set(err.error?.message || 'Error en el inicio de sesión con Google. Por favor, inténtalo de nuevo.');
         }
       });
@@ -108,66 +94,39 @@ export default class LoginComponent implements AfterViewInit {
   // Método para Google Sign-In nativo (Android/iOS)
   async signInWithGoogleNative() {
     try {
-      console.log('🚀 Starting native Google Sign-In...');
-      console.log('📋 Configuration check:');
-      console.log('   - Android Client ID:', environment.googleAndroidClientId);
-      console.log('   - Server Client ID:', environment.googleClientId);
-      console.log('   - App ID from Capacitor:', 'com.ponlecoco.app');
-
       this.loading.set(true);
       this.error.set(null);
 
-      console.log('📱 Calling GoogleAuth.signIn()...');
-
-      // Intentar hacer sign out primero para limpiar cualquier sesión previa
+      // Limpiar sesión previa
       try {
         await GoogleAuth.signOut();
-        console.log('🧹 Previous session cleared');
       } catch (signOutError) {
-        console.log('ℹ️ No previous session to clear:', signOutError);
+        // Ignorar errores de signOut
       }
 
       const result = await GoogleAuth.signIn();
-      console.log('✅ Native Google login result:', JSON.stringify(result, null, 2));
-
-      // Verificar todas las posibles ubicaciones del token
       const idToken = result.authentication?.idToken || (result as any).idToken;
-      const accessToken = result.authentication?.accessToken || (result as any).accessToken;
-
-      console.log('🔑 ID Token:', idToken ? 'Present ✅' : 'Missing ❌');
-      console.log('🔑 Access Token:', accessToken ? 'Present ✅' : 'Missing ❌');
-      console.log('👤 User info:', result.email, result.name);
 
       if (idToken) {
-        console.log('📤 Sending token to backend...');
         this.authService.googleLogin(idToken).pipe(
           finalize(() => this.loading.set(false))
         ).subscribe({
-          next: (response) => {
-            console.log('✅ Backend login successful:', response);
-            this.router.navigateByUrl('/dashboard');
-          },
+          next: () => this.router.navigateByUrl('/dashboard'),
           error: (err) => {
-            console.error('❌ Backend login failed:', err);
-            console.error('Error details:', JSON.stringify(err, null, 2));
+            console.error('Backend login failed:', err);
             this.error.set(err.error?.message || 'Error en el inicio de sesión con Google. Por favor, inténtalo de nuevo.');
           }
         });
       } else {
-        console.error('❌ No ID token found in result');
         this.loading.set(false);
         this.error.set('No se pudo obtener el token de Google');
       }
     } catch (error: any) {
       this.loading.set(false);
-      console.error('💥 Native Google Auth error:', error);
-      console.error('Error code:', error.code);
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack available');
+      console.error('Native Google Auth error:', error);
 
       let errorMessage = 'Error al iniciar sesión con Google';
 
-      // Mapear códigos de error comunes
       switch (error.code) {
         case '10':
           errorMessage = 'Error de configuración de Google. Verifica que la app esté correctamente configurada en Google Console.';
@@ -200,13 +159,6 @@ export default class LoginComponent implements AfterViewInit {
       password: this.loginForm.value.password!
     };
 
-    console.log('🔑 Attempting login with:', { email: credentials.email, apiUrl: environment.apiUrl });
-    console.log('🌐 Platform info:', {
-      isNative: Capacitor.isNativePlatform(),
-      platform: Capacitor.getPlatform()
-    });
-
-    // Proceder directamente con el login en todas las plataformas
     this.performLogin(credentials);
   }
 
@@ -216,27 +168,16 @@ export default class LoginComponent implements AfterViewInit {
         finalize(() => this.loading.set(false))
       )
       .subscribe({
-        next: (response) => {
-          console.log('✅ Login successful:', response);
-          console.log('🔍 Checking localStorage after login:');
-          console.log('   - access_token:', localStorage.getItem('access_token') ? `${localStorage.getItem('access_token')?.substring(0, 20)}...` : 'null');
-          console.log('   - user_data:', localStorage.getItem('user_data'));
-          this.router.navigateByUrl('/dashboard');
-        },
+        next: () => this.router.navigateByUrl('/dashboard'),
         error: (err) => {
-          console.error('❌ Login failed:', err);
-          console.error('Error type:', err.name);
-          console.error('Error message:', err.message);
-          console.error('Error status:', err.status);
-          console.error('Error statusText:', err.statusText);
-          console.error('Full error object:', JSON.stringify(err, null, 2));
+          console.error('Login failed:', err);
 
           let errorMessage = 'Error en el inicio de sesión. Por favor, inténtalo de nuevo.';
 
           if (err.name === 'TypeError' && err.message.includes('Failed to fetch')) {
-            errorMessage = `Error de conectividad: No se puede conectar al servidor (${environment.apiUrl}). Verifica tu conexión a internet.`;
+            errorMessage = `Error de conectividad: No se puede conectar al servidor. Verifica tu conexión a internet.`;
           } else if (err.status === 0) {
-            errorMessage = `Error de red: No se puede conectar al servidor (${environment.apiUrl}). Verifica la configuración de red.`;
+            errorMessage = `Error de red: No se puede conectar al servidor. Verifica la configuración de red.`;
           } else if (err.error?.message) {
             errorMessage = err.error.message;
           }

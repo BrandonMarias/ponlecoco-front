@@ -6,6 +6,51 @@ body {
   @apply bg-white dark:bg-gray-900;
 }
 
+/* Safe area padding for mobile devices - solo para páginas sin header */
+@supports (padding-top: env(safe-area-inset-top)) {
+  .page-container.auth-page {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+/* Capacitor-specific safe area for Android - solo para páginas sin header */
+.capacitor-android .page-container.auth-page {
+  padding-top: max(env(safe-area-inset-top), 24px);
+}
+
+/* Ensure content doesn't overlap with status bar */
+.page-container {
+  min-height: 100vh;
+  padding-top: 0;
+}
+
+/* Header with safe area support */
+.safe-area-header {
+  padding-top: env(safe-area-inset-top, 0);
+}
+
+/* Content pages with safe area support */
+.content-page {
+  padding-top: 0;
+}
+
+@media (max-width: 768px) {
+  .page-container.auth-page {
+    padding-top: env(safe-area-inset-top, 20px);
+  }
+
+  .safe-area-header {
+    padding-top: env(safe-area-inset-top, 20px);
+  }
+
+  .content-page {
+    padding-top: env(safe-area-inset-top, 20px);
+  }
+}
+
 @keyframes zoom-in-out {
   0% {
     transform: scale(1);

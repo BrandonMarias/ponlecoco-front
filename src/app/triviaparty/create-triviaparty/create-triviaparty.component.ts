@@ -415,4 +415,8 @@ export default class CreateTriviaPartyComponent implements OnInit, OnDestroy {
 
     return saveObservable;
   }
+
+  goBackToDashboard() {
+    this.router.navigateByUrl('/dashboard');
+  }
 }

@@ -394,4 +394,8 @@ export default class CreateRouletteComponent implements OnInit, OnDestroy {
 
     return saveObservable;
   }
+
+  goBackToDashboard() {
+    this.router.navigateByUrl('/dashboard');
+  }
 }

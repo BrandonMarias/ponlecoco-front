@@ -1,11 +1,12 @@
 {
-  "name": "PonleCoco - Trivias divertidas",
+  "name": "PonleCoco - Trivias y Ruletas Interactivas",
   "short_name": "PonleCoco",
-  "description": "Crea trivias personalizadas y ruletas de preguntas para jugar con amigos",
+  "description": "Crea trivias personalizadas y ruletas de preguntas para jugar con amigos. Sistema de puntuación automática, múltiples equipos y diversión garantizada.",
   "start_url": "/",
   "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#1f2937",
   "background_color": "#1f2937",
-  "theme_color": "#3b82f6",
   "icons": [
     {
       "src": "favicon.ico",
@@ -13,10 +14,21 @@
       "type": "image/x-icon"
     },
     {
-      "src": "web-app-manifest-512x512.png",
+      "src": "media/img/logo.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    }
+  ],
+  "categories": ["games", "entertainment", "education"],
+  "lang": "es",
+  "dir": "ltr",
+  "scope": "/",
+  "prefer_related_applications": true,
+  "related_applications": [
+    {
+      "platform": "play",
+      "id": "com.ponlecoco.app"
     }
   ]
 }
