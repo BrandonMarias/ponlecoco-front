@@ -2,3 +2,22 @@
   from = "/api/*"
   to = "http://143.244.178.3:3000/api/:splat"
   status = 200
+  force = true
+
+# Configuración específica para CORS y apps móviles
+[[headers]]
+  for = "/api/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS, HEAD"
+    Access-Control-Allow-Headers = "Accept, Authorization, Content-Type, Origin, X-Requested-With"
+    Access-Control-Allow-Credentials = "true"
+    Access-Control-Max-Age = "86400"
+
+# Headers específicos para la aplicación principal
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"

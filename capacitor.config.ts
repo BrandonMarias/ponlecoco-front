@@ -6,7 +6,7 @@ const config: CapacitorConfig = {
   webDir: 'dist/jeopardimania-front/browser',
   server: {
     androidScheme: 'https',
-    allowNavigation: ['https://ponlecoco.com']
+    allowNavigation: ['https://ponlecoco.com', 'http://143.244.178.3:3000', 'https://143.244.178.3:3000']
   },
   plugins: {
     SplashScreen: {

@@ -13,8 +13,8 @@
     "cap:open": "npx cap open",
     "cap:run": "npx cap run",
     "cap:build": "ng build && npx cap sync",
-    "android:build": "ng build && npx cap copy android && npx cap open android",
-    "android:run": "ng build && npx cap run android"
+    "android:build": "ng build --configuration=android && npx cap copy android && npx cap open android",
+    "android:run": "ng build --configuration=android && npx cap run android"
   },
   "prettier": {
     "overrides": [

@@ -65,10 +65,30 @@ export class AuthService {
   }
 
   login(credentials: { email: string, password: string }) {
+    console.log('🔐 AuthService.login called with:', {
+      email: credentials.email,
+      apiUrl: this.apiUrl,
+      fullUrl: `${this.apiUrl}/auth/login`
+    });
+
     return this.http.post<AuthResponse>(`${this.apiUrl}/auth/login`, credentials, {
       withCredentials: true
     }).pipe(
-      tap(response => this.setAuthState({ user: response.user, isAuthenticated: true }))
+      tap(response => {
+        console.log('✅ Login successful, setting auth state:', response);
+        this.setAuthState({ user: response.user, isAuthenticated: true });
+      }),
+      catchError(error => {
+        console.error('❌ Login error in AuthService:', error);
+        console.error('Error details:', {
+          name: error.name,
+          message: error.message,
+          status: error.status,
+          statusText: error.statusText,
+          url: error.url
+        });
+        throw error;
+      })
     );
   }
 
