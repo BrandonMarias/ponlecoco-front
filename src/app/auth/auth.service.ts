@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { catchError, Observable, of, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { Capacitor } from '@capacitor/core';
 
 interface User {
   id: string;
@@ -48,6 +49,14 @@ export class AuthService {
     }
   }
 
+  // Helper para opciones HTTP según la plataforma
+  private getHttpOptions() {
+    const isNative = Capacitor.isNativePlatform();
+    return {
+      withCredentials: !isNative // Solo usar cookies en web, no en móvil
+    };
+  }
+
   refreshTokenOnLoad(): Observable<any> {
     // Since we're using httpOnly cookies, we just try to validate the session
     return this.http.get<AuthResponse>(`${this.apiUrl}/auth/refresh`, {
@@ -65,15 +74,15 @@ export class AuthService {
   }
 
   login(credentials: { email: string, password: string }) {
-    console.log('🔐 AuthService.login called with:', {
-      email: credentials.email,
+    console.log('🔐 AuthService.login called with:', { 
+      email: credentials.email, 
       apiUrl: this.apiUrl,
-      fullUrl: `${this.apiUrl}/auth/login`
+      fullUrl: `${this.apiUrl}/auth/login`,
+      isNative: Capacitor.isNativePlatform(),
+      useCredentials: !Capacitor.isNativePlatform()
     });
 
-    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/login`, credentials, {
-      withCredentials: true
-    }).pipe(
+    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/login`, credentials, this.getHttpOptions()).pipe(
       tap(response => {
         console.log('✅ Login successful, setting auth state:', response);
         this.setAuthState({ user: response.user, isAuthenticated: true });
@@ -90,9 +99,7 @@ export class AuthService {
         throw error;
       })
     );
-  }
-
-  googleLogin(token: string) {
+  }  googleLogin(token: string) {
     return this.http.post<AuthResponse>(`${this.apiUrl}/auth/google`, { token }, {
       withCredentials: true
     }).pipe(

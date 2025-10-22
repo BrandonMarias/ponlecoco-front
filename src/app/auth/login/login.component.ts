@@ -151,30 +151,61 @@ export default class LoginComponent implements AfterViewInit {
   }
 
   // Método para probar conectividad específicamente en Android
-  private async testConnectivity(): Promise<boolean> {
+  async testConnectivity(): Promise<boolean> {
     if (!this.isNative()) {
       return true; // No necesitamos test en web
     }
 
     try {
       console.log('🔍 Testing connectivity to:', environment.apiUrl);
+      console.log('🌐 Platform:', Capacitor.getPlatform());
+      console.log('📱 Device info:', {
+        isNative: Capacitor.isNativePlatform(),
+        platform: Capacitor.getPlatform()
+      });
 
       // Probar conectividad básica
       const testUrl = `${environment.apiUrl}/auth/refresh`;
+      console.log('🎯 Testing URL:', testUrl);
+
       const response = await this.http.get(testUrl, {
         withCredentials: true,
-        timeout: 10000 // 10 segundos timeout
+        observe: 'response', // Para obtener headers y status
+        timeout: 15000 // 15 segundos timeout
       }).toPromise();
 
       console.log('✅ Connectivity test successful');
+      console.log('📊 Response status:', response?.status);
+      console.log('📋 Response headers:', response?.headers);
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Connectivity test failed:', error);
+      console.error('🔍 Error details:', {
+        name: error.name,
+        message: error.message,
+        status: error.status,
+        statusText: error.statusText,
+        url: error.url,
+        error: error.error
+      });
+
+      // Si es error de red, intentar con un endpoint más simple
+      if (error.status === 0 || error.name === 'TypeError') {
+        console.log('🔄 Trying simple connectivity test...');
+        try {
+          const simpleResponse = await this.http.get(`${environment.apiUrl.replace('/api', '')}/`, {
+            timeout: 10000
+          }).toPromise();
+          console.log('✅ Simple connectivity successful');
+          return true;
+        } catch (simpleError) {
+          console.error('❌ Simple connectivity also failed:', simpleError);
+        }
+      }
+
       return false;
     }
-  }
-
-  onSubmit() {
+  }  onSubmit() {
     if (this.loginForm.invalid) {
       this.loginForm.markAllAsTouched();
       return;

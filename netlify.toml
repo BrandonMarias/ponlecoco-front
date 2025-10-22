@@ -4,20 +4,26 @@
   status = 200
   force = true
 
-# Configuración específica para CORS y apps móviles
+# Headers CORS permisivos para aplicaciones móviles
 [[headers]]
   for = "/api/*"
   [headers.values]
     Access-Control-Allow-Origin = "*"
-    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS, HEAD"
-    Access-Control-Allow-Headers = "Accept, Authorization, Content-Type, Origin, X-Requested-With"
-    Access-Control-Allow-Credentials = "true"
+    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS, HEAD, PATCH"
+    Access-Control-Allow-Headers = "Accept, Authorization, Content-Type, Origin, X-Requested-With, Cache-Control, Pragma"
     Access-Control-Max-Age = "86400"
 
-# Headers específicos para la aplicación principal
+# Headers adicionales para otros orígenes
+[[headers]]
+  for = "/api/*"
+  [headers.values]
+    Vary = "Origin"
+
+# Headers para la aplicación principal
 [[headers]]
   for = "/*"
   [headers.values]
-    X-Frame-Options = "DENY"
+    X-Frame-Options = "SAMEORIGIN"
     X-XSS-Protection = "1; mode=block"
     Referrer-Policy = "strict-origin-when-cross-origin"
+    X-Content-Type-Options = "nosniff"
