@@ -14,7 +14,9 @@ interface User {
 
 interface AuthResponse {
   user: User;
-  access_token: string;
+  access_token?: string;
+  accessToken?: string;
+  token?: string;
 }
 
 interface AuthState {
@@ -48,7 +50,9 @@ export class AuthService {
   }
 
   getToken(): string | null {
-    return localStorage.getItem('access_token');
+    const token = localStorage.getItem('access_token');
+    console.log('🔑 Getting token from localStorage:', token ? `${token.substring(0, 20)}...` : 'null');
+    return token;
   }
 
   private getAuthHeaders(): HttpHeaders {
@@ -75,7 +79,8 @@ export class AuthService {
       headers: this.getAuthHeaders()
     }).pipe(
       tap(response => {
-        this.setAuthState(response.user, response.access_token);
+        const token = this.extractToken(response);
+        this.setAuthState(response.user, token);
       }),
       catchError(() => {
         this.clearAuthState();
@@ -89,7 +94,8 @@ export class AuthService {
       headers: new HttpHeaders({ 'Content-Type': 'application/json' })
     }).pipe(
       tap(response => {
-        this.setAuthState(response.user, response.access_token);
+        const token = this.extractToken(response);
+        this.setAuthState(response.user, token);
       })
     );
   }
@@ -98,7 +104,10 @@ export class AuthService {
     return this.http.post<AuthResponse>(`${this.apiUrl}/auth/google`, { token }, {
       headers: new HttpHeaders({ 'Content-Type': 'application/json' })
     }).pipe(
-      tap(response => this.setAuthState(response.user, response.access_token))
+      tap(response => {
+        const token = this.extractToken(response);
+        this.setAuthState(response.user, token);
+      })
     );
   }
 
@@ -106,7 +115,10 @@ export class AuthService {
     return this.http.post<AuthResponse>(`${this.apiUrl}/users`, credentials, {
       headers: new HttpHeaders({ 'Content-Type': 'application/json' })
     }).pipe(
-      tap(response => this.setAuthState(response.user, response.access_token))
+      tap(response => {
+        const token = this.extractToken(response);
+        this.setAuthState(response.user, token);
+      })
     );
   }
 
@@ -121,9 +133,21 @@ export class AuthService {
     localStorage.removeItem('access_token');
   }
 
+  private extractToken(response: AuthResponse): string {
+    const token = response.access_token || response.accessToken || response.token;
+    if (!token) {
+      console.error('❌ No token found in response:', response);
+      throw new Error('No authentication token received');
+    }
+    console.log('🔑 Token extracted from response:', `${token.substring(0, 20)}...`);
+    return token;
+  }
+
   private setAuthState(user: User, accessToken: string) {
+    console.log('💾 Setting auth state with user:', user.email, 'and token:', accessToken ? `${accessToken.substring(0, 20)}...` : 'null');
     this.authState.set({ user, isAuthenticated: true });
     localStorage.setItem('user_data', JSON.stringify(user));
     localStorage.setItem('access_token', accessToken);
+    console.log('✅ Auth state set, localStorage updated');
   }
 }

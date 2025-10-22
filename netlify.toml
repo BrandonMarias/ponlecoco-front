@@ -4,7 +4,7 @@
   status = 200
   force = true
 
-# Headers CORS simples para JWT (no necesitamos cookies)
+# Headers CORS específicos para apps móviles
 [[headers]]
   for = "/api/*"
   [headers.values]
@@ -12,6 +12,9 @@
     Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS, HEAD, PATCH"
     Access-Control-Allow-Headers = "Accept, Authorization, Content-Type, Origin, X-Requested-With"
     Access-Control-Max-Age = "86400"
+    # Headers adicionales para Capacitor
+    Access-Control-Allow-Private-Network = "true"
+    Vary = "Origin"
 
 # Headers para la aplicación principal
 [[headers]]

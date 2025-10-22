@@ -261,6 +261,9 @@ export default class LoginComponent implements AfterViewInit {
       .subscribe({
         next: (response) => {
           console.log('✅ Login successful:', response);
+          console.log('🔍 Checking localStorage after login:');
+          console.log('   - access_token:', localStorage.getItem('access_token') ? `${localStorage.getItem('access_token')?.substring(0, 20)}...` : 'null');
+          console.log('   - user_data:', localStorage.getItem('user_data'));
           this.router.navigateByUrl('/dashboard');
         },
         error: (err) => {
