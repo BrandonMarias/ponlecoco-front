@@ -51,17 +51,15 @@ export class AuthService {
 
   // Helper para opciones HTTP según la plataforma
   private getHttpOptions() {
-    const isNative = Capacitor.isNativePlatform();
+    // Ahora usamos credentials en todas las plataformas ya que configuramos CORS específicamente
     return {
-      withCredentials: !isNative // Solo usar cookies en web, no en móvil
+      withCredentials: true
     };
   }
 
   refreshTokenOnLoad(): Observable<any> {
     // Since we're using httpOnly cookies, we just try to validate the session
-    return this.http.get<AuthResponse>(`${this.apiUrl}/auth/refresh`, {
-      withCredentials: true
-    }).pipe(
+    return this.http.get<AuthResponse>(`${this.apiUrl}/auth/refresh`, this.getHttpOptions()).pipe(
       tap(response => {
         this.setAuthState({ user: response.user, isAuthenticated: true });
       }),
@@ -100,26 +98,20 @@ export class AuthService {
       })
     );
   }  googleLogin(token: string) {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/google`, { token }, {
-      withCredentials: true
-    }).pipe(
+    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/google`, { token }, this.getHttpOptions()).pipe(
       tap(response => this.setAuthState({ user: response.user, isAuthenticated: true }))
     );
   }
 
   register(credentials: { name: string, email: string, password: string }) {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/users`, credentials, {
-      withCredentials: true
-    }).pipe(
+    return this.http.post<AuthResponse>(`${this.apiUrl}/users`, credentials, this.getHttpOptions()).pipe(
       tap(response => this.setAuthState({ user: response.user, isAuthenticated: true }))
     );
   }
 
   logout() {
     // Call the logout endpoint to clear the httpOnly cookie
-    this.http.post(`${this.apiUrl}/auth/logout`, {}, {
-      withCredentials: true
-    }).subscribe({
+    this.http.post(`${this.apiUrl}/auth/logout`, {}, this.getHttpOptions()).subscribe({
       next: () => {
         console.log('Logout successful, cookie cleared');
       },

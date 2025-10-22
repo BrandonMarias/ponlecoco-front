@@ -4,13 +4,14 @@
   status = 200
   force = true
 
-# Headers CORS permisivos para aplicaciones móviles
+# Headers CORS específicos para aplicaciones móviles con cookies
 [[headers]]
   for = "/api/*"
   [headers.values]
-    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Origin = "https://localhost"
     Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS, HEAD, PATCH"
-    Access-Control-Allow-Headers = "Accept, Authorization, Content-Type, Origin, X-Requested-With, Cache-Control, Pragma"
+    Access-Control-Allow-Headers = "Accept, Authorization, Content-Type, Origin, X-Requested-With, Cache-Control, Pragma, Cookie"
+    Access-Control-Allow-Credentials = "true"
     Access-Control-Max-Age = "86400"
 
 # Headers adicionales para otros orígenes

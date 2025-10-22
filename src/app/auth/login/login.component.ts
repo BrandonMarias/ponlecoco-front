@@ -170,7 +170,7 @@ export default class LoginComponent implements AfterViewInit {
 
       // Usar las mismas opciones HTTP que el AuthService
       const httpOptions = {
-        withCredentials: !Capacitor.isNativePlatform(), // No usar credentials en Android
+        withCredentials: true, // Ahora usamos credentials en todas las plataformas
         observe: 'response' as const, // Para obtener headers y status
         timeout: 15000 // 15 segundos timeout
       };
@@ -206,7 +206,7 @@ export default class LoginComponent implements AfterViewInit {
         console.log('🔄 Trying simple connectivity test...');
         try {
           const simpleResponse = await this.http.get(`${environment.apiUrl.replace('/api', '')}/`, {
-            withCredentials: !Capacitor.isNativePlatform(),
+            withCredentials: true,
             timeout: 10000
           }).toPromise();
           console.log('✅ Simple connectivity successful');
