@@ -13,6 +13,11 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'profile',
+    loadComponent: () => import('./user-profile/user-profile.component'),
+    canActivate: [authGuard],
+  },
+  {
     path: 'triviaparty',
     loadChildren: () => import('./triviaparty/triviaparty.routes'),
     canActivate: [authGuard], // Or apply to individual child routes

@@ -10,6 +10,7 @@ interface User {
   name: string;
   photoUrl?: string;
   role: string;
+  googleId?: string;
 }
 
 interface AuthResponse {
@@ -36,6 +37,7 @@ export class AuthService {
 
   currentUser = computed(() => this.authState().user);
   isAuthenticated = computed(() => this.authState().isAuthenticated);
+  isGoogleUser = computed(() => !!this.authState().user?.googleId);
 
   constructor() {
     const storedUser = localStorage.getItem('user_data');
@@ -123,6 +125,15 @@ export class AuthService {
   logout() {
     this.clearAuthState();
     this.router.navigateByUrl('/auth/login');
+  }
+
+  updateUserProfile(updates: Partial<User>) {
+    const currentUser = this.authState().user;
+    if (currentUser) {
+      const updatedUser = { ...currentUser, ...updates };
+      this.authState.set({ user: updatedUser, isAuthenticated: true });
+      localStorage.setItem('user_data', JSON.stringify(updatedUser));
+    }
   }
 
   private clearAuthState() {
