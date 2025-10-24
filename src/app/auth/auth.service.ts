@@ -114,12 +114,24 @@ export class AuthService {
   register(credentials: { name: string, email: string, password: string }) {
     return this.http.post<AuthResponse>(`${this.apiUrl}/users`, credentials, {
       headers: new HttpHeaders({ 'Content-Type': 'application/json' })
+    });
+  }
+
+  verifyEmail(email: string, code: string) {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/users/verify-email`, { email, code }, {
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' })
     }).pipe(
       tap(response => {
         const token = this.extractToken(response);
         this.setAuthState(response.user, token);
       })
     );
+  }
+
+  resendVerificationCode(email: string) {
+    return this.http.post(`${this.apiUrl}/users/resend-verification`, { email }, {
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' })
+    });
   }
 
   logout() {

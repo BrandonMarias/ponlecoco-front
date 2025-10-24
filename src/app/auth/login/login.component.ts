@@ -171,6 +171,24 @@ export default class LoginComponent implements AfterViewInit {
         next: () => this.router.navigateByUrl('/dashboard'),
         error: (err) => {
           console.error('Login failed:', err);
+          console.log('Error status:', err.status);
+          console.log('Error message:', err.error?.message);
+
+          // Verificar si la cuenta no está verificada
+          if (err.status === 401 && err.error?.message && (
+              err.error.message.toLowerCase().includes('verify your email') ||
+              err.error.message.toLowerCase().includes('not verified') ||
+              err.error.message.toLowerCase().includes('email not verified') ||
+              err.error.message.toLowerCase().includes('account not verified') ||
+              err.error?.code === 'EMAIL_NOT_VERIFIED')) {
+
+            console.log('Redirecting to email verification for:', credentials.email);
+            // Redirigir a la página de verificación con el email y parámetro fromLogin
+            this.router.navigate(['/auth/verify-email'], {
+              queryParams: { email: credentials.email, fromLogin: 'true' }
+            });
+            return;
+          }
 
           let errorMessage = 'Error en el inicio de sesión. Por favor, inténtalo de nuevo.';
 

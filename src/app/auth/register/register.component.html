@@ -71,6 +71,22 @@
           </div>
         }
       </div>
+
+      <!-- Información sobre verificación de email -->
+      <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+        <div class="flex items-start gap-3">
+          <svg class="w-5 h-5 text-blue-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+          </svg>
+          <div>
+            <h4 class="text-sm font-medium text-blue-800 dark:text-blue-200 mb-1">Verificación de Email</h4>
+            <p class="text-xs text-blue-700 dark:text-blue-300">
+              Después del registro, recibirás un código de 6 dígitos en tu email para verificar tu cuenta.
+            </p>
+          </div>
+        </div>
+      </div>
+
       <div>
         <button type="submit" [disabled]="registerForm.invalid || loading()"
           class="w-full flex justify-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-400">

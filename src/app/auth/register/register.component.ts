@@ -38,7 +38,12 @@ export default class RegisterComponent {
           finalize(() => this.loading.set(false))
         )
         .subscribe({
-          next: () => this.router.navigateByUrl('/dashboard'),
+          next: () => {
+            // Redirigir a verificación de email con el email como parámetro
+            this.router.navigate(['/auth/verify-email'], {
+              queryParams: { email: email }
+            });
+          },
           error: (err) => this.error.set(err.error.message || 'An unexpected error occurred.')
         });
     } else {
