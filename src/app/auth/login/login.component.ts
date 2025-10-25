@@ -182,15 +182,11 @@ export default class LoginComponent implements AfterViewInit {
               err.error.message.toLowerCase().includes('account not verified') ||
               err.error?.code === 'EMAIL_NOT_VERIFIED')) {
 
-            console.log('Redirecting to email verification for:', credentials.email);
-            // Redirigir a la página de verificación con el email y parámetro fromLogin
-            this.router.navigate(['/auth/verify-email'], {
-              queryParams: { email: credentials.email, fromLogin: 'true' }
-            });
+            console.log('Account not verified for:', credentials.email);
+            // Mostrar mensaje específico para cuentas no verificadas
+            this.error.set('Tu cuenta necesita ser verificada antes de poder iniciar sesión. Por favor, revisa tu email y haz clic en el enlace de verificación que te enviamos.');
             return;
-          }
-
-          let errorMessage = 'Error en el inicio de sesión. Por favor, inténtalo de nuevo.';
+          }          let errorMessage = 'Error en el inicio de sesión. Por favor, inténtalo de nuevo.';
 
           if (err.name === 'TypeError' && err.message.includes('Failed to fetch')) {
             errorMessage = `Error de conectividad: No se puede conectar al servidor. Verifica tu conexión a internet.`;

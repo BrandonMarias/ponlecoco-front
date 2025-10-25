@@ -19,6 +19,8 @@ export default class RegisterComponent {
 
   loading = signal(false);
   error = signal<string | null>(null);
+  success = signal(false);
+  userEmail = signal<string>('');
 
   registerForm = this.fb.group({
     username: ['', Validators.required],
@@ -39,15 +41,18 @@ export default class RegisterComponent {
         )
         .subscribe({
           next: () => {
-            // Redirigir a verificación de email con el email como parámetro
-            this.router.navigate(['/auth/verify-email'], {
-              queryParams: { email: email }
-            });
+            // Mostrar mensaje de éxito en lugar de redirigir
+            this.success.set(true);
+            this.userEmail.set(email!);
           },
           error: (err) => this.error.set(err.error.message || 'An unexpected error occurred.')
         });
     } else {
       this.registerForm.markAllAsTouched();
     }
+  }
+
+  goToLogin() {
+    this.router.navigateByUrl('/auth/login');
   }
 }

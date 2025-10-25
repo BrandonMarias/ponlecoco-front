@@ -1,6 +1,48 @@
 <div class="page-container auth-page flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white">
   <div class="w-full max-w-md p-8 space-y-6 bg-white dark:bg-gray-900 rounded-lg shadow-md">
-    <h2 class="text-2xl font-bold text-center">Crear Cuenta</h2>
+
+    @if (success()) {
+      <!-- Success State -->
+      <div class="text-center">
+        <div class="mx-auto w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mb-6">
+          <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+          </svg>
+        </div>
+        <h2 class="text-2xl font-bold mb-4">¡Cuenta Creada!</h2>
+        <p class="text-gray-600 dark:text-gray-300 text-sm mb-2">
+          Hemos enviado un enlace de verificación a:
+        </p>
+        <p class="text-blue-600 dark:text-blue-400 font-semibold mb-6">{{ userEmail() }}</p>
+
+        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6 text-left">
+          <div class="flex items-start gap-3">
+            <svg class="w-5 h-5 text-blue-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <div>
+              <h4 class="text-sm font-medium text-blue-800 dark:text-blue-200 mb-1">Verificación Requerida</h4>
+              <p class="text-xs text-blue-700 dark:text-blue-300">
+                Por favor, revisa tu email y haz clic en el enlace de verificación para activar tu cuenta.
+                El enlace expira en 15 minutos.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <button
+          (click)="goToLogin()"
+          class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+          </svg>
+          Ir al Login
+        </button>
+      </div>
+    } @else {
+      <!-- Registration Form -->
+      <h2 class="text-2xl font-bold text-center">Crear Cuenta</h2>
 
     @if (error()) {
       <div class="p-4 text-sm text-red-800 bg-red-100 rounded-lg dark:bg-red-900 dark:text-red-300" role="alert">
@@ -81,7 +123,7 @@
           <div>
             <h4 class="text-sm font-medium text-blue-800 dark:text-blue-200 mb-1">Verificación de Email</h4>
             <p class="text-xs text-blue-700 dark:text-blue-300">
-              Después del registro, recibirás un código de 6 dígitos en tu email para verificar tu cuenta.
+              Después del registro, recibirás un enlace de verificación en tu email. Simplemente haz clic en el enlace para activar tu cuenta.
             </p>
           </div>
         </div>
@@ -105,5 +147,6 @@
       ¿Ya tienes una cuenta?
       <a routerLink="/auth/login" class="font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300">Inicia Sesión</a>
     </p>
+    }
   </div>
 </div>

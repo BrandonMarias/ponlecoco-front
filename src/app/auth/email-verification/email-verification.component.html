@@ -1,123 +1,215 @@
-<div class="min-h-screen bg-gradient-to-br from-blue-900 to-purple-900 flex items-center justify-center p-4">
-  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 w-full max-w-md">
-    <!-- Header -->
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
+  <div class="max-w-md w-full bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 space-y-6">
+    <!-- Logo -->
     <div class="text-center mb-8">
-      <div class="mx-auto w-16 h-16 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mb-4">
-        <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-        </svg>
+      <div class="mx-auto w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mb-4">
+        <img src="media/img/logo.png" alt="logo" class="rounded">
       </div>
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Verificar Email</h1>
-      @if (fromLogin()) {
-        <p class="text-gray-600 dark:text-gray-300 text-sm">
-          Tu cuenta necesita ser verificada para poder iniciar sesión.
-        </p>
-        <p class="text-gray-600 dark:text-gray-300 text-sm mt-1">
-          Ingresa el código enviado a:
-        </p>
-      } @else {
-        <p class="text-gray-600 dark:text-gray-300 text-sm">
-          Hemos enviado un código de 6 dígitos a:
-        </p>
-      }
-      <p class="text-blue-600 dark:text-blue-400 font-semibold mt-1">{{ email() }}</p>
+      <h2 class="text-3xl font-bold text-gray-900 dark:text-white">PonleCoco</h2>
     </div>
 
-    <!-- Verification Form -->
-    <form [formGroup]="verificationForm" (ngSubmit)="verifyEmail()" class="space-y-6">
-      <div>
-        <label for="code" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Código de Verificación
-        </label>
-        <input
-          #codeInput
-          id="code"
-          type="text"
-          formControlName="code"
-          maxlength="6"
-          placeholder="000000"
-          (input)="onCodeInput($event)"
-          class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center text-2xl font-mono tracking-widest"
-          [class.border-red-500]="verificationForm.get('code')?.invalid && verificationForm.get('code')?.touched"
-        >
-        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 text-center">
-          Se verificará automáticamente al completar los 6 dígitos
+    <!-- No Token State -->
+    @if (!token() && !isLoading()) {
+      <div class="text-center">
+        <div class="mx-auto w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-6">
+          <svg class="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+        </div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Enlace Inválido</h1>
+        <p class="text-gray-600 dark:text-gray-300 text-sm mb-6">
+          No se encontró un token de verificación válido en la URL.
         </p>
-        @if (verificationForm.get('code')?.invalid && verificationForm.get('code')?.touched) {
-          <div class="text-red-500 text-sm mt-1">
-            @if (verificationForm.get('code')?.errors?.['required']) {
-              <p>El código de verificación es requerido</p>
-            }
-            @if (verificationForm.get('code')?.errors?.['pattern'] || verificationForm.get('code')?.errors?.['minlength'] || verificationForm.get('code')?.errors?.['maxlength']) {
-              <p>El código debe ser de 6 dígitos</p>
-            }
-          </div>
-        }
+        <button
+          (click)="goToLogin()"
+          class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013 3v1"></path>
+          </svg>
+          Ir al Login
+        </button>
       </div>
+    }
 
-      <!-- Submit Button -->
-      <button
-        type="submit"
-        [disabled]="verificationForm.invalid || isLoading()"
-        class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
-      >
-        @if (isLoading()) {
-          <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-          Verificando...
-        } @else {
+    @if (token() && !isSuccess() && !isLoading()) {
+      <!-- Ready to Verify State -->
+      <div class="text-center">
+        <div class="mx-auto w-16 h-16 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mb-6">
+          <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+          </svg>
+        </div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Verificar Email</h1>
+
+        <div class="mb-6">
+          <p class="text-gray-600 dark:text-gray-300 text-sm mb-2">
+            Estás a punto de verificar tu cuenta de email.
+          </p>
+          @if (userEmail()) {
+            <p class="text-blue-600 dark:text-blue-400 font-semibold">{{ userEmail() }}</p>
+          }
+        </div>
+
+        <button
+          (click)="verifyEmail()"
+          class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 mb-4"
+        >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
           </svg>
-          Verificar Email
-        }
-      </button>
-    </form>
-
-    <!-- Resend Code -->
-    <div class="text-center mt-6 space-y-3">
-      <p class="text-gray-600 dark:text-gray-400 text-sm">¿No recibiste el código?</p>
-
-      @if (countdown() > 0) {
-        <p class="text-gray-500 dark:text-gray-400 text-sm">
-          Podrás reenviar el código en {{ countdown() }} segundos
-        </p>
-      } @else {
-        <button
-          (click)="resendCode()"
-          [disabled]="isResending()"
-          class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1 mx-auto"
-        >
-          @if (isResending()) {
-            <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-            Reenviando...
-          } @else {
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-            </svg>
-            Reenviar código
-          }
+          Verificar Mi Cuenta
         </button>
-      }
-    </div>
 
-    <!-- Back Button -->
-    <div class="text-center mt-6">
-      <button
-        (click)="goBack()"
-        class="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 text-sm flex items-center justify-center gap-1 mx-auto"
-      >
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-        </svg>
-        @if (fromLogin()) {
-          Volver al login
+        <div class="text-center">
+          <button
+            (click)="goToLogin()"
+            class="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 text-sm"
+          >
+            Volver al Login
+          </button>
+        </div>
+      </div>
+    }
+
+    @if (isLoading()) {
+      <!-- Loading State -->
+      <div class="text-center">
+        <div class="mx-auto w-16 h-16 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mb-6">
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Verificando Email</h1>
+        <p class="text-gray-600 dark:text-gray-300 text-sm">
+          Por favor espera mientras verificamos tu email...
+        </p>
+      </div>
+    }
+
+    @if (isSuccess()) {
+      <!-- Success State -->
+      <div class="text-center">
+        <div class="mx-auto w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mb-6">
+          <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+          </svg>
+        </div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">¡Email Verificado!</h1>
+        <p class="text-gray-600 dark:text-gray-300 text-sm mb-6">
+          Tu cuenta ha sido verificada exitosamente. Serás redirigido al dashboard en unos segundos.
+        </p>
+
+        <div class="space-y-3">
+          <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+            <div class="bg-green-600 h-2 rounded-full animate-pulse" style="width: 100%"></div>
+          </div>
+          <p class="text-xs text-gray-500 dark:text-gray-400">Redirigiendo automáticamente...</p>
+        </div>
+      </div>
+    }
+
+    @if (!isSuccess() && !isLoading() && token() && errorMessage()) {
+      <!-- Error State with Token -->
+      <div class="text-center">
+        @if (isTokenExpired()) {
+          <!-- Expired Token State -->
+          <div class="mx-auto w-16 h-16 bg-yellow-100 dark:bg-yellow-900 rounded-full flex items-center justify-center mb-6">
+            <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Enlace Expirado</h1>
+
+          <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mb-6">
+            <div class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-yellow-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <div>
+                <p class="text-sm text-yellow-700 dark:text-yellow-300">
+                  Este enlace de verificación ha expirado. Los enlaces son válidos por 5 minutos después de ser enviados.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          @if (userEmail()) {
+            <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-6">
+              <p class="text-sm text-gray-600 dark:text-gray-300 mb-1">Cuenta a verificar:</p>
+              <p class="text-blue-600 dark:text-blue-400 font-semibold">{{ userEmail() }}</p>
+            </div>
+          }
+
+          <div class="space-y-3">
+            <button
+              (click)="resendVerification()"
+              [disabled]="isResending()"
+              class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+            >
+              @if (isResending()) {
+                <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Enviando...
+              } @else {
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+                Reenviar Email de Verificación
+              }
+            </button>
+
+            <button
+              (click)="goToLogin()"
+              class="w-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013 3v1"></path>
+              </svg>
+              Ir al Login
+            </button>
+          </div>
         } @else {
-          Volver al registro
-        }
-      </button>
-    </div>
+          <!-- General Error State -->
+          <div class="mx-auto w-16 h-16 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center mb-6">
+            <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </div>
+          <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Error de Verificación</h1>
 
-    <!-- Success/Error Messages -->
+          <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
+            <p class="text-red-800 dark:text-red-200 text-sm">
+              {{ errorMessage() }}
+            </p>
+          </div>
+
+          <div class="space-y-3">
+            <button
+              (click)="goToLogin()"
+              class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013 3v1"></path>
+              </svg>
+              Ir al Login
+            </button>
+
+            <button
+              (click)="goToRegister()"
+              class="w-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+              </svg>
+              Crear Nueva Cuenta
+            </button>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Success Message (if any) -->
     @if (successMessage()) {
       <div class="mt-4 p-4 bg-green-100 dark:bg-green-900 border border-green-300 dark:border-green-700 rounded-lg">
         <div class="flex items-center gap-2">
@@ -125,17 +217,6 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
           </svg>
           <p class="text-green-800 dark:text-green-200 text-sm">{{ successMessage() }}</p>
-        </div>
-      </div>
-    }
-
-    @if (errorMessage()) {
-      <div class="mt-4 p-4 bg-red-100 dark:bg-red-900 border border-red-300 dark:border-red-700 rounded-lg">
-        <div class="flex items-center gap-2">
-          <svg class="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-          </svg>
-          <p class="text-red-800 dark:text-red-200 text-sm">{{ errorMessage() }}</p>
         </div>
       </div>
     }

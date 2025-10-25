@@ -117,13 +117,13 @@ export class AuthService {
     });
   }
 
-  verifyEmail(email: string, code: string) {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/users/verify-email`, { email, code }, {
+  verifyEmail(token: string) {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/users/verify-email`, { token }, {
       headers: new HttpHeaders({ 'Content-Type': 'application/json' })
     }).pipe(
       tap(response => {
-        const token = this.extractToken(response);
-        this.setAuthState(response.user, token);
+        const accessToken = this.extractToken(response);
+        this.setAuthState(response.user, accessToken);
       })
     );
   }

@@ -1,166 +1,124 @@
-import { Component, signal, inject, OnInit, OnDestroy, ElementRef, ViewChild } from '@angular/core';
+import { Component, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../auth.service';
 
 @Component({
   selector: 'app-email-verification',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule],
   templateUrl: './email-verification.component.html'
 })
-export default class EmailVerificationComponent implements OnInit, OnDestroy {
-  @ViewChild('codeInput') codeInput!: ElementRef<HTMLInputElement>;
-
-  private fb = inject(FormBuilder);
+export default class EmailVerificationComponent implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private authService = inject(AuthService);
 
-  verificationForm: FormGroup;
-  email = signal<string>('');
-  fromLogin = signal(false);
+  token = signal<string | null>(null);
   isLoading = signal(false);
   isResending = signal(false);
+  isSuccess = signal(false);
+  isTokenExpired = signal(false);
   errorMessage = signal<string | null>(null);
   successMessage = signal<string | null>(null);
-  countdown = signal(0);
-  private countdownInterval?: any;
-
-  constructor() {
-    this.verificationForm = this.fb.group({
-      code: ['', [
-        Validators.required,
-        Validators.pattern(/^\d{6}$/),
-        Validators.minLength(6),
-        Validators.maxLength(6)
-      ]]
-    });
-  }
+  userEmail = signal<string>('');
 
   ngOnInit() {
-    // Obtener email de los parámetros de ruta
-    const email = this.route.snapshot.queryParams['email'];
-    const fromLogin = this.route.snapshot.queryParams['fromLogin'];
+    // Obtener token de los parámetros de ruta
+    const token = this.route.snapshot.queryParams['code'];
 
-    if (email) {
-      this.email.set(email);
-      this.fromLogin.set(fromLogin === 'true');
-
-      // Auto-focus en el input después de un breve delay
-      setTimeout(() => {
-        if (this.codeInput) {
-          this.codeInput.nativeElement.focus();
-        }
-      }, 500);
-
-      // Si viene del login, mostrar mensaje informativo
-      if (this.fromLogin()) {
-        this.showErrorMessage('Tu cuenta necesita ser verificada antes de poder iniciar sesión. Por favor, verifica tu email.');
-      }
+    if (token) {
+      this.token.set(token);
+      // Decodificar el token para obtener información del usuario
+      this.decodeTokenInfo(token);
     } else {
-      // Si no hay email, redirigir al registro
-      this.router.navigateByUrl('/auth/register');
+      this.showErrorMessage('Token de verificación no encontrado. Por favor, revisa tu email y haz clic en el enlace de verificación.');
     }
   }
 
-  onCodeInput(event: any) {
-    let value = event.target.value.replace(/\D/g, ''); // Solo números
-    if (value.length > 6) {
-      value = value.substring(0, 6);
-    }
-    this.verificationForm.patchValue({ code: value });
-
-    // Auto-submit cuando tenga 6 dígitos
-    if (value.length === 6) {
-      setTimeout(() => this.verifyEmail(), 100);
-    }
-  }
-
-  ngOnDestroy() {
-    if (this.countdownInterval) {
-      clearInterval(this.countdownInterval);
+  private decodeTokenInfo(token: string) {
+    try {
+      // Decodificar el payload del JWT (parte media del token)
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      if (payload.email) {
+        this.userEmail.set(payload.email);
+      }
+    } catch (error) {
+      console.error('Error decoding token:', error);
+      // No es crítico, solo no mostramos el email
     }
   }
 
   async verifyEmail() {
-    if (this.verificationForm.invalid || this.isLoading()) return;
+    if (!this.token() || this.isLoading()) return;
 
     this.isLoading.set(true);
     this.clearMessages();
 
     try {
-      await this.authService.verifyEmail(
-        this.email(),
-        this.verificationForm.value.code
-      ).toPromise();
+      await this.authService.verifyEmail(this.token()!).toPromise();
 
-      this.showSuccessMessage('¡Email verificado correctamente!');
+      this.isSuccess.set(true);
+      this.showSuccessMessage('¡Email verificado correctamente! Redirigiendo al dashboard...');
 
-      // Redirigir al dashboard después de 2 segundos
+      // Redirigir al dashboard después de 3 segundos
       setTimeout(() => {
         this.router.navigateByUrl('/dashboard');
-      }, 2000);
+      }, 3000);
 
     } catch (error: any) {
       console.error('Error verifying email:', error);
-      this.showErrorMessage(error?.error?.message || 'Código de verificación inválido');
+
+      let errorMsg = 'Error al verificar el email';
+
+      if (error?.error?.message?.includes('expired') || error?.error?.message?.includes('Invalid or expired')) {
+        this.isTokenExpired.set(true);
+        errorMsg = 'El enlace de verificación ha expirado.';
+      } else if (error?.error?.message?.includes('Invalid')) {
+        errorMsg = 'El enlace de verificación es inválido. Por favor, verifica que hayas copiado el enlace completo.';
+      } else if (error?.error?.message) {
+        errorMsg = error.error.message;
+      }
+
+      this.showErrorMessage(errorMsg);
     } finally {
       this.isLoading.set(false);
     }
   }
 
-  async resendCode() {
-    if (this.isResending() || this.countdown() > 0) return;
+  async resendVerification() {
+    if (!this.userEmail() || this.isResending()) return;
 
     this.isResending.set(true);
     this.clearMessages();
 
     try {
-      await this.authService.resendVerificationCode(this.email()).toPromise();
+      await this.authService.resendVerificationCode(this.userEmail()).toPromise();
 
-      this.showSuccessMessage('Código de verificación reenviado. Revisa tu email.');
-      this.startCountdown();
+      this.showSuccessMessage('Nuevo enlace de verificación enviado. Por favor, revisa tu email.');
 
     } catch (error: any) {
-      console.error('Error resending verification code:', error);
-      this.showErrorMessage(error?.error?.message || 'Error al reenviar el código');
+      console.error('Error resending verification:', error);
+      this.showErrorMessage(error?.error?.message || 'Error al enviar el enlace de verificación. Por favor, inténtalo de nuevo.');
     } finally {
       this.isResending.set(false);
     }
   }
 
-  private startCountdown() {
-    this.countdown.set(60);
-    this.countdownInterval = setInterval(() => {
-      const current = this.countdown();
-      if (current <= 1) {
-        this.countdown.set(0);
-        clearInterval(this.countdownInterval);
-      } else {
-        this.countdown.set(current - 1);
-      }
-    }, 1000);
+  goToLogin() {
+    this.router.navigateByUrl('/auth/login');
   }
 
-  goBack() {
-    // Si viene del login, regresar al login, sino al registro
-    if (this.fromLogin()) {
-      this.router.navigateByUrl('/auth/login');
-    } else {
-      this.router.navigateByUrl('/auth/register');
-    }
+  goToRegister() {
+    this.router.navigateByUrl('/auth/register');
   }
 
   private showSuccessMessage(message: string) {
     this.successMessage.set(message);
-    setTimeout(() => this.successMessage.set(null), 5000);
   }
 
   private showErrorMessage(message: string) {
     this.errorMessage.set(message);
-    setTimeout(() => this.errorMessage.set(null), 5000);
   }
 
   private clearMessages() {
