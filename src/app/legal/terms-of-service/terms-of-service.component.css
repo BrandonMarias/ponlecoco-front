@@ -1,0 +1,60 @@
+.legal-container {
+  scroll-behavior: smooth;
+}
+
+.legal-container h2 {
+  scroll-margin-top: 1.5rem;
+}
+
+.legal-container h3 {
+  scroll-margin-top: 1.5rem;
+}
+
+.legal-nav {
+  position: sticky;
+  top: 1rem;
+}
+
+.contact-card {
+  transition: all 0.2s ease-in-out;
+}
+
+.contact-card:hover {
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  transform: translateY(-2px);
+}
+
+.warning-box {
+  background-color: rgb(255 251 235);
+  border: 1px solid rgb(252 211 77);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .warning-box {
+    background-color: rgb(120 53 15 / 0.2);
+    border-color: rgb(146 64 14);
+  }
+}
+
+.warning-box .warning-icon {
+  color: rgb(245 158 11);
+}
+
+.warning-box .warning-text {
+  color: rgb(180 83 9);
+}
+
+@media (prefers-color-scheme: dark) {
+  .warning-box .warning-text {
+    color: rgb(252 211 77);
+  }
+}
+
+@media (max-width: 768px) {
+  .legal-nav {
+    position: static;
+  }
+}

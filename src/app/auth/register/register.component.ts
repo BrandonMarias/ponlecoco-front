@@ -26,7 +26,8 @@ export default class RegisterComponent {
     username: ['', Validators.required],
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(6), passwordStrengthValidator()]],
-    confirmPassword: ['', Validators.required]
+    confirmPassword: ['', Validators.required],
+    acceptTerms: [false, Validators.requiredTrue]
   }, { validators: passwordMatchValidator('password', 'confirmPassword') });
 
   onSubmit() {

@@ -1,0 +1,384 @@
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+  <!-- Header -->
+  <div class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+          <button
+            (click)="goBack()"
+            class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+          >
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+            Volver
+          </button>
+          <div class="h-6 border-l border-gray-300 dark:border-gray-600"></div>
+          <div class="flex items-center space-x-3">
+            <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <img src="/media/img/logo.png" alt="" srcset="">
+            </div>
+            <h1 class="text-xl font-semibold text-gray-900 dark:text-white">PonleCoco</h1>
+          </div>
+        </div>
+        <button
+          (click)="goToPrivacy()"
+          class="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
+        >
+          Ver Política de Privacidad
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="lg:grid lg:grid-cols-4 lg:gap-8">
+      <!-- Navigation Sidebar -->
+      <div class="lg:col-span-1">
+        <div class="legal-nav bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mb-8 lg:mb-0">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Contenido</h3>
+          <nav class="space-y-2">
+            <a href="#aceptacion" class="block text-sm text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 py-1">
+              1. Aceptación de Términos
+            </a>
+            <a href="#servicios" class="block text-sm text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 py-1">
+              2. Descripción del Servicio
+            </a>
+            <a href="#registro" class="block text-sm text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 py-1">
+              3. Registro y Cuenta
+            </a>
+            <a href="#uso-aceptable" class="block text-sm text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 py-1">
+              4. Uso Aceptable
+            </a>
+            <a href="#contenido" class="block text-sm text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 py-1">
+              5. Contenido del Usuario
+            </a>
+            <a href="#propiedad" class="block text-sm text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 py-1">
+              6. Propiedad Intelectual
+            </a>
+            <a href="#limitaciones" class="block text-sm text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 py-1">
+              7. Limitaciones de Responsabilidad
+            </a>
+            <a href="#suspension" class="block text-sm text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 py-1">
+              8. Suspensión y Terminación
+            </a>
+            <a href="#modificaciones" class="block text-sm text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 py-1">
+              9. Modificaciones
+            </a>
+            <a href="#ley-aplicable" class="block text-sm text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 py-1">
+              10. Ley Aplicable
+            </a>
+            <a href="#contacto" class="block text-sm text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 py-1">
+              11. Contacto
+            </a>
+          </nav>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div class="lg:col-span-3">
+        <div class="legal-container bg-white dark:bg-gray-800 rounded-lg shadow-sm p-8">
+          <!-- Header -->
+          <div class="text-center mb-8 pb-8 border-b border-gray-200 dark:border-gray-700">
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              Términos de Servicio
+            </h1>
+            <p class="text-gray-600 dark:text-gray-400">
+              Última actualización: 28 de octubre de 2025
+            </p>
+          </div>
+
+          <!-- Content Sections -->
+          <div class="prose prose-gray dark:prose-invert max-w-none">
+
+            <!-- Aceptación de Términos -->
+            <section id="aceptacion" class="mb-8">
+              <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
+                1. Aceptación de Términos
+              </h2>
+              <div class="warning-box">
+                <div class="flex items-start gap-3">
+                  <svg class="warning-icon w-5 h-5 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  <div>
+                    <p class="text-amber-300 text-sm font-medium">
+                      Al usar PonleCoco, aceptas estos términos en su totalidad.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <p class="text-gray-700 dark:text-gray-300 mb-4">
+                Estos Términos de Servicio ("Términos") rigen tu uso de la aplicación móvil y web Jeopardimania
+                ("Servicio") operada por nuestro equipo ("nosotros", "nos", "nuestro").
+              </p>
+              <p class="text-gray-700 dark:text-gray-300">
+                Al acceder o usar nuestro Servicio, aceptas estar sujeto a estos Términos. Si no estás de acuerdo
+                con alguna parte de estos términos, no podrás acceder al Servicio.
+              </p>
+            </section>
+
+            <!-- Descripción del Servicio -->
+            <section id="servicios" class="mb-8">
+              <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
+                2. Descripción del Servicio
+              </h2>
+              <p class="text-gray-700 dark:text-gray-300 mb-4">
+                Jeopardimania es una plataforma de juegos de trivia que permite a los usuarios:
+              </p>
+              <ul class="list-disc pl-6 text-gray-700 dark:text-gray-300 mb-4 space-y-2">
+                <li>Crear y personalizar juegos de trivia</li>
+                <li>Participar en juegos creados por otros usuarios</li>
+                <li>Competir en desafíos de conocimiento general</li>
+                <li>Llevar seguimiento de puntuaciones y estadísticas</li>
+                <li>Interactuar con una comunidad de jugadores</li>
+              </ul>
+              <p class="text-gray-700 dark:text-gray-300">
+                Nos reservamos el derecho de modificar, suspender o discontinuar cualquier parte del Servicio
+                en cualquier momento sin previo aviso.
+              </p>
+            </section>
+
+            <!-- Registro y Cuenta -->
+            <section id="registro" class="mb-8">
+              <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
+                3. Registro y Cuenta
+              </h2>
+
+              <h3 class="text-xl font-medium text-gray-900 dark:text-white mb-3">
+                3.1 Elegibilidad
+              </h3>
+              <ul class="list-disc pl-6 text-gray-700 dark:text-gray-300 mb-4 space-y-2">
+                <li>Debes tener al menos 13 años para usar el Servicio</li>
+                <li>Debes proporcionar información precisa y completa</li>
+                <li>Debes mantener actualizada tu información de cuenta</li>
+                <li>Solo puedes crear una cuenta por persona</li>
+              </ul>
+
+              <h3 class="text-xl font-medium text-gray-900 dark:text-white mb-3">
+                3.2 Seguridad de la Cuenta
+              </h3>
+              <ul class="list-disc pl-6 text-gray-700 dark:text-gray-300 mb-4 space-y-2">
+                <li>Eres responsable de mantener segura tu contraseña</li>
+                <li>No compartas tu cuenta con terceros</li>
+                <li>Notifícanos inmediatamente sobre cualquier uso no autorizado</li>
+                <li>Puedes usar Google Sign-In como método de autenticación alternativo</li>
+              </ul>
+            </section>
+
+            <!-- Uso Aceptable -->
+            <section id="uso-aceptable" class="mb-8">
+              <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
+                4. Uso Aceptable
+              </h2>
+              <p class="text-gray-700 dark:text-gray-300 mb-4">
+                Al usar nuestro Servicio, te comprometes a NO:
+              </p>
+              <ul class="list-disc pl-6 text-gray-700 dark:text-gray-300 mb-4 space-y-2">
+                <li>Usar el Servicio para actividades ilegales o no autorizadas</li>
+                <li>Crear contenido ofensivo, discriminatorio o que incite al odio</li>
+                <li>Hacer trampa o usar herramientas automatizadas para obtener ventajas</li>
+                <li>Intentar acceder a cuentas de otros usuarios</li>
+                <li>Interferir con el funcionamiento del Servicio</li>
+                <li>Distribuir malware, virus o código malicioso</li>
+                <li>Hacer uso comercial no autorizado del Servicio</li>
+                <li>Copiar, modificar o distribuir contenido protegido por derechos de autor</li>
+              </ul>
+            </section>
+
+            <!-- Contenido del Usuario -->
+            <section id="contenido" class="mb-8">
+              <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
+                5. Contenido del Usuario
+              </h2>
+
+              <h3 class="text-xl font-medium text-gray-900 dark:text-white mb-3">
+                5.1 Tu Contenido
+              </h3>
+              <p class="text-gray-700 dark:text-gray-300 mb-4">
+                Conservas todos los derechos sobre el contenido que creas (preguntas de trivia, respuestas, etc.).
+                Sin embargo, al subir contenido a nuestro Servicio, nos otorgas una licencia mundial, no exclusiva,
+                libre de regalías para usar, almacenar, mostrar y distribuir tu contenido.
+              </p>
+
+              <h3 class="text-xl font-medium text-gray-900 dark:text-white mb-3">
+                5.2 Responsabilidad del Contenido
+              </h3>
+              <ul class="list-disc pl-6 text-gray-700 dark:text-gray-300 mb-4 space-y-2">
+                <li>Eres responsable de todo el contenido que publicas</li>
+                <li>Garantizas que tienes derecho a publicar el contenido</li>
+                <li>El contenido debe cumplir con nuestras políticas de uso</li>
+                <li>Nos reservamos el derecho de remover contenido inapropiado</li>
+              </ul>
+            </section>
+
+            <!-- Propiedad Intelectual -->
+            <section id="propiedad" class="mb-8">
+              <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
+                6. Propiedad Intelectual
+              </h2>
+              <p class="text-gray-700 dark:text-gray-300 mb-4">
+                El Servicio y su contenido original, características y funcionalidad son y permanecerán
+                propiedad exclusiva de Jeopardimania y sus licenciantes.
+              </p>
+              <ul class="list-disc pl-6 text-gray-700 dark:text-gray-300 mb-4 space-y-2">
+                <li>Nuestra marca, logo y diseño están protegidos por derechos de autor</li>
+                <li>No puedes usar nuestros elementos de marca sin autorización</li>
+                <li>Respetamos los derechos de propiedad intelectual de terceros</li>
+                <li>Respondemos a notificaciones de infracción de copyright</li>
+              </ul>
+            </section>
+
+            <!-- Limitaciones de Responsabilidad -->
+            <section id="limitaciones" class="mb-8">
+              <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
+                7. Limitaciones de Responsabilidad
+              </h2>
+              <div class="warning-box">
+                <div class="flex items-start gap-3">
+                  <svg class="warning-icon w-5 h-5 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  <div>
+                    <p class="warning-text text-sm font-medium">
+                      El Servicio se proporciona "tal como está" sin garantías de ningún tipo.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <h3 class="text-xl font-medium text-gray-900 dark:text-white mb-3">
+                7.1 Exención de Garantías
+              </h3>
+              <p class="text-gray-700 dark:text-gray-300 mb-4">
+                No garantizamos que:
+              </p>
+              <ul class="list-disc pl-6 text-gray-700 dark:text-gray-300 mb-4 space-y-2">
+                <li>El Servicio estará disponible ininterrumpidamente</li>
+                <li>El Servicio estará libre de errores</li>
+                <li>Los resultados obtenidos serán precisos o confiables</li>
+                <li>Los defectos serán corregidos</li>
+              </ul>
+
+              <h3 class="text-xl font-medium text-gray-900 dark:text-white mb-3">
+                7.2 Limitación de Daños
+              </h3>
+              <p class="text-gray-700 dark:text-gray-300">
+                En ningún caso seremos responsables por daños indirectos, incidentales, especiales,
+                consecuenciales o punitivos, incluyendo pero no limitado a pérdida de beneficios,
+                datos, uso, buena voluntad u otras pérdidas intangibles.
+              </p>
+            </section>
+
+            <!-- Suspensión y Terminación -->
+            <section id="suspension" class="mb-8">
+              <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
+                8. Suspensión y Terminación
+              </h2>
+
+              <h3 class="text-xl font-medium text-gray-900 dark:text-white mb-3">
+                8.1 Terminación por tu Parte
+              </h3>
+              <p class="text-gray-700 dark:text-gray-300 mb-4">
+                Puedes terminar tu cuenta en cualquier momento eliminándola desde la configuración
+                de tu perfil o contactándonos directamente.
+              </p>
+
+              <h3 class="text-xl font-medium text-gray-900 dark:text-white mb-3">
+                8.2 Terminación por Nuestra Parte
+              </h3>
+              <p class="text-gray-700 dark:text-gray-300 mb-4">
+                Podemos suspender o terminar tu cuenta si:
+              </p>
+              <ul class="list-disc pl-6 text-gray-700 dark:text-gray-300 mb-4 space-y-2">
+                <li>Violas estos Términos de Servicio</li>
+                <li>Tu uso del Servicio causa daño a otros usuarios</li>
+                <li>Tu uso del Servicio viola leyes aplicables</li>
+                <li>Decidimos discontinuar el Servicio</li>
+              </ul>
+            </section>
+
+            <!-- Modificaciones -->
+            <section id="modificaciones" class="mb-8">
+              <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
+                9. Modificaciones
+              </h2>
+              <p class="text-gray-700 dark:text-gray-300 mb-4">
+                Nos reservamos el derecho de modificar estos términos en cualquier momento.
+                Las modificaciones entrarán en vigor inmediatamente tras su publicación.
+              </p>
+              <p class="text-gray-700 dark:text-gray-300 mb-4">
+                Te notificaremos sobre cambios significativos a través de:
+              </p>
+              <ul class="list-disc pl-6 text-gray-700 dark:text-gray-300 mb-4 space-y-2">
+                <li>Notificación en la aplicación</li>
+                <li>Email a tu dirección registrada</li>
+                <li>Aviso en nuestro sitio web</li>
+              </ul>
+              <p class="text-gray-700 dark:text-gray-300">
+                Tu uso continuado del Servicio después de modificaciones constituye aceptación
+                de los nuevos términos.
+              </p>
+            </section>
+
+            <!-- Ley Aplicable -->
+            <section id="ley-aplicable" class="mb-8">
+              <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
+                10. Ley Aplicable y Resolución de Disputas
+              </h2>
+              <p class="text-gray-700 dark:text-gray-300 mb-4">
+                Estos Términos se regirán e interpretarán de acuerdo con las leyes aplicables,
+                sin consideración a conflictos de principios legales.
+              </p>
+              <p class="text-gray-700 dark:text-gray-300 mb-4">
+                Cualquier disputa que surja en relación con estos términos o el uso del Servicio
+                será resuelta preferentemente a través de mediación. Si la mediación no tiene éxito,
+                las disputas se resolverán en los tribunales competentes.
+              </p>
+            </section>
+
+            <!-- Contacto -->
+            <section id="contacto" class="mb-8">
+              <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
+                11. Contacto
+              </h2>
+              <p class="text-gray-700 dark:text-gray-300 mb-6">
+                Si tienes preguntas sobre estos Términos de Servicio, puedes contactarnos:
+              </p>
+
+              <div class="grid md:grid-cols-2 gap-4">
+
+                <div class="contact-card bg-gray-50 dark:bg-gray-700 p-6 rounded-lg">
+                  <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-3">
+                    Soporte
+                  </h3>
+                  <p class="text-blue-600 dark:text-blue-400 font-medium">
+                    soporte&#64;ponlecoco.com
+                  </p>
+                </div>
+              </div>
+
+              <div class="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <div class="flex items-start gap-3">
+                  <svg class="w-5 h-5 text-blue-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  <div>
+                    <h4 class="text-sm font-medium text-blue-800 dark:text-blue-200 mb-1">
+                      Tiempo de Respuesta
+                    </h4>
+                    <p class="text-xs text-blue-700 dark:text-blue-300">
+                      Responderemos a consultas legales en un plazo de 3-5 días hábiles.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -16,6 +16,14 @@ const authRoutes: Routes = [
     loadComponent: () => import('./email-verification/email-verification.component'),
   },
   {
+    path: 'privacy-policy',
+    loadComponent: () => import('../legal/privacy-policy/privacy-policy.component').then(m => m.PrivacyPolicyComponent),
+  },
+  {
+    path: 'terms-of-service',
+    loadComponent: () => import('../legal/terms-of-service/terms-of-service.component').then(m => m.TermsOfServiceComponent),
+  },
+  {
     path: '',
     redirectTo: 'login',
     pathMatch: 'full',

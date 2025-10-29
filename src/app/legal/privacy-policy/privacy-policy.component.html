@@ -1,0 +1,315 @@
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+  <!-- Header -->
+  <div class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+          <button
+            (click)="goBack()"
+            class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+          >
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+            Volver
+          </button>
+          <div class="h-6 border-l border-gray-300 dark:border-gray-600"></div>
+          <div class="flex items-center space-x-3">
+            <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <img src="/media/img/logo.png" alt="" srcset="">
+            </div>
+            <h1 class="text-xl font-semibold text-gray-900 dark:text-white">PonleCoco</h1>
+          </div>
+        </div>
+        <button
+          (click)="goToTerms()"
+          class="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
+        >
+          Ver Términos de Servicio
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="lg:grid lg:grid-cols-4 lg:gap-8">
+      <!-- Navigation Sidebar -->
+      <div class="lg:col-span-1">
+        <div class="legal-nav bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mb-8 lg:mb-0">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Contenido</h3>
+          <nav class="space-y-2">
+            <a href="#introduccion" class="block text-sm text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 py-1">
+              1. Introducción
+            </a>
+            <a href="#informacion" class="block text-sm text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 py-1">
+              2. Información que Recopilamos
+            </a>
+            <a href="#uso" class="block text-sm text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 py-1">
+              3. Cómo Usamos tu Información
+            </a>
+            <a href="#compartir" class="block text-sm text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 py-1">
+              4. Compartir Información
+            </a>
+            <a href="#seguridad" class="block text-sm text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 py-1">
+              5. Seguridad de Datos
+            </a>
+            <a href="#cookies" class="block text-sm text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 py-1">
+              6. Cookies y Tecnologías
+            </a>
+            <a href="#derechos" class="block text-sm text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 py-1">
+              7. Tus Derechos
+            </a>
+            <a href="#menores" class="block text-sm text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 py-1">
+              8. Menores de Edad
+            </a>
+            <a href="#cambios" class="block text-sm text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 py-1">
+              9. Cambios en la Política
+            </a>
+            <a href="#contacto" class="block text-sm text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 py-1">
+              10. Contacto
+            </a>
+          </nav>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div class="lg:col-span-3">
+        <div class="legal-container bg-white dark:bg-gray-800 rounded-lg shadow-sm p-8">
+          <!-- Header -->
+          <div class="text-center mb-8 pb-8 border-b border-gray-200 dark:border-gray-700">
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              Política de Privacidad
+            </h1>
+            <p class="text-gray-600 dark:text-gray-400">
+              Última actualización: 28 de octubre de 2025
+            </p>
+          </div>
+
+          <!-- Content Sections -->
+          <div class="prose prose-gray dark:prose-invert max-w-none">
+
+            <!-- Introducción -->
+            <section id="introduccion" class="mb-8">
+              <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
+                1. Introducción
+              </h2>
+              <p class="text-gray-700 dark:text-gray-300 mb-4">
+                En Jeopardimania, valoramos tu privacidad y estamos comprometidos a proteger tu información personal.
+                Esta Política de Privacidad explica cómo recopilamos, usamos, compartimos y protegemos tu información
+                cuando utilizas nuestra aplicación de trivia y juegos.
+              </p>
+              <p class="text-gray-700 dark:text-gray-300">
+                Al utilizar Jeopardimania, aceptas las prácticas descritas en esta política. Si no estás de acuerdo
+                con algún aspecto de esta política, por favor no uses nuestra aplicación.
+              </p>
+            </section>
+
+            <!-- Información que Recopilamos -->
+            <section id="informacion" class="mb-8">
+              <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
+                2. Información que Recopilamos
+              </h2>
+
+              <h3 class="text-xl font-medium text-gray-900 dark:text-white mb-3">
+                2.1 Información que Proporcionas
+              </h3>
+              <ul class="list-disc pl-6 text-gray-700 dark:text-gray-300 mb-4 space-y-2">
+                <li><strong>Información de cuenta:</strong> Nombre, email, contraseña</li>
+                <li><strong>Información de perfil:</strong> Foto de perfil, preferencias de juego</li>
+                <li><strong>Contenido generado:</strong> Juegos de trivia que creas, respuestas, puntuaciones</li>
+                <li><strong>Comunicaciones:</strong> Mensajes que nos envías</li>
+              </ul>
+
+              <h3 class="text-xl font-medium text-gray-900 dark:text-white mb-3">
+                2.2 Información de Google Sign-In
+              </h3>
+              <p class="text-gray-700 dark:text-gray-300 mb-4">
+                Si eliges iniciar sesión con Google, recopilamos:
+              </p>
+              <ul class="list-disc pl-6 text-gray-700 dark:text-gray-300 mb-4 space-y-2">
+                <li>Nombre y email de tu cuenta de Google</li>
+                <li>Foto de perfil de Google (si está disponible)</li>
+                <li>ID único de Google para verificación</li>
+              </ul>
+
+              <h3 class="text-xl font-medium text-gray-900 dark:text-white mb-3">
+                2.3 Información Automática
+              </h3>
+              <ul class="list-disc pl-6 text-gray-700 dark:text-gray-300 mb-4 space-y-2">
+                <li><strong>Datos de uso:</strong> Cómo interactúas con la aplicación</li>
+                <li><strong>Información del dispositivo:</strong> Tipo de dispositivo, sistema operativo</li>
+                <li><strong>Datos de rendimiento:</strong> Tiempos de carga, errores de aplicación</li>
+                <li><strong>Información de red:</strong> Dirección IP, información de conexión</li>
+              </ul>
+            </section>
+
+            <!-- Cómo Usamos tu Información -->
+            <section id="uso" class="mb-8">
+              <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
+                3. Cómo Usamos tu Información
+              </h2>
+              <p class="text-gray-700 dark:text-gray-300 mb-4">
+                Utilizamos tu información para:
+              </p>
+              <ul class="list-disc pl-6 text-gray-700 dark:text-gray-300 mb-4 space-y-2">
+                <li>Proporcionar y mantener nuestros servicios</li>
+                <li>Autenticar tu identidad y gestionar tu cuenta</li>
+                <li>Personalizar tu experiencia de juego</li>
+                <li>Procesar y guardar tus juegos de trivia</li>
+                <li>Comunicarnos contigo sobre tu cuenta y actualizaciones</li>
+                <li>Mejorar nuestros servicios y desarrollar nuevas funcionalidades</li>
+                <li>Detectar y prevenir fraudes y actividades no autorizadas</li>
+                <li>Cumplir con obligaciones legales</li>
+              </ul>
+            </section>
+
+            <!-- Compartir Información -->
+            <section id="compartir" class="mb-8">
+              <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
+                4. Compartir Información
+              </h2>
+              <p class="text-gray-700 dark:text-gray-300 mb-4">
+                <strong>No vendemos tu información personal.</strong> Podemos compartir tu información en las siguientes circunstancias:
+              </p>
+              <ul class="list-disc pl-6 text-gray-700 dark:text-gray-300 mb-4 space-y-2">
+                <li><strong>Con tu consentimiento:</strong> Cuando nos autorices explícitamente</li>
+                <li><strong>Proveedores de servicios:</strong> Con terceros que nos ayudan a operar la aplicación</li>
+                <li><strong>Cumplimiento legal:</strong> Cuando sea requerido por ley o proceso legal</li>
+                <li><strong>Protección de derechos:</strong> Para proteger nuestros derechos y los de nuestros usuarios</li>
+                <li><strong>Transferencias comerciales:</strong> En caso de fusión, adquisición o venta de activos</li>
+              </ul>
+            </section>
+
+            <!-- Seguridad de Datos -->
+            <section id="seguridad" class="mb-8">
+              <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
+                5. Seguridad de Datos
+              </h2>
+              <p class="text-gray-700 dark:text-gray-300 mb-4">
+                Implementamos medidas de seguridad técnicas y organizativas para proteger tu información:
+              </p>
+              <ul class="list-disc pl-6 text-gray-700 dark:text-gray-300 mb-4 space-y-2">
+                <li>Encriptación de datos en tránsito y en reposo</li>
+                <li>Autenticación segura con JWT tokens</li>
+                <li>Acceso limitado a información personal</li>
+                <li>Monitoreo regular de seguridad</li>
+                <li>Eliminación segura de datos cuando sea necesario</li>
+              </ul>
+              <p class="text-gray-700 dark:text-gray-300">
+                Sin embargo, ningún método de transmisión por internet es 100% seguro. No podemos garantizar
+                la seguridad absoluta de tu información.
+              </p>
+            </section>
+
+            <!-- Cookies y Tecnologías -->
+            <section id="cookies" class="mb-8">
+              <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
+                6. Cookies y Tecnologías Similares
+              </h2>
+              <p class="text-gray-700 dark:text-gray-300 mb-4">
+                Utilizamos las siguientes tecnologías:
+              </p>
+              <ul class="list-disc pl-6 text-gray-700 dark:text-gray-300 mb-4 space-y-2">
+                <li><strong>Almacenamiento local:</strong> Para mantener tu sesión activa</li>
+                <li><strong>Tokens de autenticación:</strong> Para verificar tu identidad</li>
+                <li><strong>Preferencias de aplicación:</strong> Para recordar tus configuraciones</li>
+                <li><strong>Datos de rendimiento:</strong> Para mejorar la experiencia de usuario</li>
+              </ul>
+              <p class="text-gray-700 dark:text-gray-300">
+                Puedes controlar estas tecnologías a través de la configuración de tu dispositivo o navegador.
+              </p>
+            </section>
+
+            <!-- Tus Derechos -->
+            <section id="derechos" class="mb-8">
+              <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
+                7. Tus Derechos
+              </h2>
+              <p class="text-gray-700 dark:text-gray-300 mb-4">
+                Tienes derecho a:
+              </p>
+              <ul class="list-disc pl-6 text-gray-700 dark:text-gray-300 mb-4 space-y-2">
+                <li><strong>Acceder:</strong> Solicitar una copia de tu información personal</li>
+                <li><strong>Rectificar:</strong> Corregir información inexacta o incompleta</li>
+                <li><strong>Eliminar:</strong> Solicitar la eliminación de tu información personal</li>
+                <li><strong>Portabilidad:</strong> Recibir tu información en un formato estructurado</li>
+                <li><strong>Oposición:</strong> Oponerte al procesamiento de tu información</li>
+                <li><strong>Limitación:</strong> Solicitar la limitación del procesamiento</li>
+              </ul>
+              <p class="text-gray-700 dark:text-gray-300">
+                Para ejercer estos derechos, contáctanos usando la información de contacto proporcionada abajo.
+              </p>
+            </section>
+
+            <!-- Menores de Edad -->
+            <section id="menores" class="mb-8">
+              <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
+                8. Menores de Edad
+              </h2>
+              <p class="text-gray-700 dark:text-gray-300 mb-4">
+                Nuestra aplicación está dirigida a usuarios mayores de 13 años. No recopilamos
+                intencionalmente información personal de menores de 13 años sin el consentimiento parental.
+              </p>
+              <p class="text-gray-700 dark:text-gray-300">
+                Si descubrimos que hemos recopilado información de un menor de 13 años, tomaremos
+                medidas para eliminar dicha información lo antes posible.
+              </p>
+            </section>
+
+            <!-- Cambios en la Política -->
+            <section id="cambios" class="mb-8">
+              <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
+                9. Cambios en la Política
+              </h2>
+              <p class="text-gray-700 dark:text-gray-300 mb-4">
+                Podemos actualizar esta Política de Privacidad periódicamente. Te notificaremos sobre
+                cambios importantes a través de:
+              </p>
+              <ul class="list-disc pl-6 text-gray-700 dark:text-gray-300 mb-4 space-y-2">
+                <li>Notificación en la aplicación</li>
+                <li>Email a tu dirección registrada</li>
+                <li>Aviso destacado en nuestro sitio web</li>
+              </ul>
+              <p class="text-gray-700 dark:text-gray-300">
+                Te recomendamos revisar esta política periódicamente para mantenerte informado.
+              </p>
+            </section>
+
+            <!-- Contacto -->
+            <section id="contacto" class="mb-8">
+              <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
+                10. Contacto
+              </h2>
+              <p class="text-gray-700 dark:text-gray-300 mb-6">
+                Si tienes preguntas sobre esta Política de Privacidad o sobre cómo manejamos tu información,
+                puedes contactarnos:
+              </p>
+
+              <div class="grid md:grid-cols-2 gap-4">
+                <div class="contact-card bg-gray-50 dark:bg-gray-700 p-6 rounded-lg">
+                  <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-3">
+                    Email
+                  </h3>
+                  <p class="text-blue-600 dark:text-blue-400 font-medium">
+                    privacy&#64;ponlecoco.com
+                  </p>
+                </div>
+
+                <div class="contact-card bg-gray-50 dark:bg-gray-700 p-6 rounded-lg">
+                  <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-3">
+                    Respuesta
+                  </h3>
+                  <p class="text-gray-700 dark:text-gray-300">
+                    Responderemos en un plazo de 30 días
+                  </p>
+                </div>
+              </div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
