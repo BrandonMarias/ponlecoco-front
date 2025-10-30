@@ -44,6 +44,10 @@ export default class GamePlayComponent implements OnInit, CanComponentDeactivate
     this.suspenseSound = new Audio('/media/sound/suspenso.mp3');
     this.suspenseSound.loop = true;
     this.doublePointsSound = new Audio('/media/sound/puntosdobles.mp3');
+
+    // Check if this is a public game
+    const isPublic = this.route.snapshot.queryParams['public'] === 'true';
+
     this.route.paramMap.pipe(
       switchMap(params => {
         const id = params.get('id');
@@ -53,7 +57,11 @@ export default class GamePlayComponent implements OnInit, CanComponentDeactivate
           throw new Error('Jeopardy ID is required');
         }
         this.initializeTeams();
-        return this.triviaPartyService.getTriviaPartyById(id);
+
+        // Use public endpoint if isPublic flag is true
+        return isPublic
+          ? this.triviaPartyService.getPublicTriviaParty(id)
+          : this.triviaPartyService.getTriviaPartyById(id);
       })
     ).subscribe({
       next: (data) => {

@@ -11,4 +11,5 @@ export interface Roulette {
   title: string;
   questions: RouletteQuestion[];
   userId?: string;
+  isShared?: boolean; // Field to track if roulette is publicly shared
 }

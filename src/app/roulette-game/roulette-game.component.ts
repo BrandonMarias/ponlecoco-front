@@ -154,9 +154,10 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
 
     this.teamCount = parseInt(queryParams['teams']) || 1;
     this.timePerQuestion = parseInt(queryParams['time']) || 60;
+    const isPublic = queryParams['public'] === 'true';
 
     if (rouletteId) {
-      this.loadRoulette(rouletteId);
+      this.loadRoulette(rouletteId, isPublic);
     } else {
       this.error.set('ID de ruleta no encontrado');
       this.loading.set(false);
@@ -172,8 +173,12 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
     gsap.killTweensOf('*'); // Kill all animations from this component
   }
 
-  loadRoulette(id: string) {
-    this.rouletteService.getRouletteById(id).subscribe({
+  loadRoulette(id: string, isPublic: boolean = false) {
+    const request = isPublic
+      ? this.rouletteService.getPublicRoulette(id)
+      : this.rouletteService.getRouletteById(id);
+
+    request.subscribe({
       next: (roulette: Roulette) => {
         this.roulette.set(roulette);
         this.initializeGame();

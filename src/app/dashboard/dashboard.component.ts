@@ -16,6 +16,7 @@ interface DashboardItem {
   title: string;
   type: 'triviaparty' | 'ruleta';
   gameType?: 'triviaparty' | 'ruleta'; // For TriviaParty items that can be either type
+  isShared?: boolean; // Track if item is publicly shared
 }
 
 @Component({
@@ -41,6 +42,11 @@ export default class DashboardComponent implements OnInit {
   teamCount = signal(2);
   timePerQuestion = signal(30);
 
+  // Toast notification
+  showToast = signal(false);
+  toastMessage = signal('');
+  toastType = signal<'success' | 'error'>('success');
+
   @HostListener('document:click')
   onDocumentClick() {
     this.openMenuId.set(null);
@@ -64,12 +70,14 @@ export default class DashboardComponent implements OnInit {
             id: tp.id!,
             title: tp.title,
             type: 'triviaparty' as const,
-            gameType: tp.type || 'triviaparty'
+            gameType: tp.type || 'triviaparty',
+            isShared: tp.isShared || false
           })),
           ...roulettes.map(r => ({
             id: r.id!,
             title: r.title,
-            type: 'ruleta' as const
+            type: 'ruleta' as const,
+            isShared: r.isShared || false
           }))
         ];
         this.dashboardItems.set(items);
@@ -161,5 +169,89 @@ export default class DashboardComponent implements OnInit {
       }
     });
     this.closeTeamSelection();
+  }
+
+  toggleShare(item: DashboardItem) {
+    const newSharedState = !item.isShared;
+
+    if (item.type === 'triviaparty') {
+      this.triviaPartyService.toggleShareTriviaParty(item.id, newSharedState).subscribe({
+        next: () => {
+          this.dashboardItems.update(current =>
+            current.map(i =>
+              i.id === item.id ? { ...i, isShared: newSharedState } : i
+            )
+          );
+        },
+        error: (err: any) => {
+          this.error.set('Failed to update sharing status. Please try again.');
+          console.error(err);
+        }
+      });
+    } else {
+      this.rouletteService.toggleShareRoulette(item.id, newSharedState).subscribe({
+        next: () => {
+          this.dashboardItems.update(current =>
+            current.map(i =>
+              i.id === item.id ? { ...i, isShared: newSharedState } : i
+            )
+          );
+        },
+        error: (err: any) => {
+          this.error.set('Failed to update sharing status. Please try again.');
+          console.error(err);
+        }
+      });
+    }
+    this.openMenuId.set(null);
+  }
+
+  getShareUrl(item: DashboardItem): string {
+    const baseUrl = window.location.origin;
+    const path = item.type === 'triviaparty' ? 'public/triviaparty' : 'public/roulette';
+    // Include hash (#) for hash location routing
+    return `${baseUrl}/#/${path}/${item.id}`;
+  }
+
+  async copyShareLink(item: DashboardItem) {
+    const url = this.getShareUrl(item);
+    try {
+      await navigator.clipboard.writeText(url);
+      this.showToastNotification('¡Enlace copiado al portapapeles!', 'success');
+    } catch (err) {
+      console.error('Failed to copy:', err);
+      this.showToastNotification('No se pudo copiar el enlace', 'error');
+    }
+    this.openMenuId.set(null);
+  }
+
+  showToastNotification(message: string, type: 'success' | 'error' = 'success') {
+    this.toastMessage.set(message);
+    this.toastType.set(type);
+    this.showToast.set(true);
+    
+    // Auto-hide after 3 seconds
+    setTimeout(() => {
+      this.showToast.set(false);
+    }, 3000);
+  }
+
+  async shareLink(item: DashboardItem) {
+    const url = this.getShareUrl(item);
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: item.title,
+          text: `¡Juega ${item.title} en PonleCoco!`,
+          url: url
+        });
+      } catch (err) {
+        console.error('Error sharing:', err);
+      }
+    } else {
+      // Fallback to copy
+      this.copyShareLink(item);
+    }
+    this.openMenuId.set(null);
   }
 }

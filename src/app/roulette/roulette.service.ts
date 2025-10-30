@@ -57,4 +57,14 @@ export class RouletteService {
       topic
     });
   }
+
+  // Share/Unshare roulette
+  toggleShareRoulette(id: string, isShared: boolean): Observable<Roulette> {
+    return this.http.patch<Roulette>(`${this.apiUrl}/${id}/shared`, { isShared });
+  }
+
+  // Get public roulette
+  getPublicRoulette(id: string): Observable<Roulette> {
+    return this.http.get<Roulette>(`${environment.apiUrl}/public/roulette/${id}`);
+  }
 }

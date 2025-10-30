@@ -1,0 +1,114 @@
+<div class="min-h-screen bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center p-4">
+  <div class="max-w-2xl w-full">
+    @if (loading()) {
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 text-center">
+        <div class="animate-spin rounded-full h-16 w-16 border-b-4 border-purple-600 mx-auto"></div>
+        <p class="mt-4 text-gray-600 dark:text-gray-300">Cargando ruleta...</p>
+      </div>
+    } @else if (error()) {
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 text-center">
+        <svg class="w-16 h-16 text-red-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Error</h2>
+        <p class="text-gray-600 dark:text-gray-300 mb-6">{{ error() }}</p>
+        <button (click)="goToHome()" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors">
+          Ir al Inicio
+        </button>
+      </div>
+    } @else if (roulette() && showTeamSelection()) {
+      <!-- Team Selection Screen -->
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8">
+        <!-- Logo -->
+        <div class="text-center mb-6">
+          <div class="w-20 h-20 mx-auto mb-4">
+            <img src="/media/img/logo.png" alt="PonleCoco" class="w-full h-full object-contain">
+          </div>
+          <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">PonleCoco</h1>
+        </div>
+
+        <!-- Roulette Info -->
+        <div class="mb-8 text-center">
+          <div class="inline-flex items-center gap-2 mb-3">
+            <img src="/media/img/ruleta.png" alt="Ruleta" class="w-8 h-8 object-contain">
+            <span class="text-sm text-gray-500 dark:text-gray-400 font-medium">Ruleta</span>
+          </div>
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">{{ roulette()!.title }}</h2>
+          <p class="text-gray-600 dark:text-gray-300 text-sm">
+            {{ roulette()!.questions.length }} preguntas
+          </p>
+        </div>
+
+        <!-- Configuration -->
+        <div class="space-y-6">
+          <div>
+            <label for="team-count" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              ¿Cuántos equipos van a jugar?
+            </label>
+            <select
+              id="team-count"
+              [(ngModel)]="teamCount"
+              class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            >
+              @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+                <option [value]="i">{{ i }} {{ i === 1 ? 'equipo' : 'equipos' }}</option>
+              }
+            </select>
+          </div>
+
+          <div>
+            <label for="time-per-question" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Tiempo por pregunta
+            </label>
+            <select
+              id="time-per-question"
+              [(ngModel)]="timePerQuestion"
+              class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            >
+              <option value="30">00:30 segundos</option>
+              <option value="60">01:00 minuto</option>
+              <option value="90">01:30 minutos</option>
+              <option value="120">02:00 minutos</option>
+              <option value="150">02:30 minutos</option>
+              <option value="180">03:00 minutos</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="mt-8 space-y-3">
+          <button
+            (click)="startGame()"
+            class="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2"
+          >
+            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M11.596 8.697l-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/>
+            </svg>
+            ¡Empezar a Jugar!
+          </button>
+
+          <button
+            (click)="goToHome()"
+            class="w-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-semibold py-3 px-6 rounded-lg transition-colors"
+          >
+            {{ isAuthenticated() ? 'Volver al Inicio' : 'Iniciar Sesión' }}
+          </button>
+        </div>
+
+        <!-- Info -->
+        <div class="mt-6 p-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
+          <div class="flex items-start gap-3">
+            <svg class="w-5 h-5 text-purple-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <div>
+              <p class="text-sm text-purple-700 dark:text-purple-300">
+                Esta es una ruleta compartida públicamente. ¡Diviértete jugando!
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</div>

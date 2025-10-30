@@ -19,4 +19,5 @@ export interface TriviaParty {
   categories: Category[];
   userId?: string; // Assuming backend links triviaparty to a user
   type?: 'triviaparty' | 'ruleta'; // New field to distinguish between trivia types
+  isShared?: boolean; // Field to track if trivia is publicly shared
 }

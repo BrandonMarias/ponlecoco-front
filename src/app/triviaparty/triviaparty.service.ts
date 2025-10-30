@@ -66,4 +66,14 @@ export class TriviaPartyService {
         throw error;
       }));
   }
+
+  // Share/Unshare trivia party
+  toggleShareTriviaParty(id: string, isShared: boolean): Observable<TriviaParty> {
+    return this.http.patch<TriviaParty>(`${this.apiUrl}/${id}/shared`, { isShared });
+  }
+
+  // Get public trivia party
+  getPublicTriviaParty(id: string): Observable<TriviaParty> {
+    return this.http.get<TriviaParty>(`${environment.apiUrl}/public/triviaparty/${id}`);
+  }
 }
