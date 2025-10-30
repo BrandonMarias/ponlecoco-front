@@ -192,7 +192,7 @@
   <!-- Toast Notification -->
   @if (showToast()) {
     <div class="fixed bottom-4 right-4 z-50 animate-slide-in-up">
-      <div [class]="toastType() === 'success' ? 'bg-green-500' : 'bg-red-500'" 
+      <div [class]="toastType() === 'success' ? 'bg-green-500' : 'bg-red-500'"
            class="text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 min-w-[300px]">
         @if (toastType() === 'success') {
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

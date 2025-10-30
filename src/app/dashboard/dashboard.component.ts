@@ -229,7 +229,7 @@ export default class DashboardComponent implements OnInit {
     this.toastMessage.set(message);
     this.toastType.set(type);
     this.showToast.set(true);
-    
+
     // Auto-hide after 3 seconds
     setTimeout(() => {
       this.showToast.set(false);
