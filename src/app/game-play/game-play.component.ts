@@ -64,7 +64,7 @@ export default class GamePlayComponent implements OnInit, CanComponentDeactivate
         if (token) {
           return this.triviaPartyService.getTriviaPartyByToken(token);
         }
-        
+
         // Use public endpoint if isPublic flag is true
         return isPublic
           ? this.triviaPartyService.getPublicTriviaParty(id)

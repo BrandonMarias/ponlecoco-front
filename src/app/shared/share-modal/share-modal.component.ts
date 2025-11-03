@@ -32,7 +32,7 @@ export class ShareModalComponent {
 
   copyToClipboard() {
     if (!this.shareUrl) return;
-    
+
     navigator.clipboard.writeText(this.shareUrl).then(() => {
       this.showToastNotification('✅ Enlace copiado al portapapeles');
     }).catch(() => {

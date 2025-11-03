@@ -298,7 +298,7 @@ export default class DashboardComponent implements OnInit {
     this.shareLoading.set(true);
 
     const service = item.type === 'triviaparty' ? this.triviaPartyService : this.rouletteService;
-    
+
     service.generateShareLink(item.id).subscribe({
       next: (response) => {
         const baseUrl = `${window.location.origin}/#/public/${item.type}`;
@@ -327,7 +327,7 @@ export default class DashboardComponent implements OnInit {
           this.shareLoading.set(false);
           const publicUrl = this.getShareUrl(item);
           this.generatedShareUrl.set(publicUrl);
-          
+
           // Update item in list
           const items = this.dashboardItems();
           const index = items.findIndex(i => i.id === item.id);
@@ -335,7 +335,7 @@ export default class DashboardComponent implements OnInit {
             items[index].isShared = true;
             this.dashboardItems.set([...items]);
           }
-          
+
           this.showToastNotification('✅ Trivia ahora es pública', 'success');
         },
         error: (err: any) => {
@@ -350,7 +350,7 @@ export default class DashboardComponent implements OnInit {
           this.shareLoading.set(false);
           const publicUrl = this.getShareUrl(item);
           this.generatedShareUrl.set(publicUrl);
-          
+
           // Update item in list
           const items = this.dashboardItems();
           const index = items.findIndex(i => i.id === item.id);
@@ -358,7 +358,7 @@ export default class DashboardComponent implements OnInit {
             items[index].isShared = true;
             this.dashboardItems.set([...items]);
           }
-          
+
           this.showToastNotification('✅ Ruleta ahora es pública', 'success');
         },
         error: (err: any) => {

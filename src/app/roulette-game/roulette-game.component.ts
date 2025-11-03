@@ -185,7 +185,7 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
 
   loadRoulette(id: string, isPublic: boolean = false, token?: string) {
     let request;
-    
+
     // If token is provided, use token endpoint
     if (token) {
       request = this.rouletteService.getRouletteByToken(token);

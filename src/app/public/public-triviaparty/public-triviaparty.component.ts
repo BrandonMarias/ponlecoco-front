@@ -34,7 +34,7 @@ export default class PublicTriviaPartyComponent implements OnInit {
   ngOnInit() {
     // Check if there's a code (token) parameter first
     const code = this.route.snapshot.queryParamMap.get('code');
-    
+
     if (code) {
       this.accessToken = code;
       this.loadTriviaPartyByToken(code);
