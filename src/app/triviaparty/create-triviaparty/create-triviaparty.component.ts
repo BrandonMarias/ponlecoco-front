@@ -471,13 +471,13 @@ export default class CreateTriviaPartyComponent implements OnInit, OnDestroy {
     if (this.loading()) {
       return;
     }
-    
+
     if (!this.triviaPartyForm.valid) {
       this.showToastNotification('⚠️ Por favor, complete todos los campos requeridos', 'warning');
       this.triviaPartyForm.markAllAsTouched();
       return;
     }
-    
+
     this.onSubmit();
   }
 

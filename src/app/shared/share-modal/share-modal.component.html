@@ -1,0 +1,98 @@
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+  <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6 relative">
+    <!-- Close button -->
+    <button
+      (click)="onClose()"
+      class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+    >
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+      </svg>
+    </button>
+
+    <!-- Title -->
+    <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">{{ title }}</h2>
+
+    <!-- Content -->
+    <div class="space-y-4">
+      <!-- Generate Unique Link Button -->
+      <button
+        (click)="onGenerateLink()"
+        [disabled]="loading"
+        class="w-full px-6 py-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white rounded-lg font-semibold flex items-center justify-center gap-3 transition-colors"
+      >
+        @if (loading) {
+          <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span>Generando...</span>
+        } @else {
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+          </svg>
+          <span>Generar Enlace Único (3 días)</span>
+        }
+      </button>
+
+      <!-- Make Public Button -->
+      <button
+        (click)="onMakePublic()"
+        [disabled]="loading"
+        class="w-full px-6 py-4 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white rounded-lg font-semibold flex items-center justify-center gap-3 transition-colors"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <span>Hacer Público (permanente)</span>
+      </button>
+
+      <!-- Share URL Display (when generated) -->
+      @if (shareUrl) {
+        <div class="mt-6 space-y-3">
+          <div class="p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
+            <p class="text-xs text-gray-600 dark:text-gray-400 mb-2">Enlace generado:</p>
+            <p class="text-sm text-gray-900 dark:text-white break-all font-mono">{{ shareUrl }}</p>
+          </div>
+
+          <!-- Copy and Share buttons -->
+          <div class="flex gap-2">
+            <button
+              (click)="copyToClipboard()"
+              class="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-semibold flex items-center justify-center gap-2"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+              </svg>
+              Copiar
+            </button>
+            <button
+              (click)="shareLink()"
+              class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold flex items-center justify-center gap-2"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
+              </svg>
+              Compartir
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Info text -->
+    <div class="mt-6 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+      <p class="text-xs text-blue-800 dark:text-blue-300">
+        <strong>Enlace único:</strong> Válido por 3 días. Ideal para compartir temporalmente.<br>
+        <strong>Público:</strong> Enlace permanente. Cualquiera puede acceder.
+      </p>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  @if (showToast()) {
+    <div class="fixed bottom-4 right-4 bg-gray-900 text-white px-6 py-3 rounded-lg shadow-lg animate-slide-in-up">
+      {{ toastMessage() }}
+    </div>
+  }
+</div>

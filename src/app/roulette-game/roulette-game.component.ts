@@ -164,9 +164,10 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
     this.teamCount = parseInt(queryParams['teams']) || 1;
     this.timePerQuestion = parseInt(queryParams['time']) || 60;
     const isPublic = queryParams['public'] === 'true';
+    const token = queryParams['token'];
 
     if (rouletteId) {
-      this.loadRoulette(rouletteId, isPublic);
+      this.loadRoulette(rouletteId, isPublic, token);
     } else {
       this.error.set('ID de ruleta no encontrado');
       this.loading.set(false);
@@ -182,10 +183,18 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
     gsap.killTweensOf('*'); // Kill all animations from this component
   }
 
-  loadRoulette(id: string, isPublic: boolean = false) {
-    const request = isPublic
-      ? this.rouletteService.getPublicRoulette(id)
-      : this.rouletteService.getRouletteById(id);
+  loadRoulette(id: string, isPublic: boolean = false, token?: string) {
+    let request;
+    
+    // If token is provided, use token endpoint
+    if (token) {
+      request = this.rouletteService.getRouletteByToken(token);
+    } else {
+      // Otherwise use public or private endpoint
+      request = isPublic
+        ? this.rouletteService.getPublicRoulette(id)
+        : this.rouletteService.getRouletteById(id);
+    }
 
     request.subscribe({
       next: (roulette: Roulette) => {

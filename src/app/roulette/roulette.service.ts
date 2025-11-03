@@ -67,4 +67,14 @@ export class RouletteService {
   getPublicRoulette(id: string): Observable<Roulette> {
     return this.http.get<Roulette>(`${environment.apiUrl}/public/roulette/${id}`);
   }
+
+  // Generate unique share link
+  generateShareLink(id: string): Observable<{ token: string; expiresAt: string }> {
+    return this.http.post<{ token: string; expiresAt: string }>(`${this.apiUrl}/${id}/share-link`, {});
+  }
+
+  // Get roulette by token
+  getRouletteByToken(token: string): Observable<Roulette> {
+    return this.http.get<Roulette>(`${this.apiUrl}/shared/${token}`);
+  }
 }

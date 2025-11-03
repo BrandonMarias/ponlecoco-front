@@ -8,8 +8,16 @@ export const routes: Routes = [
     path: 'public',
     children: [
       {
+        path: 'triviaparty',
+        loadComponent: () => import('./public/public-triviaparty/public-triviaparty.component'),
+      },
+      {
         path: 'triviaparty/:id',
         loadComponent: () => import('./public/public-triviaparty/public-triviaparty.component'),
+      },
+      {
+        path: 'roulette',
+        loadComponent: () => import('./public/public-roulette/public-roulette.component'),
       },
       {
         path: 'roulette/:id',

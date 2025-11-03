@@ -48,6 +48,7 @@ export default class GamePlayComponent implements OnInit, CanComponentDeactivate
 
     // Check if this is a public game
     const isPublic = this.route.snapshot.queryParams['public'] === 'true';
+    const token = this.route.snapshot.queryParams['token'];
 
     this.route.paramMap.pipe(
       switchMap(params => {
@@ -59,6 +60,11 @@ export default class GamePlayComponent implements OnInit, CanComponentDeactivate
         }
         this.initializeTeams();
 
+        // If token is provided, use token endpoint
+        if (token) {
+          return this.triviaPartyService.getTriviaPartyByToken(token);
+        }
+        
         // Use public endpoint if isPublic flag is true
         return isPublic
           ? this.triviaPartyService.getPublicTriviaParty(id)

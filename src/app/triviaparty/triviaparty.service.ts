@@ -76,4 +76,14 @@ export class TriviaPartyService {
   getPublicTriviaParty(id: string): Observable<TriviaParty> {
     return this.http.get<TriviaParty>(`${environment.apiUrl}/public/triviaparty/${id}`);
   }
+
+  // Generate unique share link
+  generateShareLink(id: string): Observable<{ token: string; expiresAt: string }> {
+    return this.http.post<{ token: string; expiresAt: string }>(`${this.apiUrl}/${id}/share-link`, {});
+  }
+
+  // Get trivia party by token
+  getTriviaPartyByToken(token: string): Observable<TriviaParty> {
+    return this.http.get<TriviaParty>(`${this.apiUrl}/shared/${token}`);
+  }
 }

@@ -9,6 +9,8 @@ import { Roulette } from '../roulette/roulette';
 import { ModalService } from '../shared/modal.service';
 import { forkJoin } from 'rxjs';
 import { FormsModule } from '@angular/forms';
+import { ShareModalComponent } from '../shared/share-modal/share-modal.component';
+import { environment } from '../../environments/environment';
 
 // Unified interface for dashboard items
 interface DashboardItem {
@@ -22,7 +24,7 @@ interface DashboardItem {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, HeaderComponent, FormsModule],
+  imports: [CommonModule, HeaderComponent, FormsModule, ShareModalComponent],
   templateUrl: './dashboard.component.html',
 })
 export default class DashboardComponent implements OnInit {
@@ -47,6 +49,12 @@ export default class DashboardComponent implements OnInit {
   showToast = signal(false);
   toastMessage = signal('');
   toastType = signal<'success' | 'error'>('success');
+
+  // Share modal
+  showShareModal = signal(false);
+  shareModalItem = signal<DashboardItem | null>(null);
+  generatedShareUrl = signal('');
+  shareLoading = signal(false);
 
   @HostListener('document:click')
   onDocumentClick() {
@@ -268,5 +276,97 @@ export default class DashboardComponent implements OnInit {
       this.copyShareLink(item);
     }
     this.openMenuId.set(null);
+  }
+
+  openShareModal(item: DashboardItem) {
+    this.shareModalItem.set(item);
+    this.generatedShareUrl.set('');
+    this.showShareModal.set(true);
+    this.openMenuId.set(null);
+  }
+
+  closeShareModal() {
+    this.showShareModal.set(false);
+    this.shareModalItem.set(null);
+    this.generatedShareUrl.set('');
+  }
+
+  generateUniqueLink() {
+    const item = this.shareModalItem();
+    if (!item) return;
+
+    this.shareLoading.set(true);
+
+    const service = item.type === 'triviaparty' ? this.triviaPartyService : this.rouletteService;
+    
+    service.generateShareLink(item.id).subscribe({
+      next: (response) => {
+        const baseUrl = `${window.location.origin}/#/public/${item.type}`;
+        const shareUrl = `${baseUrl}?code=${response.token}`;
+        this.generatedShareUrl.set(shareUrl);
+        this.shareLoading.set(false);
+        this.showToastNotification('✅ Enlace único generado (válido por 3 días)', 'success');
+      },
+      error: (err) => {
+        console.error('Error generating share link:', err);
+        this.shareLoading.set(false);
+        this.showToastNotification('❌ Error al generar el enlace', 'error');
+      }
+    });
+  }
+
+  makePublic() {
+    const item = this.shareModalItem();
+    if (!item) return;
+
+    this.shareLoading.set(true);
+
+    if (item.type === 'triviaparty') {
+      this.triviaPartyService.toggleShareTriviaParty(item.id, true).subscribe({
+        next: () => {
+          this.shareLoading.set(false);
+          const publicUrl = this.getShareUrl(item);
+          this.generatedShareUrl.set(publicUrl);
+          
+          // Update item in list
+          const items = this.dashboardItems();
+          const index = items.findIndex(i => i.id === item.id);
+          if (index !== -1) {
+            items[index].isShared = true;
+            this.dashboardItems.set([...items]);
+          }
+          
+          this.showToastNotification('✅ Trivia ahora es pública', 'success');
+        },
+        error: (err: any) => {
+          console.error('Error making public:', err);
+          this.shareLoading.set(false);
+          this.showToastNotification('❌ Error al hacer pública la trivia', 'error');
+        }
+      });
+    } else {
+      this.rouletteService.toggleShareRoulette(item.id, true).subscribe({
+        next: () => {
+          this.shareLoading.set(false);
+          const publicUrl = this.getShareUrl(item);
+          this.generatedShareUrl.set(publicUrl);
+          
+          // Update item in list
+          const items = this.dashboardItems();
+          const index = items.findIndex(i => i.id === item.id);
+          if (index !== -1) {
+            items[index].isShared = true;
+            this.dashboardItems.set([...items]);
+          }
+          
+          this.showToastNotification('✅ Ruleta ahora es pública', 'success');
+        },
+        error: (err: any) => {
+          console.error('Error making public:', err);
+          this.shareLoading.set(false);
+          this.showToastNotification('❌ Error al hacer pública la ruleta', 'error');
+        }
+      });
+    }
   }
 }

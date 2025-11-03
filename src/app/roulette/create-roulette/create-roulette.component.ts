@@ -428,13 +428,13 @@ export default class CreateRouletteComponent implements OnInit, OnDestroy {
     if (this.loading()) {
       return;
     }
-    
+
     if (!this.rouletteForm.valid) {
       this.showToastNotification('⚠️ Por favor, complete todos los campos requeridos', 'warning');
       this.rouletteForm.markAllAsTouched();
       return;
     }
-    
+
     this.onSubmit();
   }
 }
