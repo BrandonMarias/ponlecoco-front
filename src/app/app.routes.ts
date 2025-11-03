@@ -24,6 +24,14 @@ export const routes: Routes = [
         loadComponent: () => import('./public/public-roulette/public-roulette.component'),
       },
       {
+        path: 'ruleta',
+        loadComponent: () => import('./public/public-roulette/public-roulette.component'),
+      },
+      {
+        path: 'ruleta/:id',
+        loadComponent: () => import('./public/public-roulette/public-roulette.component'),
+      },
+      {
         path: 'play/:id',
         loadComponent: () => import('./game-play/game-play.component'),
       },

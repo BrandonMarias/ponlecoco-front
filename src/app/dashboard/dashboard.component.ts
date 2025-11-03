@@ -301,7 +301,9 @@ export default class DashboardComponent implements OnInit {
 
     service.generateShareLink(item.id).subscribe({
       next: (response) => {
-        const baseUrl = `${window.location.origin}/#/public/${item.type}`;
+        // Map type to route: 'ruleta' -> 'roulette', 'triviaparty' -> 'triviaparty'
+        const routePath = item.type === 'ruleta' ? 'roulette' : item.type;
+        const baseUrl = `${window.location.origin}/#/public/${routePath}`;
         const shareUrl = `${baseUrl}?code=${response.token}`;
         this.generatedShareUrl.set(shareUrl);
         this.shareLoading.set(false);
