@@ -19,6 +19,8 @@ interface DashboardItem {
   type: 'triviaparty' | 'ruleta';
   gameType?: 'triviaparty' | 'ruleta'; // For TriviaParty items that can be either type
   isShared?: boolean; // Track if item is publicly shared
+  createdAt?: string; // Creation date for sorting
+  updatedAt?: string; // Update date
 }
 
 @Component({
@@ -80,15 +82,26 @@ export default class DashboardComponent implements OnInit {
             title: tp.title,
             type: 'triviaparty' as const,
             gameType: tp.type || 'triviaparty',
-            isShared: tp.isShared || false
+            isShared: tp.isShared || false,
+            createdAt: (tp as any).createdAt,
+            updatedAt: (tp as any).updatedAt
           })),
           ...roulettes.map(r => ({
             id: r.id!,
             title: r.title,
             type: 'ruleta' as const,
-            isShared: r.isShared || false
+            isShared: r.isShared || false,
+            createdAt: (r as any).createdAt,
+            updatedAt: (r as any).updatedAt
           }))
         ];
+
+        // Sort by creation date (most recent first)
+        items.sort((a, b) => {
+          if (!a.createdAt || !b.createdAt) return 0;
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        });
+
         this.dashboardItems.set(items);
         this.loading.set(false);
       },
