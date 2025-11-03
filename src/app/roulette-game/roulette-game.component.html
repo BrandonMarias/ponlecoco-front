@@ -196,28 +196,15 @@
             }
           </div>
         </div>
-      } @else if (getGameState().gameEnded && !showWinnerScreen()) {
-        <!-- Game End Screen (fallback - should not be shown when winner screen is active) -->
+      } @else if (showResultsButton()) {
+        <!-- Results Button Screen -->
         <div class="flex-grow flex items-center justify-center min-h-0">
-          <div class="text-center px-4">
-            <h2 class="text-3xl sm:text-4xl font-bold mb-6 sm:mb-8">¡Juego Terminado!</h2>
+          <div class="text-center px-4 max-w-2xl mx-auto">
+            <h2 class="text-3xl sm:text-5xl font-bold mb-12 text-yellow-400">¡Juego Terminado!</h2>
 
-            <!-- Final Scores -->
-            <div class="mb-6 sm:mb-8">
-              @for (score of getGameState().scores; track $index) {
-                <div class="text-lg sm:text-2xl mb-2"
-                     [class]="$index === winnerTeam() ? 'text-yellow-400 font-bold' : ''">
-                  Equipo {{ $index + 1 }}: {{ score }} puntos
-                  @if ($index === winnerTeam()) {
-                    <span class="text-2xl sm:text-3xl ml-2">🏆</span>
-                  }
-                </div>
-              }
-            </div>
-
-            <button (click)="goBack()"
-                    class="w-full max-w-xs px-6 sm:px-8 py-3 sm:py-4 bg-indigo-600 text-white font-bold text-lg sm:text-xl rounded-lg hover:bg-indigo-700 transition-colors touch-manipulation min-h-[56px]">
-              Volver al Dashboard
+            <button (click)="showResults()"
+                    class="px-8 sm:px-12 py-4 sm:py-5 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-bold text-xl sm:text-2xl rounded-xl shadow-2xl transform hover:scale-105 transition-all duration-200 touch-manipulation min-h-[56px] cursor-pointer">
+              🏆 Ver Resultados
             </button>
           </div>
         </div>

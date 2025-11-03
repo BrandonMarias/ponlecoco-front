@@ -61,6 +61,7 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
 
   // Winner screen signals
   showWinnerScreen = signal(false);
+  showResultsButton = signal(false); // Show "Ver Resultados" button before winner screen
   winners = signal<Team[]>([]);
   winnerScore = signal(0);
 
@@ -299,8 +300,8 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
         showViewQuestionButton: false,
       }));
 
-      // Show winner screen
-      this.showWinnerScreen.set(true);
+      // Show results button instead of winner screen immediately
+      this.showResultsButton.set(true);
       this.determineWinner();
       return;
     }
@@ -432,8 +433,8 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
       const nextTeam = (state.currentTeam + 1) % this.teamCount;
 
       if (nextQuestionIndex >= state.questionOrder.length) {
-        // Game ended - show winner screen
-        this.showWinnerScreen.set(true);
+        // Game ended - show results button instead of winner screen immediately
+        this.showResultsButton.set(true);
         this.determineWinner();
 
         return {
@@ -472,6 +473,11 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
 
     this.winners.set(winnerTeams);
     this.winnerScore.set(maxScore);
+  }
+
+  showResults() {
+    this.showResultsButton.set(false);
+    this.showWinnerScreen.set(true);
   }
 
   onWinnerClose() {
