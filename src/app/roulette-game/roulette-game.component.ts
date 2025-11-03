@@ -143,6 +143,15 @@ export class RouletteGameComponent implements OnInit, OnDestroy {
     return 12 - state.usedPositions.size;
   });
 
+  // Computed para obtener todos los equipos con sus nombres y puntajes
+  allTeams = computed(() => {
+    const state = this.gameState();
+    return state.teamNames.map((name, index) => ({
+      name: name,
+      score: state.scores[index]
+    }));
+  });
+
   // Helper method to check if a position has been used (for future UI enhancements)
   isPositionUsed(positionIndex: number): boolean {
     return this.getGameState().usedPositions.has(positionIndex);

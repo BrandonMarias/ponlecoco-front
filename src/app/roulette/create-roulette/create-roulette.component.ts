@@ -415,9 +415,26 @@ export default class CreateRouletteComponent implements OnInit, OnDestroy {
     }, 3000);
   }
 
-  onSaveAttempt() {
+  onSaveAttempt(event?: Event) {
     if (!this.rouletteForm.valid) {
+      event?.preventDefault();
       this.showToastNotification('Revise el formulario', 'warning');
+      return false;
     }
+    return true;
+  }
+
+  onSaveClick() {
+    if (this.loading()) {
+      return;
+    }
+    
+    if (!this.rouletteForm.valid) {
+      this.showToastNotification('⚠️ Por favor, complete todos los campos requeridos', 'warning');
+      this.rouletteForm.markAllAsTouched();
+      return;
+    }
+    
+    this.onSubmit();
   }
 }

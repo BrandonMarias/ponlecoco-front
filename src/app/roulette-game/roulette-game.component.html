@@ -4,6 +4,7 @@
     <app-winner
       [winners]="winners()"
       [score]="winnerScore()"
+      [allTeams]="allTeams()"
       (close)="onWinnerClose()"
     ></app-winner>
   } @else if (loading()) {

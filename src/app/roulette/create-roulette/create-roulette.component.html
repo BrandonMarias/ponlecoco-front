@@ -26,7 +26,7 @@
     <p class="dark:text-gray-300">Cargando datos de la ruleta...</p>
   } @else {
     <!-- Main Form -->
-    <form [formGroup]="rouletteForm" (ngSubmit)="onSubmit()" class="space-y-6 sm:space-y-8">
+    <form [formGroup]="rouletteForm" (ngSubmit)="onSubmit()" (submit)="onSaveAttempt()" class="space-y-6 sm:space-y-8">
       <!-- Roulette Title -->
       <div>
         <label
@@ -154,11 +154,15 @@
 
       <!-- Submit Button -->
       <div class="flex justify-center mt-6 sm:mt-8">
-        <div class="w-full sm:w-auto" (click)="rouletteForm.invalid && onSaveAttempt()">
+        <div class="w-full sm:w-auto">
           <button
-            type="submit"
-            [disabled]="rouletteForm.invalid || loading()"
-            class="w-full px-6 py-3 font-semibold text-white bg-red-600 rounded-md hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center touch-manipulation min-h-[44px]"
+            type="button"
+            (click)="onSaveClick()"
+            [ngClass]="{
+              'bg-red-600 hover:bg-red-700 cursor-pointer': !loading(),
+              'bg-gray-400 cursor-not-allowed': loading()
+            }"
+            class="w-full px-6 py-3 font-semibold text-white rounded-md flex items-center justify-center touch-manipulation min-h-[44px]"
           >
           @if(loading()) {
           <svg

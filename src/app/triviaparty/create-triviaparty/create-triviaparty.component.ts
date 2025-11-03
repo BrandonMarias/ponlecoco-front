@@ -442,10 +442,43 @@ export default class CreateTriviaPartyComponent implements OnInit, OnDestroy {
     }, 3000);
   }
 
-  onSaveAttempt() {
+  onSaveAttempt(event?: Event) {
     if (!this.triviaPartyForm.valid) {
+      event?.preventDefault();
       this.showToastNotification('Revise el formulario', 'warning');
+      return false;
     }
+    return true;
+  }
+
+  onAddCategoryClick() {
+    if (this.categories.length >= 6) {
+      this.showToastNotification('⚠️ Máximo 6 categorías permitidas', 'warning');
+      return;
+    }
+    this.addCategory();
+  }
+
+  async onAddCategoryWithIAClick() {
+    if (this.categories.length >= 6) {
+      this.showToastNotification('⚠️ Máximo 6 categorías permitidas', 'warning');
+      return;
+    }
+    await this.addCategoryWithIA();
+  }
+
+  onSaveClick() {
+    if (this.loading()) {
+      return;
+    }
+    
+    if (!this.triviaPartyForm.valid) {
+      this.showToastNotification('⚠️ Por favor, complete todos los campos requeridos', 'warning');
+      this.triviaPartyForm.markAllAsTouched();
+      return;
+    }
+    
+    this.onSubmit();
   }
 
   toggleCategory(index: number) {

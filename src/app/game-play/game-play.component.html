@@ -3,6 +3,7 @@
     <app-winner
       [winners]="winners()"
       [score]="winnerScore()"
+      [allTeams]="teams()"
       (close)="goToDashboard()"
     ></app-winner>
   } @else {
