@@ -33,6 +33,7 @@ export default class GamePlayComponent implements OnInit, CanComponentDeactivate
   editingTeamIndex = signal<number | null>(null);
   timePerQuestion = signal(30);
   currentTeam = signal(0);
+  stealPointsEnabled = signal(true); // Control de robo de puntos
 
   showWinnerScreen = signal(false);
   winners = signal<Team[]>([]);
@@ -88,6 +89,10 @@ export default class GamePlayComponent implements OnInit, CanComponentDeactivate
 
       const timeStr = params.get('time') || '30';
       this.timePerQuestion.set(parseInt(timeStr, 10));
+
+      // Get stealPoints parameter (default to true for backward compatibility)
+      const stealPointsStr = params.get('stealPoints');
+      this.stealPointsEnabled.set(stealPointsStr === null || stealPointsStr === 'true');
     });
   }
 

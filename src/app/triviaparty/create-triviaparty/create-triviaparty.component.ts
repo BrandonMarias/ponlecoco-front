@@ -41,6 +41,14 @@ export default class CreateTriviaPartyComponent implements OnInit, OnDestroy {
   private triviaPartyId: string | null = null;
   private previewUrls = new Map<FormGroup, string>();
 
+  // Toast notification
+  showToast = signal(false);
+  toastMessage = signal('');
+  toastType = signal<'success' | 'error' | 'warning'>('success');
+
+  // Collapse state for categories
+  collapsedCategories = signal<Set<number>>(new Set());
+
   constructor() {
     this.triviaPartyForm = this.fb.group({
       title: ['', Validators.required],
@@ -120,7 +128,10 @@ export default class CreateTriviaPartyComponent implements OnInit, OnDestroy {
   }
 
   addCategory() {
-    if (this.categories.length >= 6) return;
+    if (this.categories.length >= 6) {
+      this.showToastNotification('Solo se permiten 6 categorías', 'warning');
+      return;
+    }
 
     const categoryGroup = this.fb.group({
       title: ['', Validators.required],
@@ -418,5 +429,43 @@ export default class CreateTriviaPartyComponent implements OnInit, OnDestroy {
 
   goBackToDashboard() {
     this.router.navigateByUrl('/dashboard');
+  }
+
+  showToastNotification(message: string, type: 'success' | 'error' | 'warning' = 'success') {
+    this.toastMessage.set(message);
+    this.toastType.set(type);
+    this.showToast.set(true);
+
+    // Auto-hide after 3 seconds
+    setTimeout(() => {
+      this.showToast.set(false);
+    }, 3000);
+  }
+
+  onSaveAttempt() {
+    if (!this.triviaPartyForm.valid) {
+      this.showToastNotification('Revise el formulario', 'warning');
+    }
+  }
+
+  toggleCategory(index: number) {
+    this.collapsedCategories.update(collapsed => {
+      const newSet = new Set(collapsed);
+      if (newSet.has(index)) {
+        newSet.delete(index);
+      } else {
+        newSet.add(index);
+      }
+      return newSet;
+    });
+  }
+
+  isCategoryCollapsed(index: number): boolean {
+    return this.collapsedCategories().has(index);
+  }
+
+  isCategoryInvalid(categoryControl: any): boolean {
+    const categoryGroup = categoryControl as FormGroup;
+    return categoryGroup.invalid && (categoryGroup.dirty || categoryGroup.touched);
   }
 }

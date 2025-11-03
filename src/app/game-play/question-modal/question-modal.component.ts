@@ -22,6 +22,7 @@ export class QuestionModalComponent implements OnInit, OnDestroy {
   @Input() timeLimit = 30;
   @Input() teams: Team[] = [];
   @Input() currentTeamIndex = 0;
+  @Input() stealPointsEnabled = true; // Control de robo de puntos
 
   @Output() close = new EventEmitter<void>();
   @Output() answerRevealed = new EventEmitter<void>();

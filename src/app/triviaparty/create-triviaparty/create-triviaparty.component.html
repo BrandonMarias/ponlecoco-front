@@ -63,18 +63,43 @@
         $index) {
         <div
           [formGroupName]="catIndex"
-          class="p-3 sm:p-4 border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700"
+          class="p-3 sm:p-4 border rounded-lg bg-gray-50 dark:bg-gray-800 transition-colors"
+          [class.border-red-500]="isCategoryInvalid(category)"
+          [class.border-gray-200]="!isCategoryInvalid(category)"
+          [class.dark:border-red-500]="isCategoryInvalid(category)"
+          [class.dark:border-gray-700]="!isCategoryInvalid(category)"
         >
-          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-3 sm:gap-0">
-            <h3 class="text-lg sm:text-xl font-medium">Categoría {{ catIndex + 1 }}</h3>
+          <!-- Category Header - Clickable to collapse -->
+          <div 
+            class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-3 sm:gap-0 cursor-pointer"
+            (click)="toggleCategory(catIndex)"
+          >
+            <div class="flex items-center gap-3">
+              <svg class="w-5 h-5 transition-transform" [class.rotate-90]="!isCategoryCollapsed(catIndex)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
+              <h3 class="text-lg sm:text-xl font-medium">
+                Categoría {{ catIndex + 1 }}
+                @if (category.get('title')?.value) {
+                  <span class="text-sm text-gray-600 dark:text-gray-400"> - {{ category.get('title')?.value }}</span>
+                }
+                @if (isCategoryInvalid(category)) {
+                  <span class="ml-2 text-sm text-red-500">⚠️ Incompleta</span>
+                }
+              </h3>
+            </div>
             <button
               type="button"
-              (click)="removeCategory(catIndex)"
+              (click)="removeCategory(catIndex); $event.stopPropagation()"
               class="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 touch-manipulation min-h-[44px]"
             >
               🗑️ Eliminar Categoría
             </button>
           </div>
+
+          <!-- Category Content - Collapsible -->
+          @if (!isCategoryCollapsed(catIndex)) {
+          <div class="space-y-4">
 
           <!-- Category Title -->
           <div class="mb-4">
@@ -150,6 +175,8 @@
             />
             }
           </div>
+          </div>
+          }
         </div>
         }
       </div>
@@ -173,11 +200,12 @@
             🤖 Añadir Categoría con IA
           </button>
         </div>
-        <button
-          type="submit"
-          [disabled]="triviaPartyForm.invalid || loading()"
-          class="w-full sm:w-auto px-6 py-3 font-semibold text-white bg-green-600 rounded-md hover:bg-green-700 disabled:bg-gray-400 flex items-center justify-center touch-manipulation min-h-[44px]"
-        >
+        <div class="w-full sm:w-auto" (click)="triviaPartyForm.invalid && onSaveAttempt()">
+          <button
+            type="submit"
+            [disabled]="triviaPartyForm.invalid || loading()"
+            class="w-full px-6 py-3 font-semibold text-white bg-green-600 rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center touch-manipulation min-h-[44px]"
+          >
           @if(loading()) {
           <svg
             class="w-5 h-5 mr-2 text-white animate-spin"
@@ -205,7 +233,8 @@
             @if (isEditMode()) { 💾 Guardar Cambios } @else { 💾 Guardar Trivia }
           </span>
           }
-        </button>
+          </button>
+        </div>
       </div>
       @if(error()) {
       <div
@@ -216,5 +245,28 @@
       </div>
       }
     </form>
+  }
+
+  <!-- Toast Notification -->
+  @if (showToast()) {
+    <div class="fixed bottom-4 right-4 z-50 animate-slide-in-up">
+      <div [class]="toastType() === 'success' ? 'bg-green-500' : toastType() === 'warning' ? 'bg-yellow-500' : 'bg-red-500'"
+           class="text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 min-w-[300px]">
+        @if (toastType() === 'success') {
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+        } @else if (toastType() === 'warning') {
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+          </svg>
+        } @else {
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        }
+        <span class="font-medium">{{ toastMessage() }}</span>
+      </div>
+    </div>
   }
 </div>

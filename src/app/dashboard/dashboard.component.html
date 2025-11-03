@@ -176,6 +176,25 @@
               <option value="180">03:00</option>
             </select>
           </div>
+          <!-- Solo mostrar el toggle de robo de puntos si es TriviaParty -->
+          @if (isSelectedItemTriviaParty()) {
+            <div class="flex items-center justify-between">
+              <label for="steal-points-toggle" class="text-sm font-medium">Robo de puntos</label>
+              <button
+                type="button"
+                (click)="stealPointsEnabled.set(!stealPointsEnabled())"
+                [class]="stealPointsEnabled() ? 'bg-indigo-600' : 'bg-gray-200 dark:bg-gray-700'"
+                class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                role="switch"
+                [attr.aria-checked]="stealPointsEnabled()"
+              >
+                <span
+                  [class]="stealPointsEnabled() ? 'translate-x-5' : 'translate-x-0'"
+                  class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                ></span>
+              </button>
+            </div>
+          }
         </div>
         <div class="flex justify-end space-x-4 mt-6">
           <button (click)="closeTeamSelection()" class="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500 cursor-pointer">

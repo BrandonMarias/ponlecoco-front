@@ -37,6 +37,11 @@ export default class CreateRouletteComponent implements OnInit, OnDestroy {
   private rouletteId: string | null = null;
   private previewUrls = new Map<FormGroup, string>();
 
+  // Toast notification
+  showToast = signal(false);
+  toastMessage = signal('');
+  toastType = signal<'success' | 'error' | 'warning'>('success');
+
   // Predefined question structure for roulette
   private questionValues = [
     { count: 3, value: 100 },
@@ -397,5 +402,22 @@ export default class CreateRouletteComponent implements OnInit, OnDestroy {
 
   goBackToDashboard() {
     this.router.navigateByUrl('/dashboard');
+  }
+
+  showToastNotification(message: string, type: 'success' | 'error' | 'warning' = 'success') {
+    this.toastMessage.set(message);
+    this.toastType.set(type);
+    this.showToast.set(true);
+
+    // Auto-hide after 3 seconds
+    setTimeout(() => {
+      this.showToast.set(false);
+    }, 3000);
+  }
+
+  onSaveAttempt() {
+    if (!this.rouletteForm.valid) {
+      this.showToastNotification('Revise el formulario', 'warning');
+    }
   }
 }

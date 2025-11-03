@@ -127,6 +127,7 @@
         [timeLimit]="timePerQuestion()"
         [teams]="teams()"
         [currentTeamIndex]="currentTeam()"
+        [stealPointsEnabled]="stealPointsEnabled()"
         (close)="closeAndMarkQuestion()"
         (answerRevealed)="stopAllSounds()"
         (updateScore)="handleScoreUpdate($event)"

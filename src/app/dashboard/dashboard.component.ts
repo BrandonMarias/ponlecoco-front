@@ -41,6 +41,7 @@ export default class DashboardComponent implements OnInit {
   selectedItemId = signal<string | null>(null);
   teamCount = signal(2);
   timePerQuestion = signal(30);
+  stealPointsEnabled = signal(true); // Toggle para robo de puntos
 
   // Toast notification
   showToast = signal(false);
@@ -137,6 +138,13 @@ export default class DashboardComponent implements OnInit {
     this.showCreateOptions.set(false);
   }
 
+  isSelectedItemTriviaParty(): boolean {
+    const id = this.selectedItemId();
+    if (!id) return false;
+    const item = this.dashboardItems().find(i => i.id === id);
+    return item?.type === 'triviaparty';
+  }
+
   navigateToCreateRoulette() {
     this.router.navigateByUrl('/roulette/create');
     this.showCreateOptions.set(false);
@@ -162,11 +170,18 @@ export default class DashboardComponent implements OnInit {
     // Navigate to the appropriate game based on item type
     const route = selectedItem.type === 'ruleta' ? '/play-roulette' : '/play';
 
+    const queryParams: any = {
+      teams: this.teamCount(),
+      time: this.timePerQuestion()
+    };
+
+    // Add stealPoints parameter only for TriviaParty
+    if (selectedItem.type === 'triviaparty') {
+      queryParams.stealPoints = this.stealPointsEnabled();
+    }
+
     this.router.navigate([route, this.selectedItemId()], {
-      queryParams: {
-        teams: this.teamCount(),
-        time: this.timePerQuestion()
-      }
+      queryParams
     });
     this.closeTeamSelection();
   }
