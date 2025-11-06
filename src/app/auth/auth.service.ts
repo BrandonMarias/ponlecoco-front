@@ -134,6 +134,18 @@ export class AuthService {
     });
   }
 
+  forgotPassword(email: string) {
+    return this.http.post(`${this.apiUrl}/auth/forgot-password`, { email }, {
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' })
+    });
+  }
+
+  resetPassword(token: string, newPassword: string) {
+    return this.http.post(`${this.apiUrl}/auth/reset-password`, { token, newPassword }, {
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' })
+    });
+  }
+
   logout() {
     this.clearAuthState();
     this.router.navigateByUrl('/auth/login');

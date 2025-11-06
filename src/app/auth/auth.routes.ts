@@ -16,6 +16,14 @@ const authRoutes: Routes = [
     loadComponent: () => import('./email-verification/email-verification.component'),
   },
   {
+    path: 'forgot-password',
+    loadComponent: () => import('./forgot-password/forgot-password.component'),
+  },
+  {
+    path: 'reset-password',
+    loadComponent: () => import('./reset-password/reset-password.component'),
+  },
+  {
     path: 'privacy-policy',
     loadComponent: () => import('../legal/privacy-policy/privacy-policy.component').then(m => m.PrivacyPolicyComponent),
   },

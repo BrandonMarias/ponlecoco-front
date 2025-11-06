@@ -25,7 +25,12 @@
         }
       </div>
       <div>
-        <label for="password" class="block text-sm font-medium">Contraseña</label>
+        <div class="flex justify-between items-center">
+          <label for="password" class="block text-sm font-medium">Contraseña</label>
+          <a routerLink="/auth/forgot-password" class="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300">
+            ¿Olvidaste tu contraseña?
+          </a>
+        </div>
         <input type="password" id="password" name="password" formControlName="password"
           class="block w-full px-3 py-2 mt-1 text-gray-900 dark:text-white bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
         @if (loginForm.get('password')?.invalid && (loginForm.get('password')?.dirty || loginForm.get('password')?.touched)) {

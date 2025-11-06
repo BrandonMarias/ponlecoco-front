@@ -33,3 +33,25 @@ export function passwordMatchValidator(controlName: string, matchingControlName:
     }
   };
 }
+
+export function passwordValidator(): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const value = control.value;
+    if (!value) {
+      return null;
+    }
+
+    const hasLetter = /[a-zA-Z]/.test(value);
+    const hasNumber = /[0-9]/.test(value);
+
+    if (!hasLetter) {
+      return { missingLetter: 'La contraseña debe contener al menos una letra' };
+    }
+
+    if (!hasNumber) {
+      return { missingNumber: 'La contraseña debe contener al menos un número' };
+    }
+
+    return null;
+  };
+}
