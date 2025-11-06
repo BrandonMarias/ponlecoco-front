@@ -68,6 +68,11 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'quick-thinking',
+    loadChildren: () => import('./quick-thinking/quick-thinking.routes'),
+    canActivate: [authGuard],
+  },
+  {
     path: 'play/:id',
     loadComponent: () => import('./game-play/game-play.component'),
     canActivate: [authGuard],

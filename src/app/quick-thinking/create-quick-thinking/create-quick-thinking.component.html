@@ -1,0 +1,264 @@
+<div class="content-page container mx-auto p-4 pb-20 text-gray-800 dark:text-white">
+  <!-- Back to Dashboard Button -->
+  <div class="mb-4">
+    <button
+      type="button"
+      (click)="cancel()"
+      class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+    >
+      <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+      </svg>
+      Volver
+    </button>
+  </div>
+
+  <!-- Dynamic Title -->
+  <h1 class="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 flex items-center gap-3">
+    <img src="/media/img/piensarapido.png" alt="Piensa Rápido" class="w-10 h-10 sm:w-12 sm:h-12">
+    @if (isEditMode()) {
+      Editar Piensa Rápido
+    } @else {
+      Crear Piensa Rápido
+    }
+  </h1>
+
+  @if (loading() && isEditMode()) {
+    <p class="dark:text-gray-300">Cargando datos de la trivia...</p>
+  } @else {
+    <!-- Main Form -->
+    <form [formGroup]="quickThinkingForm" (ngSubmit)="onSubmit()" class="space-y-6 sm:space-y-8">
+      <!-- Title -->
+      <div>
+        <label
+          for="title"
+          class="block text-base sm:text-lg font-medium text-gray-700 dark:text-gray-300 mb-2"
+        >
+          Título de la Trivia
+        </label>
+        <input
+          type="text"
+          id="title"
+          formControlName="title"
+          class="mt-1 block w-full px-3 py-3 sm:py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-base sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
+          placeholder="Ej: Cultura General"
+        />
+        @if (quickThinkingForm.get('title')?.invalid && quickThinkingForm.get('title')?.touched) {
+        <div class="text-red-600 text-sm mt-1 dark:text-red-400">
+          El título es requerido.
+        </div>
+        }
+      </div>
+
+      <!-- Instructions -->
+      <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-600 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
+        <div class="flex items-start gap-3 sm:gap-4">
+          <svg class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+          </svg>
+          <div>
+            <h3 class="text-base sm:text-lg font-semibold text-blue-800 dark:text-blue-200 mb-2">
+              Instrucciones
+            </h3>
+            <ul class="text-blue-700 dark:text-blue-300 text-sm mt-2 list-disc list-inside space-y-1">
+              <li>Cada pregunta debe tener exactamente 4 opciones de respuesta</li>
+              <li>Selecciona cuál es la respuesta correcta (índice 0-3)</li>
+              <li>Puedes agregar una imagen opcional a cada pregunta</li>
+              <li>Añade tantas preguntas como necesites</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Questions -->
+      <div formArrayName="questions" class="space-y-6">
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
+          <h2 class="text-xl sm:text-2xl font-semibold">Preguntas</h2>
+          <button
+            type="button"
+            (click)="addQuestion()"
+            class="w-full sm:w-auto px-4 py-3 font-medium text-white rounded-md bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 cursor-pointer touch-manipulation min-h-[44px] flex items-center justify-center gap-2"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            Agregar Pregunta
+          </button>
+        </div>
+
+        @for (question of questions.controls; track $index) {
+          <div [formGroupName]="$index" class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 sm:p-6 border border-gray-200 dark:border-gray-700">
+            <!-- Question Header -->
+            <div class="flex justify-between items-start mb-4">
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                Pregunta {{ $index + 1 }}
+              </h3>
+              <button
+                type="button"
+                (click)="removeQuestion($index)"
+                class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
+                [disabled]="questions.length <= 1"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+              </button>
+            </div>
+
+            <!-- Question Text -->
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Pregunta *
+              </label>
+              <textarea
+                formControlName="question"
+                rows="2"
+                class="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                placeholder="Escribe la pregunta aquí..."
+              ></textarea>
+              @if (question.get('question')?.invalid && question.get('question')?.touched) {
+                <div class="text-red-600 text-sm mt-1 dark:text-red-400">
+                  La pregunta es requerida.
+                </div>
+              }
+            </div>
+
+            <!-- Options -->
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Opciones de Respuesta *
+              </label>
+              <div formArrayName="options" class="space-y-2">
+                @for (option of getOptions($index).controls; track optIdx; let optIdx = $index) {
+                  <div class="flex items-center gap-2">
+                    <span class="flex-shrink-0 w-6 h-6 flex items-center justify-center bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 rounded-full text-sm font-medium">
+                      {{ optIdx + 1 }}
+                    </span>
+                    <input
+                      type="text"
+                      [formControlName]="optIdx"
+                      class="flex-1 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                      placeholder="Opción {{ optIdx + 1 }}"
+                    />
+                  </div>
+                }
+              </div>
+            </div>
+
+            <!-- Correct Answer Index -->
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Respuesta Correcta *
+              </label>
+              <select
+                formControlName="correctAnswerIndex"
+                class="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+              >
+                <option [value]="0">Opción 1</option>
+                <option [value]="1">Opción 2</option>
+                <option [value]="2">Opción 3</option>
+                <option [value]="3">Opción 4</option>
+              </select>
+            </div>
+
+            <!-- Image Upload -->
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Imagen (Opcional)
+              </label>
+
+              @if (getImagePreview($index)) {
+                <div class="relative inline-block">
+                  <img
+                    [src]="getImagePreview($index)"
+                    alt="Preview"
+                    class="w-full max-w-xs h-auto rounded-md border border-gray-300 dark:border-gray-600"
+                  />
+                  <button
+                    type="button"
+                    (click)="removeImage($index)"
+                    class="absolute top-2 right-2 p-1 bg-red-600 text-white rounded-full hover:bg-red-700"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                  </button>
+                </div>
+              } @else {
+                <div class="flex items-center gap-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    (change)="onImageSelected($event, $index)"
+                    [id]="'image-' + $index"
+                    class="hidden"
+                  />
+                  <label
+                    [for]="'image-' + $index"
+                    class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-600 inline-flex items-center gap-2"
+                  >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    Seleccionar Imagen
+                  </label>
+                  @if (compressingImages().has($index)) {
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Comprimiendo...</span>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Form Actions -->
+      <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <button
+          type="button"
+          (click)="cancel()"
+          class="w-full sm:w-auto px-6 py-3 font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 min-h-[44px]"
+        >
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          [disabled]="quickThinkingForm.invalid || loading()"
+          class="w-full sm:flex-1 px-6 py-3 font-medium text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400 disabled:cursor-not-allowed min-h-[44px]"
+        >
+          @if (loading()) {
+            <span class="flex items-center justify-center">
+              <svg class="w-5 h-5 mr-2 text-white animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Guardando...
+            </span>
+          } @else {
+            @if (isEditMode()) {
+              Actualizar Trivia
+            } @else {
+              Crear Trivia
+            }
+          }
+        </button>
+      </div>
+    </form>
+  }
+
+  <!-- Toast Notification -->
+  @if (showToast()) {
+    <div class="fixed bottom-4 right-4 z-50 animate-slide-up">
+      <div
+        [class]="
+          'px-4 py-3 rounded-lg shadow-lg ' +
+          (toastType() === 'success' ? 'bg-green-500 text-white' :
+           toastType() === 'error' ? 'bg-red-500 text-white' :
+           'bg-yellow-500 text-white')
+        "
+      >
+        {{ toastMessage() }}
+      </div>
+    </div>
+  }
+</div>
