@@ -73,17 +73,43 @@
       <!-- Questions -->
       <div formArrayName="questions" class="space-y-6">
         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
-          <h2 class="text-xl sm:text-2xl font-semibold">Preguntas</h2>
-          <button
-            type="button"
-            (click)="addQuestion()"
-            class="w-full sm:w-auto px-4 py-3 font-medium text-white rounded-md bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 cursor-pointer touch-manipulation min-h-[44px] flex items-center justify-center gap-2"
-          >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-            </svg>
-            Agregar Pregunta
-          </button>
+          <div>
+            <h2 class="text-xl sm:text-2xl font-semibold">Preguntas</h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              {{ questions.length }} / {{ MAX_QUESTIONS }} preguntas
+            </p>
+          </div>
+          <div class="flex flex-col sm:flex-row gap-2">
+            <button
+              type="button"
+              (click)="generateQuestionsWithAI()"
+              [disabled]="loading()"
+              class="w-full sm:w-auto px-4 py-3 font-medium text-white rounded-md bg-pink-500 hover:bg-pink-600 disabled:bg-gray-400 cursor-pointer touch-manipulation min-h-[44px] flex items-center justify-center gap-2"
+            >
+              @if (loading()) {
+                <svg class="w-5 h-5 text-white animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              } @else {
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                </svg>
+              }
+              Generar con IA
+            </button>
+            <button
+              type="button"
+              (click)="addQuestion()"
+              [disabled]="questions.length >= MAX_QUESTIONS"
+              class="w-full sm:w-auto px-4 py-3 font-medium text-white rounded-md bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 cursor-pointer touch-manipulation min-h-[44px] flex items-center justify-center gap-2"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+              </svg>
+              Agregar Pregunta
+            </button>
+          </div>
         </div>
 
         @for (question of questions.controls; track $index) {
@@ -162,52 +188,15 @@
             </div>
 
             <!-- Image Upload -->
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Imagen (Opcional)
-              </label>
-
-              @if (getImagePreview($index)) {
-                <div class="relative inline-block">
-                  <img
-                    [src]="getImagePreview($index)"
-                    alt="Preview"
-                    class="w-full max-w-xs h-auto rounded-md border border-gray-300 dark:border-gray-600"
-                  />
-                  <button
-                    type="button"
-                    (click)="removeImage($index)"
-                    class="absolute top-2 right-2 p-1 bg-red-600 text-white rounded-full hover:bg-red-700"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                  </button>
-                </div>
-              } @else {
-                <div class="flex items-center gap-2">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    (change)="onImageSelected($event, $index)"
-                    [id]="'image-' + $index"
-                    class="hidden"
-                  />
-                  <label
-                    [for]="'image-' + $index"
-                    class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-600 inline-flex items-center gap-2"
-                  >
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                    </svg>
-                    Seleccionar Imagen
-                  </label>
-                  @if (compressingImages().has($index)) {
-                    <span class="text-sm text-gray-600 dark:text-gray-400">Comprimiendo...</span>
-                  }
-                </div>
-              }
-            </div>
+            <app-image-upload
+              [label]="'Imagen (Opcional)'"
+              [helperText]="'Formatos soportados: JPG, PNG, GIF, etc.'"
+              [previewUrl]="getImagePreview($index)"
+              [isCompressing]="compressingImages().has($index)"
+              [inputId]="'image-' + $index"
+              (fileSelected)="onImageSelected($event, $index)"
+              (imageRemoved)="removeImage($index)"
+            ></app-image-upload>
           </div>
         }
       </div>

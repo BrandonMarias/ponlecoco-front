@@ -13,11 +13,12 @@ import { finalize, switchMap, of, forkJoin } from 'rxjs';
 import { QuickThinking } from '../quick-thinking';
 import { ModalService } from '../../shared/modal.service';
 import { ImageCompressionService } from '../../shared/image-compression.service';
+import { ImageUploadComponent } from '../../shared/image-upload/image-upload.component';
 
 @Component({
   selector: 'app-create-quick-thinking',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, ImageUploadComponent],
   templateUrl: './create-quick-thinking.component.html',
 })
 export default class CreateQuickThinkingComponent implements OnInit, OnDestroy {
@@ -35,6 +36,9 @@ export default class CreateQuickThinkingComponent implements OnInit, OnDestroy {
   isEditMode = signal(false);
   private quickThinkingId: string | null = null;
   private previewUrls = new Map<number, string>();
+
+  // Constants
+  readonly MAX_QUESTIONS = 30;
 
   // Toast notification
   showToast = signal(false);
@@ -132,6 +136,10 @@ export default class CreateQuickThinkingComponent implements OnInit, OnDestroy {
   }
 
   addQuestion() {
+    if (this.questions.length >= this.MAX_QUESTIONS) {
+      this.showToastNotification(`No se pueden agregar más de ${this.MAX_QUESTIONS} preguntas`, 'warning');
+      return;
+    }
     this.questions.push(this.createQuestionGroup());
   }
 
@@ -158,53 +166,69 @@ export default class CreateQuickThinkingComponent implements OnInit, OnDestroy {
     }
   }
 
-  async onImageSelected(event: Event, questionIndex: number) {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files[0]) {
-      const file = input.files[0];
+  async onImageSelected(file: File, questionIndex: number) {
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      this.showToastNotification('Por favor selecciona un archivo de imagen válido', 'error');
+      return;
+    }
 
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        this.showToastNotification('Por favor selecciona un archivo de imagen válido', 'error');
+    // Validate file size (10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      this.showToastNotification('La imagen no debe superar los 10MB', 'error');
+      return;
+    }
+
+    const questionGroup = this.questions.at(questionIndex);
+
+    // Clean up previous preview URL
+    const oldPreviewUrl = this.previewUrls.get(questionIndex);
+    if (oldPreviewUrl) {
+      URL.revokeObjectURL(oldPreviewUrl);
+    }
+
+    // Compress image
+    this.compressingImages.update(set => new Set(set).add(questionIndex));
+
+    try {
+      const result = await this.imageCompressionService.compressImage(file);
+
+      // Remove from compressing set
+      this.compressingImages.update(set => {
+        const newSet = new Set(set);
+        newSet.delete(questionIndex);
+        return newSet;
+      });
+
+      // Final validation after compression
+      const validation = this.imageCompressionService.validateImageFile(result.file);
+      if (!validation.isValid) {
+        this.error.set(validation.errorMessage!);
+        this.showToastNotification(validation.errorMessage!, 'error');
         return;
       }
 
-      // Validate file size (10MB)
-      if (file.size > 10 * 1024 * 1024) {
-        this.showToastNotification('La imagen no debe superar los 10MB', 'error');
-        return;
-      }
-
-      const questionGroup = this.questions.at(questionIndex);
-
-      // Clean up previous preview URL
-      const oldPreviewUrl = this.previewUrls.get(questionIndex);
-      if (oldPreviewUrl) {
-        URL.revokeObjectURL(oldPreviewUrl);
-      }
-
-      // Create preview URL
-      const previewUrl = URL.createObjectURL(file);
+      // Create preview URL with the compressed file
+      const previewUrl = URL.createObjectURL(result.file);
       this.previewUrls.set(questionIndex, previewUrl);
 
-      // Compress image
-      this.compressingImages.update(set => new Set(set).add(questionIndex));
+      // Store the compressed file (not the result object)
+      questionGroup.patchValue({
+        imageFile: result.file,
+        imageUrl: null // Clear existing URL when a new file is selected
+      });
+    } catch (error) {
+      console.error('Error compressing image:', error);
 
-      try {
-        const compressedFile = await this.imageCompressionService.compressImage(file);
-        questionGroup.patchValue({ imageFile: compressedFile });
-        this.showToastNotification('Imagen comprimida y lista para subir', 'success');
-      } catch (error) {
-        console.error('Error compressing image:', error);
-        questionGroup.patchValue({ imageFile: file });
-        this.showToastNotification('No se pudo comprimir la imagen, se usará la original', 'warning');
-      } finally {
-        this.compressingImages.update(set => {
-          const newSet = new Set(set);
-          newSet.delete(questionIndex);
-          return newSet;
-        });
-      }
+      // Remove from compressing set on error
+      this.compressingImages.update(set => {
+        const newSet = new Set(set);
+        newSet.delete(questionIndex);
+        return newSet;
+      });
+
+      this.error.set('Error al comprimir la imagen. Por favor, inténtalo de nuevo.');
+      this.showToastNotification('No se pudo comprimir la imagen', 'error');
     }
   }
 
@@ -316,6 +340,68 @@ export default class CreateQuickThinkingComponent implements OnInit, OnDestroy {
     }
 
     this.router.navigateByUrl('/dashboard');
+  }
+
+  async generateQuestionsWithAI() {
+    // Prompt for topic first
+    const topic = await this.modalService.openInput({
+      title: 'Generar Preguntas con IA',
+      message: 'Ingresa el tema para generar 10 preguntas automáticamente:'
+    });
+
+    if (!topic || topic.trim() === '') {
+      return;
+    }
+
+    // Confirm action
+    const confirmed = await this.modalService.open({
+      title: 'Confirmar Generación',
+      message: '¿Deseas generar 10 preguntas automáticamente? Esto reemplazará las preguntas actuales.'
+    });
+
+    if (!confirmed) {
+      return;
+    }
+
+    this.loading.set(true);
+    this.error.set(null);
+
+    this.quickThinkingService.generateQuickThinkingWithAI(topic.trim()).pipe(
+      finalize(() => this.loading.set(false))
+    ).subscribe({
+      next: (response) => {
+        // Set title if provided
+        if (response.title) {
+          this.quickThinkingForm.patchValue({ title: response.title });
+        }
+
+        // Clear existing questions
+        while (this.questions.length !== 0) {
+          this.questions.removeAt(0);
+        }
+
+        // Add generated questions
+        response.questions.forEach((q: any) => {
+          const questionGroup = this.fb.group({
+            question: [q.question, Validators.required],
+            options: this.fb.array(
+              q.options.map((opt: string) => this.fb.control(opt, Validators.required))
+            ),
+            correctAnswerIndex: [q.correctAnswerIndex, [Validators.required, Validators.min(0), Validators.max(3)]],
+            imageUrl: [null],
+            imageFile: [null],
+          });
+          this.questions.push(questionGroup);
+        });
+
+        this.showToastNotification('✅ Preguntas generadas exitosamente', 'success');
+      },
+      error: (err) => {
+        console.error('Error generating questions:', err);
+        this.error.set('Error al generar las preguntas. Por favor, inténtalo de nuevo.');
+        this.showToastNotification('❌ Error al generar preguntas con IA', 'error');
+      }
+    });
   }
 
   showToastNotification(message: string, type: 'success' | 'error' | 'warning' = 'success') {

@@ -50,12 +50,24 @@ export class QuickThinkingService {
   uploadQuestionImage(image: File): Observable<ImageUploadData> {
     const formData = new FormData();
     formData.append('image', image);
+
     return this.http
       .post<ApiImageUploadResponse>(
         `${this.apiUrl}/question-image`,
         formData
       )
-      .pipe(map((response) => response.data));
+      .pipe(
+        map((response) => {
+          return response.data;
+        })
+      );
+  }
+
+  // Generate quick thinking questions with AI
+  generateQuickThinkingWithAI(topic: string): Observable<{ title: string; questions: any[] }> {
+    return this.http.post<{ title: string; questions: any[] }>(`${environment.apiUrl}/ai/quick-thinking`, {
+      topic
+    });
   }
 
   // Share/Unshare quick thinking

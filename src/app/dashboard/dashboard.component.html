@@ -17,15 +17,15 @@
             <div class="bg-white dark:bg-gray-900 p-4 rounded-lg shadow hover:shadow-lg transition-shadow flex flex-col justify-between">
               <div class="flex items-center gap-2 mb-2">
                 <img
-                  [src]="item.type === 'triviaparty' ? '/media/img/triviaparty.png' : 
-                        item.type === 'ruleta' ? '/media/img/ruleta.png' : 
+                  [src]="item.type === 'triviaparty' ? '/media/img/triviaparty.png' :
+                        item.type === 'ruleta' ? '/media/img/ruleta.png' :
                         '/media/img/piensarapido.png'"
                   [alt]="item.type"
                   class="w-8 h-8 object-contain"
                 />
                 <span class="text-sm text-gray-500 dark:text-gray-400">
-                  {{ item.type === 'triviaparty' ? 'TriviaParty' : 
-                     item.type === 'ruleta' ? 'Ruleta' : 
+                  {{ item.type === 'triviaparty' ? 'TriviaParty' :
+                     item.type === 'ruleta' ? 'Ruleta' :
                      'Piensa Rápido' }}
                 </span>
               </div>
