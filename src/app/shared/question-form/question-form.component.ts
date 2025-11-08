@@ -99,18 +99,25 @@ import { ImageCompressionService } from '../image-compression.service';
 
           @if (previewUrl || questionForm.get('imageUrl')?.value) {
           <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-            <img
-              [src]="previewUrl || questionForm.get('imageUrl')?.value"
-              alt="Preview"
-              class="h-20 w-20 sm:h-16 sm:w-16 object-cover rounded"
-            />
-            <button
-              type="button"
-              (click)="removeImage()"
-              class="w-full sm:w-auto px-3 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 touch-manipulation min-h-[44px]"
-            >
-              🗑️ Quitar Imagen
-            </button>
+            <div class="relative">
+              <img
+                [src]="previewUrl || questionForm.get('imageUrl')?.value"
+                alt="Preview"
+                class="h-20 w-20 sm:h-16 sm:w-16 object-cover rounded"
+              />
+              @if (!isCompressing) {
+              <button
+                type="button"
+                (click)="removeImage()"
+                class="absolute -top-2 -right-2 p-1.5 bg-red-600 text-white rounded-full hover:bg-red-700 shadow-lg transition-colors"
+                title="Eliminar imagen"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+              }
+            </div>
           </div>
           }
         </div>
