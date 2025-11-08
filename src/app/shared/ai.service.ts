@@ -10,7 +10,7 @@ export class AiService {
   private http = inject(HttpClient);
   private apiUrl = environment.apiUrl;
 
-  generateCategory(topic: string) {
-    return this.http.post<AiCategoryResponse>(`${this.apiUrl}/ai/triviaparty`, { topic });
+  generateCategory(params: { topic?: string; text?: string }) {
+    return this.http.post<AiCategoryResponse>(`${this.apiUrl}/ai/triviaparty`, params);
   }
 }

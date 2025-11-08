@@ -14,11 +14,12 @@ import { QuickThinking } from '../quick-thinking';
 import { ModalService } from '../../shared/modal.service';
 import { ImageCompressionService } from '../../shared/image-compression.service';
 import { ImageUploadComponent } from '../../shared/image-upload/image-upload.component';
+import { BackButtonComponent } from '../../shared/back-button/back-button.component';
 
 @Component({
   selector: 'app-create-quick-thinking',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, ImageUploadComponent],
+  imports: [CommonModule, ReactiveFormsModule, ImageUploadComponent, BackButtonComponent],
   templateUrl: './create-quick-thinking.component.html',
 })
 export default class CreateQuickThinkingComponent implements OnInit, OnDestroy {
@@ -343,20 +344,20 @@ export default class CreateQuickThinkingComponent implements OnInit, OnDestroy {
   }
 
   async generateQuestionsWithAI() {
-    // Prompt for topic first
-    const topic = await this.modalService.openInput({
+    // Prompt for topic or text
+    const input = await this.modalService.openInput({
       title: 'Generar Preguntas con IA',
-      message: 'Ingresa el tema para generar 10 preguntas automáticamente:'
+      message: 'Ingresa un tema o pega un texto para generar 20 preguntas automáticamente:'
     });
 
-    if (!topic || topic.trim() === '') {
+    if (!input || input.trim() === '') {
       return;
     }
 
     // Confirm action
     const confirmed = await this.modalService.open({
       title: 'Confirmar Generación',
-      message: '¿Deseas generar 10 preguntas automáticamente? Esto reemplazará las preguntas actuales.'
+      message: '¿Deseas generar 20 preguntas automáticamente? Esto reemplazará las preguntas actuales.'
     });
 
     if (!confirmed) {
@@ -366,7 +367,12 @@ export default class CreateQuickThinkingComponent implements OnInit, OnDestroy {
     this.loading.set(true);
     this.error.set(null);
 
-    this.quickThinkingService.generateQuickThinkingWithAI(topic.trim()).pipe(
+    // Determine if input is a topic (short) or text (long)
+    const params = input.trim().length > 100
+      ? { text: input.trim() }
+      : { topic: input.trim() };
+
+    this.quickThinkingService.generateQuickThinkingWithAI(params).pipe(
       finalize(() => this.loading.set(false))
     ).subscribe({
       next: (response) => {

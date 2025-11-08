@@ -64,10 +64,8 @@ export class QuickThinkingService {
   }
 
   // Generate quick thinking questions with AI
-  generateQuickThinkingWithAI(topic: string): Observable<{ title: string; questions: any[] }> {
-    return this.http.post<{ title: string; questions: any[] }>(`${environment.apiUrl}/ai/quick-thinking`, {
-      topic
-    });
+  generateQuickThinkingWithAI(params: { topic?: string; text?: string }): Observable<{ title: string; questions: any[] }> {
+    return this.http.post<{ title: string; questions: any[] }>(`${environment.apiUrl}/ai/quick-thinking`, params);
   }
 
   // Share/Unshare quick thinking

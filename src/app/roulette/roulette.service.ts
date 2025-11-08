@@ -52,10 +52,8 @@ export class RouletteService {
       .pipe(map((response) => response.data));
   }
 
-  generateRouletteWithAI(topic: string): Observable<{ title: string; questions: any[] }> {
-    return this.http.post<{ title: string; questions: any[] }>(`${environment.apiUrl}/ai/roulette`, {
-      topic
-    });
+  generateRouletteWithAI(params: { topic?: string; text?: string }): Observable<{ title: string; questions: any[] }> {
+    return this.http.post<{ title: string; questions: any[] }>(`${environment.apiUrl}/ai/roulette`, params);
   }
 
   // Share/Unshare roulette

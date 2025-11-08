@@ -17,11 +17,12 @@ import { ModalService } from '../../shared/modal.service';
 import { AiCategoryResponse } from '../../shared/ai.interface';
 import { ImageCompressionService } from '../../shared/image-compression.service';
 import QuestionFormComponent from '../../shared/question-form/question-form.component';
+import { BackButtonComponent } from '../../shared/back-button/back-button.component';
 
 @Component({
   selector: 'app-create-triviaparty',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, QuestionFormComponent],
+  imports: [CommonModule, ReactiveFormsModule, QuestionFormComponent, BackButtonComponent],
   templateUrl: './create-triviaparty.component.html',
 })
 export default class CreateTriviaPartyComponent implements OnInit, OnDestroy {
@@ -142,15 +143,21 @@ export default class CreateTriviaPartyComponent implements OnInit, OnDestroy {
   }
 
   async addCategoryWithIA() {
-    const topic = await this.modalService.openInput({
+    const input = await this.modalService.openInput({
       title: 'Generar Categoría con IA',
-      message: 'Introduce el tema para generar la categoría y las preguntas.',
+      message: 'Introduce un tema o pega un texto para generar la categoría y las preguntas.',
     });
 
-    if (topic) {
+    if (input && input.trim()) {
       this.loading.set(true);
+
+      // Determine if input is a topic (short) or text (long)
+      const params = input.trim().length > 100
+        ? { text: input.trim() }
+        : { topic: input.trim() };
+
       this.aiService
-        .generateCategory(topic)
+        .generateCategory(params)
         .pipe(finalize(() => this.loading.set(false)))
         .subscribe({
           next: (response) => {
@@ -425,10 +432,6 @@ export default class CreateTriviaPartyComponent implements OnInit, OnDestroy {
       : this.triviaPartyService.createTriviaParty(triviaPartyData);
 
     return saveObservable;
-  }
-
-  goBackToDashboard() {
-    this.router.navigateByUrl('/dashboard');
   }
 
   showToastNotification(message: string, type: 'success' | 'error' | 'warning' = 'success') {

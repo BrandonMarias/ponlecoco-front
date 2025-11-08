@@ -13,8 +13,13 @@ import { FormsModule } from '@angular/forms';
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md z-50" (click)="$event.stopPropagation()">
           @if (modalService.inputModalData(); as data) {
             <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">{{ data.title }}</h3>
-            <p class="text-gray-600 dark:text-gray-300 mb-6">{{ data.message }}</p>
-            <input type="text" [(ngModel)]="inputValue" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200">
+            <p class="text-gray-600 dark:text-gray-300 mb-4">{{ data.message }}</p>
+            <textarea
+              [(ngModel)]="inputValue"
+              rows="6"
+              placeholder="Escribe aquí..."
+              class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 resize-none">
+            </textarea>
           }
           <div class="flex justify-end space-x-4 mt-6">
             <button (click)="onCancel()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">

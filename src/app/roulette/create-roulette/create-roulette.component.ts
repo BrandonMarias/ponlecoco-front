@@ -14,11 +14,12 @@ import { Roulette } from '../roulette';
 import { ModalService } from '../../shared/modal.service';
 import { ImageCompressionService } from '../../shared/image-compression.service';
 import QuestionFormComponent from '../../shared/question-form/question-form.component';
+import { BackButtonComponent } from '../../shared/back-button/back-button.component';
 
 @Component({
   selector: 'app-create-roulette',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, QuestionFormComponent],
+  imports: [CommonModule, ReactiveFormsModule, QuestionFormComponent, BackButtonComponent],
   templateUrl: './create-roulette.component.html',
 })
 export default class CreateRouletteComponent implements OnInit, OnDestroy {
@@ -259,13 +260,18 @@ export default class CreateRouletteComponent implements OnInit, OnDestroy {
   generateRouletteWithAI() {
     this.modalService.openInput({
       title: 'Generar Ruleta con IA',
-      message: 'Ingresa el tema para generar una ruleta automáticamente:'
-    }).then((topic) => {
-      if (topic && topic.trim()) {
+      message: 'Ingresa un tema o pega un texto para generar una ruleta automáticamente:'
+    }).then((input) => {
+      if (input && input.trim()) {
         this.loading.set(true);
         this.error.set(null);
 
-        this.rouletteService.generateRouletteWithAI(topic.trim()).subscribe({
+        // Determine if input is a topic (short) or text (long)
+        const params = input.trim().length > 100
+          ? { text: input.trim() }
+          : { topic: input.trim() };
+
+        this.rouletteService.generateRouletteWithAI(params).subscribe({
           next: (aiResponse) => {
             // Update form title
             this.rouletteForm.patchValue({
@@ -398,10 +404,6 @@ export default class CreateRouletteComponent implements OnInit, OnDestroy {
       : this.rouletteService.createRoulette(rouletteData);
 
     return saveObservable;
-  }
-
-  goBackToDashboard() {
-    this.router.navigateByUrl('/dashboard');
   }
 
   showToastNotification(message: string, type: 'success' | 'error' | 'warning' = 'success') {
