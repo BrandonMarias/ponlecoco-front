@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -8,24 +8,24 @@ import { CommonModule } from '@angular/common';
   template: `
     <div class="mb-4">
       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-        {{ label }}
+        {{ label() }}
       </label>
 
-      @if (helperText) {
+      @if (helperText()) {
         <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
-          {{ helperText }}
+          {{ helperText() }}
         </p>
       }
 
-      @if (previewUrl) {
+      @if (previewUrl()) {
         <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
           <div class="relative">
             <img
-              [src]="previewUrl"
+              [src]="previewUrl()"
               alt="Preview"
               class="h-20 w-20 sm:h-16 sm:w-16 object-cover rounded"
             />
-            @if (!isCompressing) {
+            @if (!isCompressing()) {
               <button
                 type="button"
                 (click)="onRemoveImage()"
@@ -41,7 +41,7 @@ import { CommonModule } from '@angular/common';
         </div>
       } @else {
         <div class="flex flex-col gap-3">
-          @if (isCompressing) {
+          @if (isCompressing()) {
             <div class="flex items-center gap-2 px-3 py-3 bg-blue-50 border border-blue-200 rounded-md dark:bg-blue-900/20 dark:border-blue-600">
               <svg class="animate-spin h-4 w-4 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -54,7 +54,7 @@ import { CommonModule } from '@angular/common';
               type="file"
               accept="image/*"
               (change)="onFileSelected($event)"
-              [id]="inputId"
+              [id]="inputId()"
               class="hidden"
               #fileInput
             />
@@ -72,14 +72,15 @@ import { CommonModule } from '@angular/common';
   `,
 })
 export class ImageUploadComponent {
-  @Input() label: string = 'Imagen (Opcional)';
-  @Input() helperText?: string;
-  @Input() previewUrl?: string | null;
-  @Input() isCompressing: boolean = false;
-  @Input() inputId: string = 'image-upload';
 
-  @Output() fileSelected = new EventEmitter<File>();
-  @Output() imageRemoved = new EventEmitter<void>();
+  label = input<string>('Imagen (Opcional)');
+  helperText = input<string | undefined>(undefined);
+  previewUrl = input<string | null | undefined>(undefined);
+  isCompressing = input<boolean>(false);
+  inputId = input<string>('image-upload');
+
+  fileSelected = output<File>();
+  imageRemoved = output<void>();
 
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;

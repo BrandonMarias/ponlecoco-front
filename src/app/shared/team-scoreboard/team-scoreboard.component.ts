@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 export interface Team {
@@ -13,13 +13,15 @@ export interface Team {
   templateUrl: './team-scoreboard.component.html',
 })
 export class TeamScoreboardComponent {
-  @Input({ required: true }) teams: Team[] = [];
-  @Input() currentTeamIndex: number | null = null;
-  @Input() editingTeamIndex: number | null = null;
+  // Input signals
+  teams = input.required<Team[]>();
+  currentTeamIndex = input<number | null>(null);
+  editingTeamIndex = input<number | null>(null);
 
-  @Output() editTeam = new EventEmitter<number>();
-  @Output() saveTeam = new EventEmitter<{ index: number; event: Event }>();
-  @Output() cancelEdit = new EventEmitter<void>();
+  // Output signals
+  editTeam = output<number>();
+  saveTeam = output<{ index: number; event: Event }>();
+  cancelEdit = output<void>();
 
   onSaveTeam(index: number, event: Event) {
     this.saveTeam.emit({ index, event });

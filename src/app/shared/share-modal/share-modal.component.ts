@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
+import { Component, input, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -8,13 +8,17 @@ import { CommonModule } from '@angular/common';
   templateUrl: './share-modal.component.html',
 })
 export class ShareModalComponent {
-  @Input() title = 'Compartir Trivia';
-  @Input() shareUrl = '';
-  @Input() loading = false;
-  @Output() close = new EventEmitter<void>();
-  @Output() generateLink = new EventEmitter<void>();
-  @Output() makePublic = new EventEmitter<void>();
+  // Input signals
+  title = input<string>('Compartir Trivia');
+  shareUrl = input<string>('');
+  loading = input<boolean>(false);
 
+  // Output signals
+  close = output<void>();
+  generateLink = output<void>();
+  makePublic = output<void>();
+
+  // Local signals
   showToast = signal(false);
   toastMessage = signal('');
 
@@ -31,9 +35,10 @@ export class ShareModalComponent {
   }
 
   copyToClipboard() {
-    if (!this.shareUrl) return;
+    const url = this.shareUrl();
+    if (!url) return;
 
-    navigator.clipboard.writeText(this.shareUrl).then(() => {
+    navigator.clipboard.writeText(url).then(() => {
       this.showToastNotification('✅ Enlace copiado al portapapeles');
     }).catch(() => {
       this.showToastNotification('❌ Error al copiar el enlace');
@@ -41,15 +46,16 @@ export class ShareModalComponent {
   }
 
   async shareLink() {
-    if (!this.shareUrl) return;
+    const url = this.shareUrl();
+    if (!url) return;
 
     // Check if Web Share API is available
     if (navigator.share) {
       try {
         await navigator.share({
-          title: this.title,
+          title: this.title(),
           text: 'Únete a jugar esta trivia',
-          url: this.shareUrl,
+          url: url,
         });
       } catch (err: any) {
         if (err.name !== 'AbortError') {

@@ -7,7 +7,6 @@ import { AuthService } from '../auth.service';
 import { environment } from '../../../environments/environment';
 import { Capacitor } from '@capacitor/core';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
-import { HttpClient } from '@angular/common/http';
 
 declare global {
   interface Window {
@@ -26,7 +25,6 @@ export default class LoginComponent implements AfterViewInit {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
-  private http = inject(HttpClient);
 
   loading = signal(false);
   error = signal<string | null>(null);

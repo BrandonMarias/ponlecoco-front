@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
+import { Component, input, output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ImageCompressionService } from '../image-compression.service';
@@ -8,28 +8,28 @@ import { ImageCompressionService } from '../image-compression.service';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   template: `
-    <div [formGroup]="questionForm" class="p-3 border border-gray-200 rounded bg-white dark:bg-gray-700 dark:border-gray-600">
+    <div [formGroup]="questionForm()" class="p-3 border border-gray-200 rounded bg-white dark:bg-gray-700 dark:border-gray-600">
       <p class="font-semibold dark:text-white mb-3">
-        {{ questionTitle }}
+        {{ questionTitle() }}
       </p>
 
       <div class="grid grid-cols-1 gap-4">
         <!-- Question -->
         <div>
           <label
-            [for]="'q-' + questionId"
+            [for]="'q-' + questionId()"
             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
           >
             Pregunta
           </label>
           <textarea
-            [id]="'q-' + questionId"
+            [id]="'q-' + questionId()"
             formControlName="question"
-            [rows]="questionRows"
+            [rows]="questionRows()"
             class="mt-1 block w-full px-3 py-3 sm:py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-base sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
-            [placeholder]="questionPlaceholder"
+            [placeholder]="questionPlaceholder()"
           ></textarea>
-          @if(questionForm.get('question')?.invalid && questionForm.get('question')?.touched) {
+          @if(questionForm().get('question')?.invalid && questionForm().get('question')?.touched) {
           <div class="text-red-600 text-sm mt-1 dark:text-red-400">
             La pregunta es requerida.
           </div>
@@ -39,19 +39,19 @@ import { ImageCompressionService } from '../image-compression.service';
         <!-- Answer -->
         <div>
           <label
-            [for]="'a-' + questionId"
+            [for]="'a-' + questionId()"
             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
           >
             Respuesta
           </label>
           <textarea
-            [id]="'a-' + questionId"
+            [id]="'a-' + questionId()"
             formControlName="answer"
-            [rows]="answerRows"
+            [rows]="answerRows()"
             class="mt-1 block w-full px-3 py-3 sm:py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-base sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
-            [placeholder]="answerPlaceholder"
+            [placeholder]="answerPlaceholder()"
           ></textarea>
-          @if(questionForm.get('answer')?.invalid && questionForm.get('answer')?.touched) {
+          @if(questionForm().get('answer')?.invalid && questionForm().get('answer')?.touched) {
           <div class="text-red-600 text-sm mt-1 dark:text-red-400">
             La respuesta es requerida.
           </div>
@@ -70,14 +70,14 @@ import { ImageCompressionService } from '../image-compression.service';
         <div class="flex flex-col gap-3">
           <input
             type="file"
-            [id]="'img-' + questionId"
+            [id]="'img-' + questionId()"
             (change)="onFileSelected($event)"
             class="hidden"
             accept="image/*"
             #fileInput
           />
 
-          @if (!previewUrl && !questionForm.get('imageUrl')?.value && !isCompressing) {
+          @if (!previewUrl() && !questionForm().get('imageUrl')?.value && !isCompressing()) {
           <button
             type="button"
             (click)="fileInput.click()"
@@ -87,7 +87,7 @@ import { ImageCompressionService } from '../image-compression.service';
           </button>
           }
 
-          @if (isCompressing) {
+          @if (isCompressing()) {
           <div class="flex items-center gap-2 px-3 py-3 bg-blue-50 border border-blue-200 rounded-md dark:bg-blue-900/20 dark:border-blue-600">
             <svg class="animate-spin h-4 w-4 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -97,15 +97,15 @@ import { ImageCompressionService } from '../image-compression.service';
           </div>
           }
 
-          @if (previewUrl || questionForm.get('imageUrl')?.value) {
+          @if (previewUrl() || questionForm().get('imageUrl')?.value) {
           <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
             <div class="relative">
               <img
-                [src]="previewUrl || questionForm.get('imageUrl')?.value"
+                [src]="previewUrl() || questionForm().get('imageUrl')?.value"
                 alt="Preview"
                 class="h-20 w-20 sm:h-16 sm:w-16 object-cover rounded"
               />
-              @if (!isCompressing) {
+              @if (!isCompressing()) {
               <button
                 type="button"
                 (click)="removeImage()"
@@ -128,18 +128,18 @@ import { ImageCompressionService } from '../image-compression.service';
 export default class QuestionFormComponent {
   private imageCompressionService = inject(ImageCompressionService);
 
-  @Input() questionForm!: FormGroup;
-  @Input() questionId!: string;
-  @Input() questionTitle!: string;
-  @Input() previewUrl?: string | null;
-  @Input() isCompressing: boolean = false;
-  @Input() questionRows: number = 3;
-  @Input() answerRows: number = 3;
-  @Input() questionPlaceholder: string = 'Escribe la pregunta aquí...';
-  @Input() answerPlaceholder: string = 'Escribe la respuesta aquí...';
+  questionForm = input.required<FormGroup>();
+  questionId = input.required<string>();
+  questionTitle = input.required<string>();
+  previewUrl = input<string | null | undefined>(undefined);
+  isCompressing = input<boolean>(false);
+  questionRows = input<number>(3);
+  answerRows = input<number>(3);
+  questionPlaceholder = input<string>('Escribe la pregunta aquí...');
+  answerPlaceholder = input<string>('Escribe la respuesta aquí...');
 
-  @Output() fileSelected = new EventEmitter<File>();
-  @Output() imageRemoved = new EventEmitter<void>();
+  fileSelected = output<File>();
+  imageRemoved = output<void>();
 
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
