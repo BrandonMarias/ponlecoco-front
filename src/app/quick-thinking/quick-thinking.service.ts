@@ -155,8 +155,7 @@ export class QuickThinkingService {
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
       reconnectionAttempts: this.maxReconnectAttempts,
-      transports: ['websocket', 'polling'],
-      path: '/quick-thinking/socket.io'
+      transports: ['websocket', 'polling']
     });
 
     this.setupListeners();
