@@ -83,6 +83,11 @@ body {
   animation: slide-in-up 0.3s ease-out;
 }
 
+/* Alias for slide-up animation */
+.animate-slide-up {
+  animation: slide-in-up 0.3s ease-out;
+}
+
 /* Game board utilities for better mobile experience */
 .line-clamp-2 {
   display: -webkit-box;

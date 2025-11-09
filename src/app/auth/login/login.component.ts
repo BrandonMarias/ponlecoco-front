@@ -80,7 +80,18 @@ export default class LoginComponent implements AfterViewInit {
       this.authService.googleLogin(response.credential).pipe(
         finalize(() => this.loading.set(false))
       ).subscribe({
-        next: () => this.router.navigateByUrl('/dashboard'),
+        next: () => {
+          const returnUrl = localStorage.getItem('returnUrl');
+          console.log('🔓 Login exitoso, returnUrl:', returnUrl);
+          if (returnUrl) {
+            localStorage.removeItem('returnUrl');
+            console.log('➡️ Navegando a:', returnUrl);
+            this.router.navigateByUrl(returnUrl);
+          } else {
+            console.log('➡️ Sin returnUrl, navegando al dashboard');
+            this.router.navigateByUrl('/dashboard');
+          }
+        },
         error: (err) => {
           console.error('Google login failed:', err);
           this.error.set(err.error?.message || 'Error en el inicio de sesión con Google. Por favor, inténtalo de nuevo.');
@@ -109,7 +120,18 @@ export default class LoginComponent implements AfterViewInit {
         this.authService.googleLogin(idToken).pipe(
           finalize(() => this.loading.set(false))
         ).subscribe({
-          next: () => this.router.navigateByUrl('/dashboard'),
+          next: () => {
+            const returnUrl = localStorage.getItem('returnUrl');
+            console.log('🔓 Login nativo exitoso, returnUrl:', returnUrl);
+            if (returnUrl) {
+              localStorage.removeItem('returnUrl');
+              console.log('➡️ Navegando a:', returnUrl);
+              this.router.navigateByUrl(returnUrl);
+            } else {
+              console.log('➡️ Sin returnUrl, navegando al dashboard');
+              this.router.navigateByUrl('/dashboard');
+            }
+          },
           error: (err) => {
             console.error('Backend login failed:', err);
             this.error.set(err.error?.message || 'Error en el inicio de sesión con Google. Por favor, inténtalo de nuevo.');
@@ -166,7 +188,18 @@ export default class LoginComponent implements AfterViewInit {
         finalize(() => this.loading.set(false))
       )
       .subscribe({
-        next: () => this.router.navigateByUrl('/dashboard'),
+        next: () => {
+          const returnUrl = localStorage.getItem('returnUrl');
+          console.log('🔓 Login exitoso, returnUrl:', returnUrl);
+          if (returnUrl) {
+            localStorage.removeItem('returnUrl');
+            console.log('➡️ Navegando a:', returnUrl);
+            this.router.navigateByUrl(returnUrl);
+          } else {
+            console.log('➡️ Sin returnUrl, navegando al dashboard');
+            this.router.navigateByUrl('/dashboard');
+          }
+        },
         error: (err) => {
           console.error('Login failed:', err);
           console.log('Error status:', err.status);

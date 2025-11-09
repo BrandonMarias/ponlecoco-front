@@ -12,6 +12,16 @@ const quickThinkingRoutes: Routes = [
     loadComponent: () => import('./create-quick-thinking/create-quick-thinking.component'),
     canActivate: [authGuard],
   },
+  {
+    path: 'lobby',
+    loadComponent: () => import('./game-lobby/game-lobby.component'),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'game-room/:roomToken',
+    loadComponent: () => import('./game-room/game-room.component'),
+    canActivate: [authGuard],
+  },
 ];
 
 export default quickThinkingRoutes;

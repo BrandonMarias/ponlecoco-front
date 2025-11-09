@@ -8,6 +8,7 @@ import { RouletteService } from '../roulette/roulette.service';
 import { Roulette } from '../roulette/roulette';
 import { QuickThinkingService } from '../quick-thinking/quick-thinking.service';
 import { QuickThinking } from '../quick-thinking/quick-thinking';
+import { GameRoomApiService } from '../quick-thinking/game-room-api.service';
 import { ModalService } from '../shared/modal.service';
 import { forkJoin } from 'rxjs';
 import { FormsModule } from '@angular/forms';
@@ -35,6 +36,7 @@ export default class DashboardComponent implements OnInit {
   private triviaPartyService = inject(TriviaPartyService);
   private rouletteService = inject(RouletteService);
   private quickThinkingService = inject(QuickThinkingService);
+  private gameRoomApiService = inject(GameRoomApiService);
   private router = inject(Router);
   private modalService = inject(ModalService);
 
@@ -129,6 +131,10 @@ export default class DashboardComponent implements OnInit {
     this.openMenuId.set(this.openMenuId() === id ? null : id);
   }
 
+  goToLobby() {
+    this.router.navigate(['/quick-thinking/lobby']);
+  }
+
   editItem(item: DashboardItem) {
     if (item.type === 'triviaparty') {
       this.router.navigate(['/triviaparty/edit', item.id]);
@@ -198,6 +204,40 @@ export default class DashboardComponent implements OnInit {
   }
 
   openTeamSelection(itemId: string) {
+    // Find the item to check its type
+    const item = this.dashboardItems().find(i => i.id === itemId);
+
+    // If it's quick-thinking, create room immediately and navigate to game-room
+    if (item && item.type === 'quick-thinking') {
+      this.loading.set(true);
+
+      // Ensure WebSocket is connected before creating room (only if not already connected)
+      const token = localStorage.getItem('access_token');
+      if (token && !this.quickThinkingService.isConnected()) {
+        console.log('🔌 Conectando WebSocket desde dashboard...');
+        this.quickThinkingService.connect(token);
+      } else if (token) {
+        console.log('✅ WebSocket ya conectado');
+      }
+
+      this.gameRoomApiService.createRoom(itemId).subscribe({
+        next: (room) => {
+          console.log('✅ Sala creada:', room);
+          this.loading.set(false);
+          // Navigate to game room with the room token
+          this.router.navigate(['/quick-thinking/game-room', room.roomToken]);
+        },
+        error: (error) => {
+          console.error('❌ Error al crear sala:', error);
+          const errorMsg = error.error?.message || 'Error al crear la sala. Inténtalo de nuevo.';
+          this.showToastNotification(errorMsg, 'error');
+          this.loading.set(false);
+        }
+      });
+      return;
+    }
+
+    // For other types, open the team selection modal
     this.selectedItemId.set(itemId);
     this.showTeamSelection.set(true);
   }
