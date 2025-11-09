@@ -4,6 +4,12 @@
   status = 200
   force = true
 
+[[redirects]]
+  from = "/quick-thinking/*"
+  to = "http://143.244.178.3:3000/quick-thinking/:splat"
+  status = 200
+  force = true
+
 # Headers CORS específicos para apps móviles
 [[headers]]
   for = "/api/*"
@@ -13,6 +19,17 @@
     Access-Control-Allow-Headers = "Accept, Authorization, Content-Type, Origin, X-Requested-With"
     Access-Control-Max-Age = "86400"
     # Headers adicionales para Capacitor
+    Access-Control-Allow-Private-Network = "true"
+    Vary = "Origin"
+
+# Headers CORS para WebSocket
+[[headers]]
+  for = "/quick-thinking/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS, HEAD, PATCH"
+    Access-Control-Allow-Headers = "Accept, Authorization, Content-Type, Origin, X-Requested-With"
+    Access-Control-Max-Age = "86400"
     Access-Control-Allow-Private-Network = "true"
     Vary = "Origin"
 
