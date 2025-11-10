@@ -202,7 +202,7 @@ export default class GameRoomComponent implements OnInit, OnDestroy {
     // Nueva pregunta - resetear estado y recrear timer subscription
     this.subscriptions.push(
       this.gameService.question$.subscribe((question) => {
-        console.log('❓ Nueva pregunta recibida en componente:', question.questionId.substring(0, 8));
+        console.log('❓ Nueva pregunta:', question.questionNumber, '/', question.totalQuestions);
 
         // Resetear todo el estado de la pregunta
         this.currentQuestion.set(question);
@@ -212,11 +212,8 @@ export default class GameRoomComponent implements OnInit, OnDestroy {
         this.questionResults.set(null);
         this.timeRemaining.set(60); // Reset visual del timer
 
-        // 🔥 CRÍTICO: Recrear subscription del timer
-        console.log('🔄 Llamando a setupTimerSubscription para nueva pregunta...');
+        // Recrear subscription del timer para nueva pregunta
         this.setupTimerSubscription();
-
-        console.log('✅ Estado reseteado para nueva pregunta');
       })
     );
 
@@ -312,13 +309,10 @@ export default class GameRoomComponent implements OnInit, OnDestroy {
    * Se llama al inicio y cada vez que hay una nueva pregunta
    */
   private setupTimerSubscription(): void {
-    console.log('🔧 setupTimerSubscription llamado');
-
     // Limpiar subscription anterior si existe
     if (this.timerSubscription) {
       this.timerSubscription.unsubscribe();
       this.timerSubscription = null;
-      console.log('🔄 Timer subscription anterior desuscrita');
     }
 
     // Crear nueva subscription filtrando valores null
@@ -329,13 +323,8 @@ export default class GameRoomComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (data) => {
           this.timeRemaining.set(data.seconds);
-        },
-        complete: () => {
-          console.log('⏹️ Timer subject completado en componente');
         }
       });
-
-    console.log('⏰ Nueva timer subscription creada');
   }
 
   get isHost(): boolean {

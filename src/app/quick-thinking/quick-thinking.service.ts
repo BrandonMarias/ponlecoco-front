@@ -208,47 +208,24 @@ export class QuickThinkingService {
     });
 
     this.socket.on('newQuestion', (data: QuestionEvent) => {
-      console.log('❓ Nueva pregunta recibida:', data.questionId.substring(0, 8));
+      console.log('❓ Nueva pregunta:', data.questionNumber, '/', data.totalQuestions);
 
-      // 🔥 PASO 1: Detener timer anterior completamente
+      // Detener timer anterior completamente
       this.stopTimer();
 
-      // 🔥 PASO 2: Actualizar ID de pregunta nueva
+      // Actualizar ID de pregunta nueva
       this.currentQuestionId = data.questionId;
 
-      // 🔥 PASO 3: Activar timer para la nueva pregunta
+      // Activar timer para la nueva pregunta
       this.startTimer();
 
-      console.log('🔄 Timer reseteado para nueva pregunta:', this.currentQuestionId.substring(0, 8));
-
-      // 🔥 PASO 4: Emitir evento de nueva pregunta al componente
+      // Emitir evento de nueva pregunta al componente
       this.questionSubject.next(data);
     });
 
     this.socket.on('timeRemaining', (data: TimeRemainingEvent) => {
-      // Si el backend envía questionId, validar que coincida
-      // Si no lo envía, validar que sea parte de la secuencia correcta del timer
-      const questionIdMatch = !data.questionId || this.currentQuestionId === data.questionId;
-
-      // 🔥 VALIDACIÓN DE SECUENCIA:
-      // - Si viene 60, es un nuevo timer (aceptar siempre si está activo)
-      // - Si no, debe ser exactamente lastTimerValue - 1 (secuencia estricta)
-      let isSequenceValid = false;
-      if (data.seconds === 60) {
-        // Nuevo timer empieza
-        isSequenceValid = true;
-      } else if (this.lastTimerValue > 0 && data.seconds === this.lastTimerValue - 1) {
-        // Secuencia válida: decremento de 1
-        isSequenceValid = true;
-      }
-
-      if (this.isTimerActive && questionIdMatch && isSequenceValid) {
-        this.lastTimerValue = data.seconds;
-        this.timeRemainingSubject.next(data);
-        console.log(`✅ Timer: ${data.seconds}s`);
-      } else {
-        console.log(`❌ RECHAZADO: ${data.seconds}s (esperaba: ${this.lastTimerValue - 1}, activo: ${this.isTimerActive})`);
-      }
+      this.lastTimerValue = data.seconds;
+      this.timeRemainingSubject.next(data);
     });
 
     this.socket.on('questionTimeout', () => {
@@ -385,15 +362,12 @@ export class QuickThinkingService {
   private startTimer(): void {
     this.isTimerActive = true;
     this.lastTimerValue = 61; // Resetear para aceptar 60 como primer valor
-    console.log('⏰ Timer ACTIVADO para pregunta:', this.currentQuestionId?.substring(0, 8));
   }
 
   /**
    * Detiene el timer actual completamente
    */
   private stopTimer(): void {
-    console.log('🛑 Intentando detener timer. Estado actual - activo:', this.isTimerActive, 'questionId:', this.currentQuestionId?.substring(0, 8));
-
     // SIEMPRE ejecutar limpieza, incluso si isTimerActive es false
     this.isTimerActive = false;
     this.currentQuestionId = null;
@@ -401,8 +375,6 @@ export class QuickThinkingService {
 
     // Resetear el BehaviorSubject a null para indicar que no hay timer activo
     this.timeRemainingSubject.next(null);
-
-    console.log('⏹️ Timer DESACTIVADO completamente');
   }
 
   /**
