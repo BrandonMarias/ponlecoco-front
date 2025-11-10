@@ -48,7 +48,7 @@ export class QuickThinkingService {
   private playerReconnectedSubject = new Subject<PlayerEvent>();
   private playerDisconnectedSubject = new Subject<PlayerEvent>();
   private errorSubject = new Subject<{ message: string }>();
-  
+
   // Control del timer - se reinicia con cada nueva pregunta
   private currentQuestionId: string | null = null;
   private isTimerActive = false;
@@ -208,15 +208,15 @@ export class QuickThinkingService {
 
     this.socket.on('newQuestion', (data: QuestionEvent) => {
       console.log('❓ Nueva pregunta:', data);
-      
+
       // 🔥 CRÍTICO: Detener timer anterior y crear uno nuevo
       this.stopTimer();
       this.startTimer();
-      
+
       // Actualizar ID de pregunta actual
       this.currentQuestionId = data.questionId;
       console.log('🔄 Timer reseteado para pregunta:', this.currentQuestionId);
-      
+
       this.questionSubject.next(data);
     });
 
@@ -373,7 +373,7 @@ export class QuickThinkingService {
       console.log('⏹️ Timer DESACTIVADO');
       this.isTimerActive = false;
       this.currentQuestionId = null;
-      
+
       // Resetear el BehaviorSubject a null para indicar que no hay timer activo
       this.timeRemainingSubject.next(null);
     }

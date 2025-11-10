@@ -52,7 +52,7 @@ export default class GameRoomComponent implements OnInit, OnDestroy {
 
   // Subscriptions
   private subscriptions: Subscription[] = [];
-  
+
   // Timer subscription separada para poder recrearla
   private timerSubscription: Subscription | null = null;
 
@@ -202,7 +202,7 @@ export default class GameRoomComponent implements OnInit, OnDestroy {
     this.subscriptions.push(
       this.gameService.question$.subscribe((question) => {
         console.log('❓ Nueva pregunta recibida en componente:', question);
-        
+
         // Resetear todo el estado de la pregunta
         this.currentQuestion.set(question);
         this.selectedAnswer.set(null);
@@ -210,10 +210,10 @@ export default class GameRoomComponent implements OnInit, OnDestroy {
         this.showResults.set(false);
         this.questionResults.set(null);
         this.timeRemaining.set(60); // Reset visual del timer
-        
+
         // 🔥 CRÍTICO: Recrear subscription del timer
         this.setupTimerSubscription();
-        
+
         console.log('✅ Estado reseteado para nueva pregunta');
       })
     );
@@ -315,7 +315,7 @@ export default class GameRoomComponent implements OnInit, OnDestroy {
       this.timerSubscription.unsubscribe();
       console.log('🔄 Timer subscription anterior desuscrita');
     }
-    
+
     // Crear nueva subscription filtrando valores null
     this.timerSubscription = this.gameService.timeRemaining$
       .pipe(
@@ -329,7 +329,7 @@ export default class GameRoomComponent implements OnInit, OnDestroy {
           console.log('⏹️ Timer subject completado');
         }
       });
-    
+
     console.log('⏰ Nueva timer subscription creada');
   }
 
