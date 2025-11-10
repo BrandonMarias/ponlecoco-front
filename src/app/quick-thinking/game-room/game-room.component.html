@@ -329,76 +329,28 @@
 
     <!-- Resultados de Pregunta -->
     @if (showResults() && questionResults()) {
-      <div class="space-y-6">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-6">
-          <h2 class="text-2xl font-bold mb-4 flex items-center gap-3">
-            <svg class="w-8 h-8 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+      <!-- Componente de resultados con animaciones GSAP -->
+      <app-quick-thinking-results
+        [currentResults]="questionResults()"
+        [previousResults]="previousResults()"
+        [questionOptions]="currentQuestion()?.options || []"
+        [hostId]="roomState()?.hostId || ''"
+      />
+
+      <!-- Next Question Button (Host only) -->
+      @if (isHost) {
+        <div class="mt-6">
+          <button
+            (click)="nextQuestion()"
+            class="w-full px-6 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold text-lg transition-colors duration-200 flex items-center justify-center gap-3"
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
             </svg>
-            Resultados
-          </h2>
-
-          <!-- Respuesta Correcta -->
-          <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-600 rounded-lg p-4 mb-6">
-            <p class="text-green-800 dark:text-green-300 font-medium mb-2">
-              <strong>Respuesta correcta:</strong>
-            </p>
-            <div class="flex items-center gap-3">
-              <span class="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center font-bold">
-                {{ getOptionLetter(questionResults()?.correctAnswerIndex ?? 0) }}
-              </span>
-              <span class="text-green-900 dark:text-green-100 font-medium">
-                {{ currentQuestion()?.options?.[questionResults()?.correctAnswerIndex ?? 0] }}
-              </span>
-            </div>
-          </div>
-
-          <!-- Top 3 -->
-          <h3 class="text-xl font-semibold mb-4 flex items-center gap-2">
-            🏆 Ranking de Jugadores
-          </h3>
-          <div class="space-y-3">
-            @for (player of getTopPlayersFromScores(questionResults()?.scores || []); track player.userId; let i = $index) {
-              <div
-                class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 flex items-center justify-between"
-                [class.bg-yellow-50]="i === 0"
-                [class.dark:bg-yellow-900/20]="i === 0"
-                [class.border]="i === 0"
-                [class.border-yellow-400]="i === 0"
-                [class.dark:border-yellow-600]="i === 0"
-              >
-                <div class="flex items-center gap-4 flex-1">
-                  <span class="text-3xl">{{ getRankEmoji(i) }}</span>
-                  <div class="flex-1">
-                    <p class="font-semibold">{{ player.username }}</p>
-                  </div>
-                </div>
-                <div class="text-right">
-                  <p class="text-xl font-bold text-green-600 dark:text-green-400">
-                    {{ player.score }} pts
-                  </p>
-                  <p class="text-sm text-gray-600 dark:text-gray-400">
-                    Total acumulado
-                  </p>
-                </div>
-              </div>
-            }
-          </div>
-
-          <!-- Next Question Button (Host only) -->
-          @if (isHost) {
-            <button
-              (click)="nextQuestion()"
-              class="w-full mt-6 px-6 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold text-lg transition-colors duration-200 flex items-center justify-center gap-3"
-            >
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
-              </svg>
-              Siguiente Pregunta
-            </button>
-          }
+            Siguiente Pregunta
+          </button>
         </div>
-      </div>
+      }
     }
   }
 

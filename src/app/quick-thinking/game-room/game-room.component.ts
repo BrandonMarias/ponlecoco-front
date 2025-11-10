@@ -15,12 +15,13 @@ import {
   TimeRemainingEvent
 } from '../quick-thinking-game.models';
 import { ModalService } from '../../shared/modal.service';
+import { QuickThinkingResultsComponent } from './quick-thinking-results/quick-thinking-results.component';
 import QRCode from 'qrcode';
 
 @Component({
   selector: 'app-game-room',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, QuickThinkingResultsComponent],
   templateUrl: './game-room.component.html'
 })
 export default class GameRoomComponent implements OnInit, OnDestroy {
@@ -35,6 +36,7 @@ export default class GameRoomComponent implements OnInit, OnDestroy {
   roomState = signal<RoomState | null>(null);
   currentQuestion = signal<QuestionEvent | null>(null);
   questionResults = signal<QuestionResult | null>(null);
+  previousResults = signal<QuestionResult | null>(null); // Para animaciones
   gameEnded = signal<GameEndEvent | null>(null);
 
   // UI state
@@ -209,7 +211,8 @@ export default class GameRoomComponent implements OnInit, OnDestroy {
         this.selectedAnswer.set(null);
         this.hasAnswered.set(false);
         this.showResults.set(false);
-        this.questionResults.set(null);
+        // NO resetear questionResults ni previousResults aquí
+        // Se mantienen para que el componente de resultados pueda animarlos
         this.timeRemaining.set(60); // Reset visual del timer
 
         // Recrear subscription del timer para nueva pregunta
@@ -231,6 +234,12 @@ export default class GameRoomComponent implements OnInit, OnDestroy {
     // Resultados de pregunta
     this.subscriptions.push(
       this.gameService.questionResults$.subscribe((results) => {
+        // Guardar resultados anteriores antes de actualizar
+        const current = this.questionResults();
+        if (current) {
+          this.previousResults.set(current);
+        }
+
         this.questionResults.set(results);
         this.showResults.set(true);
         console.log('📊 Resultados recibidos:', results);
@@ -350,18 +359,6 @@ export default class GameRoomComponent implements OnInit, OnDestroy {
   getActivePlayers(): Player[] {
     if (!this.roomState()?.players) return [];
     return this.roomState()!.players.filter(player => !player.isHost);
-  }
-
-  /**
-   * Obtiene el ranking de jugadores desde scores, excluyendo al host
-   * y ordenados por puntaje descendente
-   */
-  getTopPlayersFromScores(scores: Player[]): Player[] {
-    if (!scores || scores.length === 0) return [];
-
-    return scores
-      .filter(player => !player.isHost) // Excluir host
-      .sort((a, b) => b.score - a.score); // Ordenar por puntaje descendente
   }
 
   private getCurrentUserId(): string {
