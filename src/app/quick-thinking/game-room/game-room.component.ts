@@ -425,6 +425,8 @@ export default class GameRoomComponent implements OnInit, OnDestroy {
   selectAnswer(index: number): void {
     if (!this.hasAnswered() && this.currentQuestion()) {
       this.selectedAnswer.set(index);
+      // Enviar automáticamente al seleccionar
+      this.submitAnswer();
     }
   }
 

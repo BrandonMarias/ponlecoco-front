@@ -1,4 +1,4 @@
-<div class="content-page container mx-auto p-4 pb-20 text-gray-800 dark:text-white min-h-screen">
+<div class="content-page container mx-auto p-4 pb-20 text-gray-800 dark:text-white min-h-screen mt-4">
 
   <!-- Formulario de Nickname (cuando se accede por link directo sin nickname) -->
   @if (showNicknameForm()) {
@@ -69,88 +69,92 @@
     </div>
   }
 
-  <!-- Header -->
-  <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-4 mb-6">
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-      <div class="flex-1">
-        <h1 class="text-2xl sm:text-3xl font-bold mb-2">{{ roomState()?.gameTitle || 'Cargando...' }}</h1>
-        <div class="flex items-center gap-3">
-          <div class="flex items-center gap-2 bg-gray-100 dark:bg-gray-700 px-4 py-2 rounded-lg">
-            <span class="text-sm text-gray-600 dark:text-gray-400">Código:</span>
-            <strong class="text-lg font-mono">{{ roomToken() }}</strong>
-            <button
-              (click)="copyRoomToken()"
-              class="ml-2 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300"
-              title="Copiar código"
-            >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-              </svg>
-            </button>
+  <!-- Header (oculto para jugadores durante el juego) -->
+  @if (isHost || roomState()?.status === GameRoomStatus.WAITING) {
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-4 mb-6">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div class="flex-1">
+          <h1 class="text-2xl sm:text-3xl font-bold mb-2">{{ roomState()?.gameTitle || 'Cargando...' }}</h1>
+          <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2 bg-gray-100 dark:bg-gray-700 px-4 py-2 rounded-lg">
+              <span class="text-sm text-gray-600 dark:text-gray-400">Código:</span>
+              <strong class="text-lg font-mono">{{ roomToken() }}</strong>
+              <button
+                (click)="copyRoomToken()"
+                class="ml-2 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300"
+                title="Copiar código"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                </svg>
+              </button>
+            </div>
+            @if (isHost) {
+              <button
+                (click)="toggleShareModal()"
+                class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200"
+                title="Compartir sala"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                </svg>
+                <span class="hidden sm:inline">Compartir</span>
+              </button>
+            }
           </div>
+        </div>
+        <div class="flex gap-2">
           @if (isHost) {
             <button
-              (click)="toggleShareModal()"
-              class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200"
-              title="Compartir sala"
+              (click)="closeRoom()"
+              class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200 flex items-center gap-2"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
               </svg>
-              <span class="hidden sm:inline">Compartir</span>
+              Cerrar Sala
+            </button>
+          } @else {
+            <button
+              (click)="leaveRoom()"
+              class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors duration-200 flex items-center gap-2"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+              </svg>
+              Salir
             </button>
           }
         </div>
       </div>
-      <div class="flex gap-2">
-        @if (isHost) {
-          <button
-            (click)="closeRoom()"
-            class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200 flex items-center gap-2"
-          >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-            </svg>
-            Cerrar Sala
-          </button>
-        } @else {
-          <button
-            (click)="leaveRoom()"
-            class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors duration-200 flex items-center gap-2"
-          >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-            </svg>
-            Salir
-          </button>
+    </div>
+  }
+
+  <!-- Players Section (oculto para jugadores durante el juego) -->
+  @if (isHost || roomState()?.status === GameRoomStatus.WAITING) {
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-4 mb-6">
+      <h3 class="text-lg font-semibold mb-3 flex items-center gap-2">
+        <svg class="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"></path>
+        </svg>
+        Jugadores ({{ getActivePlayers().length }}/30)
+      </h3>
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+        @for (player of getActivePlayers(); track player.userId) {
+          <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 border-2 border-gray-200 dark:border-gray-600 transition-all">
+            <div class="flex items-start justify-between mb-2">
+              <span class="text-sm font-medium truncate flex-1">
+                {{ player.username }}
+              </span>
+            </div>
+            <div class="text-lg font-bold text-indigo-600 dark:text-indigo-400">
+              {{ player.score }} pts
+            </div>
+          </div>
         }
       </div>
     </div>
-  </div>
-
-  <!-- Players Section -->
-  <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-4 mb-6">
-    <h3 class="text-lg font-semibold mb-3 flex items-center gap-2">
-      <svg class="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="currentColor" viewBox="0 0 20 20">
-        <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"></path>
-      </svg>
-      Jugadores ({{ getActivePlayers().length }}/30)
-    </h3>
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-      @for (player of getActivePlayers(); track player.userId) {
-        <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 border-2 border-gray-200 dark:border-gray-600 transition-all">
-          <div class="flex items-start justify-between mb-2">
-            <span class="text-sm font-medium truncate flex-1">
-              {{ player.username }}
-            </span>
-          </div>
-          <div class="text-lg font-bold text-indigo-600 dark:text-indigo-400">
-            {{ player.score }} pts
-          </div>
-        </div>
-      }
-    </div>
-  </div>
+  }
 
   <!-- SALA EN ESPERA -->
   @if (roomState()?.status === GameRoomStatus.WAITING) {
@@ -310,22 +314,9 @@
               }
             </div>
 
-            <!-- Submit Button -->
-            @if (selectedAnswer() !== null && !hasAnswered()) {
-              <button
-                (click)="submitAnswer()"
-                class="w-full px-6 py-4 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold text-lg transition-colors duration-200 flex items-center justify-center gap-3"
-              >
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                </svg>
-                Enviar Respuesta
-              </button>
-            }
-
             <!-- Answered Message -->
             @if (hasAnswered()) {
-              <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-600 rounded-lg p-4 text-center">
+              <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-600 rounded-lg p-4 text-center mt-4">
                 <p class="text-blue-800 dark:text-blue-300 font-medium">
                   ✅ Respuesta enviada. Esperando resultados...
                 </p>
