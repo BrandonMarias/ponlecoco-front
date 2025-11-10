@@ -53,9 +53,6 @@ export default class GameRoomComponent implements OnInit, OnDestroy {
   // Subscriptions
   private subscriptions: Subscription[] = [];
 
-  // Timer control
-  private timerSubscription: Subscription | null = null;
-
   // Toast notification
   showToast = signal(false);
   toastMessage = signal('');
@@ -188,15 +185,6 @@ export default class GameRoomComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.subscriptions.forEach(sub => sub.unsubscribe());
-    this.clearTimer();
-  }
-
-  private clearTimer(): void {
-    if (this.timerSubscription) {
-      this.timerSubscription.unsubscribe();
-      this.timerSubscription = null;
-      console.log('⏹️ Temporizador limpiado');
-    }
   }
 
   private setupSubscriptions(): void {
@@ -211,35 +199,28 @@ export default class GameRoomComponent implements OnInit, OnDestroy {
     // Nueva pregunta
     this.subscriptions.push(
       this.gameService.question$.subscribe((question) => {
-        console.log('❓ Nueva pregunta recibida:', question);
-
-        // Limpiar temporizador anterior PRIMERO
-        this.clearTimer();
-
-        // Resetear estado
         this.currentQuestion.set(question);
         this.selectedAnswer.set(null);
         this.hasAnswered.set(false);
         this.showResults.set(false);
         this.questionResults.set(null);
         this.timeRemaining.set(60);
-
-        console.log('✅ Estado reseteado para nueva pregunta');
+        console.log('Nueva pregunta:', question);
       })
     );
 
-    // Timer - usar subscription separada para poder limpiarla
-    this.timerSubscription = this.gameService.timeRemaining$.subscribe((data) => {
-      this.timeRemaining.set(data.seconds);
-    });
+    // Timer
+    this.subscriptions.push(
+      this.gameService.timeRemaining$.subscribe((data) => {
+        this.timeRemaining.set(data.seconds);
+      })
+    );
 
     // Timeout de pregunta
     this.subscriptions.push(
       this.gameService.questionTimeout$.subscribe(() => {
         console.log('⏰ Tiempo agotado');
         this.hasAnswered.set(true);
-        // Limpiar el temporizador cuando se agota el tiempo
-        this.clearTimer();
       })
     );
 
@@ -276,8 +257,6 @@ export default class GameRoomComponent implements OnInit, OnDestroy {
       this.gameService.gameEnded$.subscribe((data) => {
         this.gameEnded.set(data);
         console.log('🏆 Juego finalizado:', data);
-        // Limpiar el temporizador cuando termina el juego
-        this.clearTimer();
       })
     );
 
@@ -457,7 +436,6 @@ export default class GameRoomComponent implements OnInit, OnDestroy {
     });
 
     if (confirmed) {
-      this.clearTimer();
       this.gameService.closeRoom(this.roomToken());
       this.router.navigate(['/quick-thinking/lobby']);
     }
@@ -470,7 +448,6 @@ export default class GameRoomComponent implements OnInit, OnDestroy {
     });
 
     if (confirmed) {
-      this.clearTimer();
       this.gameService.disconnect();
       this.router.navigate(['/quick-thinking/lobby']);
     }
