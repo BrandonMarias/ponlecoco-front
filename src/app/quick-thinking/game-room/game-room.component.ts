@@ -11,7 +11,8 @@ import {
   QuestionResult,
   GameEndEvent,
   GameRoomStatus,
-  Player
+  Player,
+  TimeRemainingEvent
 } from '../quick-thinking-game.models';
 import { ModalService } from '../../shared/modal.service';
 import QRCode from 'qrcode';
@@ -201,7 +202,7 @@ export default class GameRoomComponent implements OnInit, OnDestroy {
     // Nueva pregunta - resetear estado y recrear timer subscription
     this.subscriptions.push(
       this.gameService.question$.subscribe((question) => {
-        console.log('❓ Nueva pregunta recibida en componente:', question);
+        console.log('❓ Nueva pregunta recibida en componente:', question.questionId.substring(0, 8));
 
         // Resetear todo el estado de la pregunta
         this.currentQuestion.set(question);
@@ -212,6 +213,7 @@ export default class GameRoomComponent implements OnInit, OnDestroy {
         this.timeRemaining.set(60); // Reset visual del timer
 
         // 🔥 CRÍTICO: Recrear subscription del timer
+        console.log('🔄 Llamando a setupTimerSubscription para nueva pregunta...');
         this.setupTimerSubscription();
 
         console.log('✅ Estado reseteado para nueva pregunta');
@@ -310,23 +312,26 @@ export default class GameRoomComponent implements OnInit, OnDestroy {
    * Se llama al inicio y cada vez que hay una nueva pregunta
    */
   private setupTimerSubscription(): void {
+    console.log('🔧 setupTimerSubscription llamado');
+
     // Limpiar subscription anterior si existe
     if (this.timerSubscription) {
       this.timerSubscription.unsubscribe();
+      this.timerSubscription = null;
       console.log('🔄 Timer subscription anterior desuscrita');
     }
 
     // Crear nueva subscription filtrando valores null
     this.timerSubscription = this.gameService.timeRemaining$
       .pipe(
-        filter((data): data is { seconds: number; questionId: string } => data !== null)
+        filter((data): data is TimeRemainingEvent => data !== null)
       )
       .subscribe({
         next: (data) => {
           this.timeRemaining.set(data.seconds);
         },
         complete: () => {
-          console.log('⏹️ Timer subject completado');
+          console.log('⏹️ Timer subject completado en componente');
         }
       });
 

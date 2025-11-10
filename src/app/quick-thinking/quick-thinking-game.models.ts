@@ -72,6 +72,7 @@ export interface GameEndEvent {
 
 export interface TimeRemainingEvent {
   seconds: number;
+  questionId?: string; // Opcional porque el backend puede no enviarlo
 }
 
 export interface PlayerEvent {
