@@ -2,7 +2,7 @@ import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Subscription, switchMap } from 'rxjs';
+import { Subscription, filter } from 'rxjs';
 import { QuickThinkingService } from '../quick-thinking.service';
 import { GameRoomApiService } from '../game-room-api.service';
 import {
@@ -52,6 +52,9 @@ export default class GameRoomComponent implements OnInit, OnDestroy {
 
   // Subscriptions
   private subscriptions: Subscription[] = [];
+  
+  // Timer subscription separada para poder recrearla
+  private timerSubscription: Subscription | null = null;
 
   // Toast notification
   showToast = signal(false);
@@ -181,6 +184,9 @@ export default class GameRoomComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.subscriptions.forEach(sub => sub.unsubscribe());
+    if (this.timerSubscription) {
+      this.timerSubscription.unsubscribe();
+    }
   }
 
   private setupSubscriptions(): void {
@@ -192,30 +198,28 @@ export default class GameRoomComponent implements OnInit, OnDestroy {
       })
     );
 
-    // Nueva pregunta - Usar switchMap para cancelar timer anterior automáticamente
+    // Nueva pregunta - resetear estado y recrear timer subscription
     this.subscriptions.push(
-      this.gameService.question$.pipe(
-        switchMap((question) => {
-          console.log('❓ Nueva pregunta recibida:', question);
-
-          // Resetear estado de la pregunta
-          this.currentQuestion.set(question);
-          this.selectedAnswer.set(null);
-          this.hasAnswered.set(false);
-          this.showResults.set(false);
-          this.questionResults.set(null);
-          this.timeRemaining.set(60);
-
-          console.log('✅ Estado reseteado para nueva pregunta');
-
-          // Retornar el observable del timer, switchMap cancelará el anterior automáticamente
-          return this.gameService.timeRemaining$;
-        })
-      ).subscribe((data) => {
-        // Actualizar el tiempo desde el timer de la pregunta actual
-        this.timeRemaining.set(data.seconds);
+      this.gameService.question$.subscribe((question) => {
+        console.log('❓ Nueva pregunta recibida en componente:', question);
+        
+        // Resetear todo el estado de la pregunta
+        this.currentQuestion.set(question);
+        this.selectedAnswer.set(null);
+        this.hasAnswered.set(false);
+        this.showResults.set(false);
+        this.questionResults.set(null);
+        this.timeRemaining.set(60); // Reset visual del timer
+        
+        // 🔥 CRÍTICO: Recrear subscription del timer
+        this.setupTimerSubscription();
+        
+        console.log('✅ Estado reseteado para nueva pregunta');
       })
     );
+
+    // Configurar timer subscription inicial
+    this.setupTimerSubscription();
 
     // Timeout de pregunta
     this.subscriptions.push(
@@ -301,6 +305,34 @@ export default class GameRoomComponent implements OnInit, OnDestroy {
     );
   }
 
+  /**
+   * Configura/recrea la subscription del timer
+   * Se llama al inicio y cada vez que hay una nueva pregunta
+   */
+  private setupTimerSubscription(): void {
+    // Limpiar subscription anterior si existe
+    if (this.timerSubscription) {
+      this.timerSubscription.unsubscribe();
+      console.log('🔄 Timer subscription anterior desuscrita');
+    }
+    
+    // Crear nueva subscription filtrando valores null
+    this.timerSubscription = this.gameService.timeRemaining$
+      .pipe(
+        filter((data): data is { seconds: number; questionId: string } => data !== null)
+      )
+      .subscribe({
+        next: (data) => {
+          this.timeRemaining.set(data.seconds);
+        },
+        complete: () => {
+          console.log('⏹️ Timer subject completado');
+        }
+      });
+    
+    console.log('⏰ Nueva timer subscription creada');
+  }
+
   get isHost(): boolean {
     const userId = this.getCurrentUserId();
     return this.roomState()?.hostId === userId;
@@ -323,8 +355,19 @@ export default class GameRoomComponent implements OnInit, OnDestroy {
    */
   getActivePlayers(): Player[] {
     if (!this.roomState()?.players) return [];
-    console.log(this.roomState()?.players);
     return this.roomState()!.players.filter(player => !player.isHost);
+  }
+
+  /**
+   * Obtiene el ranking de jugadores desde scores, excluyendo al host
+   * y ordenados por puntaje descendente
+   */
+  getTopPlayersFromScores(scores: Player[]): Player[] {
+    if (!scores || scores.length === 0) return [];
+
+    return scores
+      .filter(player => !player.isHost) // Excluir host
+      .sort((a, b) => b.score - a.score); // Ordenar por puntaje descendente
   }
 
   private getCurrentUserId(): string {

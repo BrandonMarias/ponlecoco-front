@@ -11,8 +11,7 @@ export interface Player {
   username: string;
   score: number;
   isHost: boolean;
-  socketId: string;
-  isConnected: boolean;
+  socketId?: string;
   lastActivity?: number;
 }
 

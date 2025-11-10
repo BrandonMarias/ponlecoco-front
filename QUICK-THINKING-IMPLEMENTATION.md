@@ -14,12 +14,12 @@ Se ha implementado exitosamente el sistema de juego multijugador en tiempo real 
    - Máximo 30 jugadores por sala
    - Estado en tiempo real con WebSocket
 
-2. **Modo de Juego**
+3. **Modo de Juego**
    - Sistema de puntos: 1º=300pts, 2º=200pts, 3º=100pts
    - Timer de 60 segundos por pregunta
    - Respuesta múltiple (4 opciones)
    - Soporte para imágenes en preguntas
-   - Reconexión automática (30 segundos de gracia)
+   - Jugadores en la lista = jugadores conectados (simplificado)
 
 3. **Roles**
    - **Anfitrión**: Control total del flujo del juego

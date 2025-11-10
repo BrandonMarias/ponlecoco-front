@@ -138,20 +138,11 @@
     </h3>
     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
       @for (player of getActivePlayers(); track player.userId) {
-        <div
-          class="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 border-2 transition-all"
-          [class.border-gray-200]="player.isConnected"
-          [class.border-red-400]="!player.isConnected"
-          [class.dark:border-gray-600]="player.isConnected"
-          [class.dark:border-red-500]="!player.isConnected"
-        >
+        <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 border-2 border-gray-200 dark:border-gray-600 transition-all">
           <div class="flex items-start justify-between mb-2">
-            <span class="text-sm font-medium truncate flex-1" [class.opacity-50]="!player.isConnected">
+            <span class="text-sm font-medium truncate flex-1">
               {{ player.username }}
             </span>
-            @if (!player.isConnected) {
-              <span class="text-xs">⚠️</span>
-            }
           </div>
           <div class="text-lg font-bold text-indigo-600 dark:text-indigo-400">
             {{ player.score }} pts
@@ -373,10 +364,10 @@
 
           <!-- Top 3 -->
           <h3 class="text-xl font-semibold mb-4 flex items-center gap-2">
-            🏆 Top Jugadores
+            🏆 Ranking de Jugadores
           </h3>
           <div class="space-y-3">
-            @for (player of questionResults()?.topPlayers; track player.userId; let i = $index) {
+            @for (player of getTopPlayersFromScores(questionResults()?.scores || []); track player.userId; let i = $index) {
               <div
                 class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 flex items-center justify-between"
                 [class.bg-yellow-50]="i === 0"
@@ -399,13 +390,6 @@
                     Total acumulado
                   </p>
                 </div>
-              </div>
-            }
-            @if (!questionResults()?.topPlayers || questionResults()?.topPlayers?.length === 0) {
-              <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-6 text-center">
-                <p class="text-gray-600 dark:text-gray-400">
-                  Ningún jugador respondió correctamente esta pregunta
-                </p>
               </div>
             }
           </div>

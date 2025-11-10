@@ -42,19 +42,26 @@ export class QuickThinkingService {
   private questionSubject = new Subject<QuestionEvent>();
   private questionResultsSubject = new Subject<QuestionResult>();
   private gameEndedSubject = new Subject<GameEndEvent>();
-  private timeRemainingSubject = new Subject<TimeRemainingEvent>();
+  private timeRemainingSubject = new BehaviorSubject<TimeRemainingEvent | null>(null);
   private questionTimeoutSubject = new Subject<void>();
   private readyForNextQuestionSubject = new Subject<void>();
   private playerReconnectedSubject = new Subject<PlayerEvent>();
   private playerDisconnectedSubject = new Subject<PlayerEvent>();
   private errorSubject = new Subject<{ message: string }>();
+  
+  // Control del timer - se reinicia con cada nueva pregunta
+  private currentQuestionId: string | null = null;
+  private isTimerActive = false;
 
   // Observables públicos para WebSocket
   roomState$ = this.roomStateSubject.asObservable();
   question$ = this.questionSubject.asObservable();
   questionResults$ = this.questionResultsSubject.asObservable();
   gameEnded$ = this.gameEndedSubject.asObservable();
-  timeRemaining$ = this.timeRemainingSubject.asObservable();
+  // timeRemaining$ se mantiene actualizado porque BehaviorSubject permite acceso al valor actual
+  get timeRemaining$() {
+    return this.timeRemainingSubject.asObservable();
+  }
   questionTimeout$ = this.questionTimeoutSubject.asObservable();
   readyForNextQuestion$ = this.readyForNextQuestionSubject.asObservable();
   playerReconnected$ = this.playerReconnectedSubject.asObservable();
@@ -201,20 +208,36 @@ export class QuickThinkingService {
 
     this.socket.on('newQuestion', (data: QuestionEvent) => {
       console.log('❓ Nueva pregunta:', data);
+      
+      // 🔥 CRÍTICO: Detener timer anterior y crear uno nuevo
+      this.stopTimer();
+      this.startTimer();
+      
+      // Actualizar ID de pregunta actual
+      this.currentQuestionId = data.questionId;
+      console.log('🔄 Timer reseteado para pregunta:', this.currentQuestionId);
+      
       this.questionSubject.next(data);
     });
 
     this.socket.on('timeRemaining', (data: TimeRemainingEvent) => {
-      this.timeRemainingSubject.next(data);
+      // Solo emitir si el timer está activo
+      if (this.isTimerActive) {
+        this.timeRemainingSubject.next(data);
+      } else {
+        console.log('⚠️ Timer ignorado - timer inactivo');
+      }
     });
 
     this.socket.on('questionTimeout', () => {
       console.log('⏰ ¡Tiempo agotado!');
+      this.stopTimer(); // Detener timer
       this.questionTimeoutSubject.next();
     });
 
     this.socket.on('questionResults', (data: QuestionResult) => {
       console.log('📈 Resultados de pregunta:', data);
+      this.stopTimer(); // Detener timer cuando se muestran resultados
       this.questionResultsSubject.next(data);
     });
 
@@ -335,10 +358,33 @@ export class QuickThinkingService {
   }
 
   /**
+   * Inicia el timer para la pregunta actual
+   */
+  private startTimer(): void {
+    this.isTimerActive = true;
+    console.log('⏰ Timer ACTIVADO');
+  }
+
+  /**
+   * Detiene el timer actual
+   */
+  private stopTimer(): void {
+    if (this.isTimerActive) {
+      console.log('⏹️ Timer DESACTIVADO');
+      this.isTimerActive = false;
+      this.currentQuestionId = null;
+      
+      // Resetear el BehaviorSubject a null para indicar que no hay timer activo
+      this.timeRemainingSubject.next(null);
+    }
+  }
+
+  /**
    * Desconectar del WebSocket
    */
   disconnect(): void {
     if (this.socket) {
+      this.stopTimer(); // Detener timer antes de desconectar
       this.socket.disconnect();
       this.socket = null;
       this.roomStateSubject.next(null);
