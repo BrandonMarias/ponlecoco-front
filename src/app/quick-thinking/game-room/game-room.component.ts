@@ -2,7 +2,7 @@ import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { Subscription, switchMap } from 'rxjs';
 import { QuickThinkingService } from '../quick-thinking.service';
 import { GameRoomApiService } from '../game-room-api.service';
 import {
@@ -63,10 +63,6 @@ export default class GameRoomComponent implements OnInit, OnDestroy {
   showShareModal = signal(false);
 
   ngOnInit(): void {
-    console.log('🎮 Game Room ngOnInit');
-    console.log('📍 Current URL:', window.location.href);
-    console.log('📍 Current hash:', window.location.hash);
-
     const token = this.route.snapshot.paramMap.get('roomToken');
     console.log('🎫 Room token from route:', token);
 
@@ -196,22 +192,27 @@ export default class GameRoomComponent implements OnInit, OnDestroy {
       })
     );
 
-    // Nueva pregunta
+    // Nueva pregunta - Usar switchMap para cancelar timer anterior automáticamente
     this.subscriptions.push(
-      this.gameService.question$.subscribe((question) => {
-        this.currentQuestion.set(question);
-        this.selectedAnswer.set(null);
-        this.hasAnswered.set(false);
-        this.showResults.set(false);
-        this.questionResults.set(null);
-        this.timeRemaining.set(60);
-        console.log('Nueva pregunta:', question);
-      })
-    );
+      this.gameService.question$.pipe(
+        switchMap((question) => {
+          console.log('❓ Nueva pregunta recibida:', question);
 
-    // Timer
-    this.subscriptions.push(
-      this.gameService.timeRemaining$.subscribe((data) => {
+          // Resetear estado de la pregunta
+          this.currentQuestion.set(question);
+          this.selectedAnswer.set(null);
+          this.hasAnswered.set(false);
+          this.showResults.set(false);
+          this.questionResults.set(null);
+          this.timeRemaining.set(60);
+
+          console.log('✅ Estado reseteado para nueva pregunta');
+
+          // Retornar el observable del timer, switchMap cancelará el anterior automáticamente
+          return this.gameService.timeRemaining$;
+        })
+      ).subscribe((data) => {
+        // Actualizar el tiempo desde el timer de la pregunta actual
         this.timeRemaining.set(data.seconds);
       })
     );
@@ -322,6 +323,7 @@ export default class GameRoomComponent implements OnInit, OnDestroy {
    */
   getActivePlayers(): Player[] {
     if (!this.roomState()?.players) return [];
+    console.log(this.roomState()?.players);
     return this.roomState()!.players.filter(player => !player.isHost);
   }
 
