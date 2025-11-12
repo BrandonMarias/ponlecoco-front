@@ -16,6 +16,7 @@ import {
 } from '../quick-thinking-game.models';
 import { ModalService } from '../../shared/modal.service';
 import { QuickThinkingResultsComponent } from './quick-thinking-results/quick-thinking-results.component';
+import { environment } from '../../../environments/environment';
 import QRCode from 'qrcode';
 
 @Component({
@@ -514,8 +515,7 @@ export default class GameRoomComponent implements OnInit, OnDestroy {
   }
 
   getJoinUrl(roomToken: string): string {
-    const baseUrl = window.location.origin;
-    // Asegurar que siempre incluya el # para hash routing
+    const baseUrl = environment.baseUrl;
     return `${baseUrl}/#/quick-thinking/game-room/${roomToken}`;
   }
 

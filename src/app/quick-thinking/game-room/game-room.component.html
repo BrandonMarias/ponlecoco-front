@@ -428,7 +428,7 @@
 
   <!-- Toast Notification -->
   @if (showToast()) {
-    <div class="fixed bottom-4 right-4 z-50 animate-slide-up">
+    <div class="fixed bottom-4 right-4 z-1000 animate-slide-up">
       <div [class]="
         'px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 min-w-[300px] ' +
         (toastType() === 'success' ? 'bg-green-500 text-white' :
@@ -495,11 +495,11 @@
               type="text"
               [value]="roomToken()"
               readonly
-              class="flex-1 px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-center text-2xl font-mono font-bold text-gray-900 dark:text-white"
+              class="flex-1 py-3 lg:px-4 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-center text-xl md:text-2xl w-100 font-mono font-bold text-gray-900 dark:text-white"
             />
             <button
               (click)="copyRoomToken()"
-              class="px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors duration-200"
+              class="px-4 py-5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors duration-200 cursor-pointer"
               title="Copiar código"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -523,7 +523,7 @@
             />
             <button
               (click)="copyJoinLink()"
-              class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors duration-200"
+              class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors duration-200 cursor-pointer"
               title="Copiar enlace"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -537,7 +537,7 @@
         <div class="flex gap-3">
           <button
             (click)="shareJoinLink()"
-            class="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors duration-200 flex items-center justify-center gap-2"
+            class="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors duration-200 flex items-center justify-center gap-2 cursor-pointer"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
