@@ -362,6 +362,15 @@ export default class GameRoomComponent implements OnInit, OnDestroy {
     return this.roomState()!.players.filter(player => !player.isHost);
   }
 
+  /**
+   * Obtiene las puntuaciones finales sin el host
+   */
+  getFinalScoresWithoutHost(): Player[] {
+    if (!this.gameEnded()?.finalScores) return [];
+    const hostId = this.roomState()?.hostId;
+    return this.gameEnded()!.finalScores.filter(player => player.userId !== hostId);
+  }
+
   private getCurrentUserId(): string {
     const userData = localStorage.getItem('user_data');
     if (userData) {

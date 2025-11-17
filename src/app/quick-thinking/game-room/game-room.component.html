@@ -131,13 +131,13 @@
   }
 
   <!-- Players Section (oculto para jugadores durante el juego) -->
-  @if (isHost || roomState()?.status === GameRoomStatus.WAITING) {
+  @if ((isHost || roomState()?.status === GameRoomStatus.WAITING) && !gameEnded()) {
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-4 mb-6">
       <h3 class="text-lg font-semibold mb-3 flex items-center gap-2">
         <svg class="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="currentColor" viewBox="0 0 20 20">
           <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"></path>
         </svg>
-        Jugadores ({{ getActivePlayers().length }}/30)
+        Jugadores ({{ getActivePlayers().length }}/40)
       </h3>
       <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
         @for (player of getActivePlayers(); track player.userId) {
@@ -381,7 +381,7 @@
       <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-6">
         <h3 class="text-2xl font-bold mb-4">Puntuaciones Finales</h3>
         <div class="space-y-2">
-          @for (player of gameEnded()?.finalScores; track player.userId; let i = $index) {
+          @for (player of getFinalScoresWithoutHost(); track player.userId; let i = $index) {
             <div
               class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 flex items-center justify-between"
               [class.bg-gradient-to-r]="i < 3"
