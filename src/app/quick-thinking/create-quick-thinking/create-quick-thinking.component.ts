@@ -115,10 +115,16 @@ export default class CreateQuickThinkingComponent implements OnInit, OnDestroy {
 
     // Add questions from quick thinking
     quickThinking.questions.forEach((q) => {
+      // Asegurar que siempre haya exactamente 4 opciones válidas
+      const validOptions = q.options.filter(opt => opt && opt.trim() !== '').slice(0, 4);
+      while (validOptions.length < 4) {
+        validOptions.push(''); // Rellenar con strings vacíos si faltan opciones
+      }
+
       const questionGroup = this.fb.group({
         question: [q.question, Validators.required],
         options: this.fb.array(
-          q.options.map(opt => this.fb.control(opt, Validators.required))
+          validOptions.map(opt => this.fb.control(opt, Validators.required))
         ),
         correctAnswerIndex: [q.correctAnswerIndex, [Validators.required, Validators.min(0), Validators.max(3)]],
         imageUrl: [q.imageUrl || null],
@@ -287,12 +293,20 @@ export default class CreateQuickThinkingComponent implements OnInit, OnDestroy {
       const formValue = this.quickThinkingForm.value;
       const payload: Omit<QuickThinking, 'id' | 'userId'> = {
         title: formValue.title,
-        questions: formValue.questions.map((q: any, index: number) => ({
-          question: q.question,
-          options: q.options,
-          correctAnswerIndex: q.correctAnswerIndex,
-          imageUrl: imageResults?.[index]?.imageUrl || null,
-        })),
+        questions: formValue.questions.map((q: any, index: number) => {
+          // Asegurar que cada pregunta tenga exactamente 4 opciones válidas
+          const validOptions = q.options.filter((opt: string) => opt && opt.trim() !== '').slice(0, 4);
+          while (validOptions.length < 4) {
+            validOptions.push(''); // Rellenar con strings vacíos si faltan opciones
+          }
+
+          return {
+            question: q.question,
+            options: validOptions,
+            correctAnswerIndex: q.correctAnswerIndex,
+            imageUrl: imageResults?.[index]?.imageUrl || null,
+          };
+        }),
       };
 
       // Create or update
@@ -388,10 +402,16 @@ export default class CreateQuickThinkingComponent implements OnInit, OnDestroy {
 
         // Add generated questions
         response.questions.forEach((q: any) => {
+          // Asegurar que siempre haya exactamente 4 opciones válidas
+          const validOptions = q.options.filter((opt: string) => opt && opt.trim() !== '').slice(0, 4);
+          while (validOptions.length < 4) {
+            validOptions.push(''); // Rellenar con strings vacíos si faltan opciones
+          }
+
           const questionGroup = this.fb.group({
             question: [q.question, Validators.required],
             options: this.fb.array(
-              q.options.map((opt: string) => this.fb.control(opt, Validators.required))
+              validOptions.map((opt: string) => this.fb.control(opt, Validators.required))
             ),
             correctAnswerIndex: [q.correctAnswerIndex, [Validators.required, Validators.min(0), Validators.max(3)]],
             imageUrl: [null],
