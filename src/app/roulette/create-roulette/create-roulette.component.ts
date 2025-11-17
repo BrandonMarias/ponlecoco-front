@@ -25,7 +25,7 @@ import { BackButtonComponent } from '../../shared/back-button/back-button.compon
 export default class CreateRouletteComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private rouletteService = inject(RouletteService);
-  private router = inject(Router);
+  router = inject(Router); // Público para usar en template
   private route = inject(ActivatedRoute);
   private modalService = inject(ModalService);
   private imageCompressionService = inject(ImageCompressionService);

@@ -28,7 +28,7 @@ import { BackButtonComponent } from '../../shared/back-button/back-button.compon
 export default class CreateTriviaPartyComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private triviaPartyService = inject(TriviaPartyService);
-  private router = inject(Router);
+  router = inject(Router); // Público para usar en template
   private route = inject(ActivatedRoute);
   private aiService = inject(AiService);
   private modalService = inject(ModalService);
