@@ -21,7 +21,6 @@
 
   <!-- Main Content Grid -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-4xl mx-auto">
-
     <!-- Unirse a Sala -->
     <div
       class="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-6"
@@ -49,9 +48,7 @@
         </h2>
       </div>
 
-      <p class="text-gray-600 dark:text-gray-400 text-sm mb-4">
-        Ingresa el código de la sala
-      </p>
+      <br />
 
       <div class="space-y-4">
         <div>
@@ -65,8 +62,9 @@
             id="roomTokenInput"
             type="text"
             [value]="roomTokenInput()"
-            (input)="onRoomTokenInput($any($event.target).value)"
+            (input)="onRoomTokenInput($any($event.target).value.toUpperCase())"
             placeholder="CODE"
+            autocomplete="off"
             maxlength="10"
             class="w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 dark:text-white text-center text-xl font-mono tracking-widest"
           />
