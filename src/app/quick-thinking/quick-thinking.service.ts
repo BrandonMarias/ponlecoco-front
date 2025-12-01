@@ -144,19 +144,15 @@ export class QuickThinkingService {
    */
   connect(token: string): void {
     if (this.socket?.connected) {
-      console.log('✅ Socket ya conectado, reutilizando conexión existente');
       return;
     }
 
     // Si hay un socket pero no está conectado, limpiarlo primero
     if (this.socket) {
-      console.log('🔄 Limpiando socket desconectado antes de crear uno nuevo');
       this.socket.removeAllListeners();
       this.socket.close();
       this.socket = null;
     }
-
-    console.log('🔌 Conectando al servidor WebSocket...');
     this.socket = io(environment.wsUrl, {
       auth: { token },
       reconnection: true,
@@ -177,12 +173,11 @@ export class QuickThinkingService {
 
     // Eventos de conexión
     this.socket.on('connect', () => {
-      console.log('✅ Conectado al servidor WebSocket');
       this.reconnectAttempts = 0;
     });
 
-    this.socket.on('disconnect', (reason) => {
-      console.log('❌ Desconectado del servidor:', reason);
+    this.socket.on('disconnect', () => {
+      // Conexión cerrada
     });
 
     this.socket.on('connect_error', (error) => {
@@ -198,18 +193,14 @@ export class QuickThinkingService {
 
     // Eventos del juego
     this.socket.on('roomState', (data: RoomState) => {
-      console.log('📊 Estado de sala actualizado:', data);
       this.roomStateSubject.next(data);
     });
 
     this.socket.on('gameStarted', (data: RoomState) => {
-      console.log('🎮 Juego iniciado:', data);
       this.roomStateSubject.next(data);
     });
 
     this.socket.on('newQuestion', (data: QuestionEvent) => {
-      console.log('❓ Nueva pregunta:', data.questionNumber, '/', data.totalQuestions);
-
       // Detener timer anterior completamente
       this.stopTimer();
 
@@ -229,44 +220,36 @@ export class QuickThinkingService {
     });
 
     this.socket.on('questionTimeout', () => {
-      console.log('⏰ ¡Tiempo agotado!');
-      this.stopTimer(); // Detener timer
+      this.stopTimer();
       this.questionTimeoutSubject.next();
     });
 
     this.socket.on('questionResults', (data: QuestionResult) => {
-      console.log('📈 Resultados de pregunta:', data);
-      this.stopTimer(); // Detener timer cuando se muestran resultados
+      this.stopTimer();
       this.questionResultsSubject.next(data);
     });
 
     this.socket.on('readyForNextQuestion', () => {
-      console.log('✅ Listo para siguiente pregunta');
       this.readyForNextQuestionSubject.next();
     });
 
     this.socket.on('gameEnded', (data: GameEndEvent) => {
-      console.log('🏆 Juego finalizado:', data);
       this.gameEndedSubject.next(data);
     });
 
     this.socket.on('playerReconnected', (data: PlayerEvent) => {
-      console.log('🔄 Jugador reconectado:', data);
       this.playerReconnectedSubject.next(data);
     });
 
     this.socket.on('playerTemporarilyDisconnected', (data: PlayerEvent) => {
-      console.log('⚠️ Jugador desconectado temporalmente:', data);
       this.playerDisconnectedSubject.next(data);
     });
 
     this.socket.on('playerDisconnected', (data: PlayerEvent) => {
-      console.log('👋 Jugador desconectado:', data);
       this.playerDisconnectedSubject.next(data);
     });
 
     this.socket.on('roomClosed', (data: { message: string }) => {
-      console.log('🚪 Sala cerrada:', data.message);
       this.errorSubject.next({ message: data.message });
     });
 
@@ -285,9 +268,7 @@ export class QuickThinkingService {
   joinRoom(roomToken: string, nickname?: string): Promise<JoinRoomResponse> {
     return new Promise((resolve) => {
       const payload = nickname ? { roomToken, nickname } : { roomToken };
-      console.log('📤 Enviando joinRoom con payload:', payload);
       this.socket?.emit('joinRoom', payload, (response: JoinRoomResponse) => {
-        console.log('📥 Respuesta de joinRoom:', response);
         resolve(response);
       });
     });

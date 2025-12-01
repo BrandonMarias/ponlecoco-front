@@ -92,14 +92,12 @@ export default class GameLobbyComponent implements OnInit, OnDestroy {
 
     this.gameRoomApi.createRoom(quickThinkingId).subscribe({
       next: (room) => {
-        console.log('✅ Sala creada:', room);
         this.showToastNotification('¡Sala creada exitosamente!', 'success');
         setTimeout(() => {
           this.router.navigate(['/quick-thinking/game-room', room.roomToken]);
         }, 500);
       },
       error: (error) => {
-        console.error('❌ Error al crear sala:', error);
         const errorMsg = error.error?.message || 'Error al crear la sala. Inténtalo de nuevo.';
         this.errorMessage.set(errorMsg);
         this.showToastNotification(errorMsg, 'error');

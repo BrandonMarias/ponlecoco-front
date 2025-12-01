@@ -71,31 +71,24 @@ export default class GameRoomComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     const token = this.route.snapshot.paramMap.get('roomToken');
-    console.log('🎫 Room token from route:', token);
 
     if (!token) {
-      console.warn('⚠️ No room token found, redirecting to lobby');
       this.router.navigate(['/quick-thinking/lobby']);
       return;
     }
 
     this.roomToken.set(token);
-    console.log('✅ Room token set:', token);
 
     // Generate QR code immediately
     this.generateQRCode(token);
 
     // Connect to WebSocket if not connected
     const jwtToken = localStorage.getItem('access_token');
-    console.log('🔑 JWT Token exists:', !!jwtToken);
 
     if (jwtToken) {
       // Conectar WebSocket si no está conectado
       if (!this.gameService.isConnected()) {
-        console.log('🔌 Conectando al WebSocket...');
         this.gameService.connect(jwtToken);
-      } else {
-        console.log('✅ WebSocket ya conectado');
       }
 
       // Setup subscriptions first
@@ -111,7 +104,6 @@ export default class GameRoomComponent implements OnInit, OnDestroy {
       const currentPath = window.location.hash.replace('#', '');
       if (currentPath) {
         localStorage.setItem('returnUrl', currentPath);
-        console.log('💾 Saved returnUrl:', currentPath);
       }
 
       this.router.navigate(['/auth/login']);
@@ -119,12 +111,9 @@ export default class GameRoomComponent implements OnInit, OnDestroy {
   }
 
   private verifyAndJoinRoom(token: string): void {
-    console.log('🔍 Verificando sala con API REST...');
-
     // Primero verificar que la sala existe usando API REST
     this.gameRoomApiService.getRoomInfo(token).subscribe({
       next: (roomInfo) => {
-        console.log('✅ Sala verificada:', roomInfo);
         // La sala existe, actualizar estado local
         this.roomState.set(roomInfo);
 
@@ -134,11 +123,9 @@ export default class GameRoomComponent implements OnInit, OnDestroy {
 
         if (!isHost) {
           // No es host: SIEMPRE mostrar formulario de nickname
-          console.log('❓ Usuario no es host, mostrando formulario de nickname');
           this.showNicknameForm.set(true);
         } else {
           // Es host: unirse directamente sin nickname
-          console.log('✅ Usuario es host, uniéndose directamente');
           setTimeout(() => {
             this.joinGameRoom(token);
           }, 500);
@@ -158,29 +145,18 @@ export default class GameRoomComponent implements OnInit, OnDestroy {
   }
 
   private joinGameRoom(token: string): void {
-    console.log('🚪 Uniéndose a sala por WebSocket...');
-
     // Si hay un nickname en el signal (viene del formulario), usarlo
     // Si no, es el host y no necesita nickname
     const nickname = this.nicknameInput().trim() || undefined;
-    console.log('👤 Nickname para unirse:', nickname || '(host sin nickname)');
 
     this.gameService.joinRoom(token, nickname).then(response => {
-      console.log('✅ Join room response:', response);
       if (!response.success) {
-        console.warn('⚠️ Error al unirse:', response.message);
         this.showToastNotification(response.message, 'warning');
-
         // Si falla, intentar obtener el estado directamente
-        console.log('🔄 Intentando obtener estado de sala...');
         this.gameService.getRoomState(token);
-      } else {
-        console.log('✅ Unido exitosamente a la sala');
       }
-    }).catch(error => {
-      console.error('❌ Error joining room:', error);
+    }).catch(() => {
       this.showToastNotification('Error al unirse a la sala', 'error');
-
       // Intentar obtener el estado como fallback
       this.gameService.getRoomState(token);
     });
@@ -198,14 +174,12 @@ export default class GameRoomComponent implements OnInit, OnDestroy {
     this.subscriptions.push(
       this.gameService.roomState$.subscribe((state) => {
         this.roomState.set(state);
-        console.log('Estado de sala:', state);
       })
     );
 
     // Nueva pregunta - resetear estado y recrear timer subscription
     this.subscriptions.push(
       this.gameService.question$.subscribe((question) => {
-        console.log('❓ Nueva pregunta:', question.questionNumber, '/', question.totalQuestions);
 
         // Resetear todo el estado de la pregunta
         this.currentQuestion.set(question);
@@ -227,7 +201,6 @@ export default class GameRoomComponent implements OnInit, OnDestroy {
     // Timeout de pregunta
     this.subscriptions.push(
       this.gameService.questionTimeout$.subscribe(() => {
-        console.log('⏰ Tiempo agotado');
         this.hasAnswered.set(true);
       })
     );
@@ -243,7 +216,6 @@ export default class GameRoomComponent implements OnInit, OnDestroy {
 
         this.questionResults.set(results);
         this.showResults.set(true);
-        console.log('📊 Resultados recibidos:', results);
 
         // Actualizar los scores de los jugadores en el roomState
         if (results.scores && this.roomState()) {
@@ -260,8 +232,6 @@ export default class GameRoomComponent implements OnInit, OnDestroy {
             ...currentState,
             players: updatedPlayers
           });
-
-          console.log('✅ Scores actualizados en roomState:', updatedPlayers);
         }
       })
     );
@@ -270,17 +240,14 @@ export default class GameRoomComponent implements OnInit, OnDestroy {
     this.subscriptions.push(
       this.gameService.gameEnded$.subscribe((data) => {
         this.gameEnded.set(data);
-        console.log('🏆 Juego finalizado:', data);
       })
     );
 
     // Listo para siguiente pregunta
     this.subscriptions.push(
       this.gameService.readyForNextQuestion$.subscribe(() => {
-        console.log('✅ Backend listo para siguiente pregunta');
         // Si eres el host, lanzar la pregunta automáticamente
         if (this.isHost) {
-          console.log('🚀 Auto-lanzando siguiente pregunta...');
           setTimeout(() => {
             this.gameService.launchQuestion(this.roomToken());
           }, 300);
@@ -406,8 +373,6 @@ export default class GameRoomComponent implements OnInit, OnDestroy {
     }
 
     // NO guardar en localStorage - solo usar para esta sesión
-    console.log('� Nickname ingresado (no se guarda):', nickname);
-
     // Ocultar formulario y unirse a la sala
     this.showNicknameForm.set(false);
     this.joiningRoom.set(true);
@@ -454,8 +419,6 @@ export default class GameRoomComponent implements OnInit, OnDestroy {
         answer
       );
 
-      console.log('Respuesta enviada:', response);
-
       if (response.success) {
         const message = response.isCorrect
           ? `✅ ¡Correcto! +${response.points} puntos`
@@ -471,7 +434,6 @@ export default class GameRoomComponent implements OnInit, OnDestroy {
 
   nextQuestion(): void {
     if (this.isHost) {
-      console.log('⏭️ Solicitando avanzar a siguiente pregunta...');
       // Solo avanzar - el evento 'readyForNextQuestion' lanzará la pregunta
       this.gameService.nextQuestion(this.roomToken());
     }
