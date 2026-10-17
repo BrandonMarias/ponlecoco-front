@@ -2,7 +2,7 @@ export const environment = {
   production: false,
   apiUrl: 'http://localhost:3000/api',
   wsUrl: 'http://localhost:3000/quick-thinking',
-  googleClientId: '793028581863-psmf3our0ip9snb792gbfqfto465dknm.apps.googleusercontent.com',
-  googleAndroidClientId: '793028581863-f6i66dqk89pscpj9b3n9lf6jmuhv5du9.apps.googleusercontent.com',
+  googleClientId: '793028581863-65tpjck5m6p356553362jlqelst8v74k.apps.googleusercontent.com',
+  googleAndroidClientId: '793028581863-81tbrtcjknfjfho84r50sm5frd63okm7.apps.googleusercontent.com',
   baseUrl: 'http://localhost:4200',
 };

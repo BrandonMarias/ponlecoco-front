@@ -6,7 +6,7 @@ const config: CapacitorConfig = {
   webDir: 'dist/jeopardimania-front/browser',
   server: {
     androidScheme: 'https',
-    allowNavigation: ['https://ponlecoco.com', 'http://143.244.178.3:3000', 'https://143.244.178.3:3000']
+    allowNavigation: ['https://ponlecoco.com', 'https://game.ponlecoco.com']
   },
   plugins: {
     SplashScreen: {
@@ -25,7 +25,7 @@ const config: CapacitorConfig = {
     },
     GoogleAuth: {
       scopes: ['profile', 'email'],
-      serverClientId: '793028581863-psmf3our0ip9snb792gbfqfto465dknm.apps.googleusercontent.com',
+      serverClientId: '793028581863-65tpjck5m6p356553362jlqelst8v74k.apps.googleusercontent.com',
       forceCodeForRefreshToken: true
     }
   },
