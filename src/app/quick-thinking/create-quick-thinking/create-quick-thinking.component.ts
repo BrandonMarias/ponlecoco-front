@@ -92,10 +92,10 @@ export default class CreateQuickThinkingComponent implements OnInit, OnDestroy {
     'Hasta 30 preguntas',
   ];
   readonly optionTiles: OptionTile[] = [
-    { tile: 'bg-red-600', shape: 'triangle', color: 'rojo' },
-    { tile: 'bg-blue-600', shape: 'diamond', color: 'azul' },
-    { tile: 'bg-amber-600', shape: 'circle', color: 'amarillo' },
-    { tile: 'bg-green-600', shape: 'square', color: 'verde' },
+    { tile: 'bg-linear-to-br from-red-600 to-rose-700', shape: 'triangle', color: 'rojo' },
+    { tile: 'bg-linear-to-br from-blue-600 to-indigo-700', shape: 'diamond', color: 'azul' },
+    { tile: 'bg-linear-to-br from-amber-600 to-orange-700', shape: 'circle', color: 'amarillo' },
+    { tile: 'bg-linear-to-br from-emerald-600 to-green-700', shape: 'square', color: 'verde' },
   ];
 
   // Toast notification

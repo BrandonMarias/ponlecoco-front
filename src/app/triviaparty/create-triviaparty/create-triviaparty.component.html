@@ -27,32 +27,37 @@
     (next)="selectLinear(linearIndex() + 1)"
     (jumpIncomplete)="jumpToFirstIncomplete()"
   >
-    <!-- Category tabs + value chips -->
-    <div navigator class="flex-none bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-      <div role="tablist" aria-label="Categorías" class="flex items-center gap-2 p-2 overflow-x-auto [scrollbar-width:thin]">
+    <!-- Category tabs + value tiles -->
+    <div navigator class="qe-surface flex-none border-b">
+      <div role="tablist" aria-label="Categorías" class="flex items-center gap-2 px-3 py-2.5 overflow-x-auto [scrollbar-width:thin]">
         @for (tab of categoryTabs(); track $index; let c = $index) {
           @if (c === selCat()) {
             <div
               role="tab"
               aria-selected="true"
-              class="shrink-0 flex items-center gap-1.5 h-11 pl-2.5 pr-1 rounded-lg border-2 border-indigo-600 bg-indigo-50 dark:bg-indigo-900/40"
+              class="shrink-0 flex items-center gap-1.5 h-12 pl-3 pr-1 rounded-xl border bg-indigo-50 dark:bg-indigo-500/15 transition-colors duration-150 motion-reduce:transition-none focus-within:ring-2 focus-within:ring-indigo-500 dark:focus-within:ring-indigo-400"
+              [class]="
+                categoryTitle(c).invalid && submitted()
+                  ? 'border-red-400 dark:border-red-400/70'
+                  : 'border-gray-300 dark:border-white/15'
+              "
             >
-              <app-quiz-status-dot [status]="tab.status" />
+              @if (tab.title) {
+                <app-quiz-status-dot [status]="tab.status" />
+              }
               <input
                 [id]="'cat-title-' + c"
                 type="text"
                 [formControl]="categoryTitle(c)"
                 [attr.aria-label]="'Título de la categoría ' + (c + 1)"
                 placeholder="Categoría {{ c + 1 }}"
-                class="w-32 sm:w-44 h-9 px-1 text-sm font-semibold bg-transparent text-indigo-900 dark:text-indigo-100 placeholder-indigo-400 dark:placeholder-indigo-300/60 focus:outline-none focus:bg-white dark:focus:bg-gray-900 rounded"
-                [class.ring-2]="categoryTitle(c).invalid && categoryTitle(c).touched"
-                [class.ring-red-500]="categoryTitle(c).invalid && categoryTitle(c).touched"
+                class="w-32 sm:w-44 h-9 px-1 text-sm font-semibold bg-transparent text-indigo-950 dark:text-indigo-50 placeholder-indigo-700/60 dark:placeholder-indigo-200/60 outline-none"
               />
               <button
                 type="button"
                 (click)="removeCategory(c)"
                 aria-label="Eliminar categoría"
-                class="inline-flex items-center justify-center w-10 h-10 rounded-full text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                class="qe-icon-btn text-gray-400 hover:text-red-600 focus-visible:text-red-600 hover:bg-red-100 dark:hover:bg-red-500/15 dark:hover:text-red-400"
               >
                 <app-quiz-icon name="trash" class="w-5 h-5" />
               </button>
@@ -64,35 +69,41 @@
               aria-selected="false"
               (click)="selectCategory(c)"
               [attr.aria-label]="'Categoría ' + (c + 1) + (tab.title ? ': ' + tab.title : '') + (tab.status === 'incomplete' ? ', sin completar' : '')"
-              class="shrink-0 flex items-center gap-1.5 h-11 px-3 max-w-44 rounded-lg border-2 bg-white dark:bg-gray-700 text-sm font-semibold text-gray-800 dark:text-gray-100 touch-manipulation focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
-              [class]="tab.status === 'incomplete' ? 'border-amber-400' : 'border-gray-200 dark:border-gray-600 hover:border-indigo-300'"
+              class="qe-chip h-12 max-w-44 justify-start text-sm font-semibold"
             >
-              <app-quiz-status-dot [status]="tab.status" />
+              @if (tab.title) {
+                <app-quiz-status-dot [status]="tab.status" />
+              }
               <span class="truncate">
                 @if (tab.title) {
                   {{ tab.title }}
                 } @else {
-                  <span class="italic font-normal text-gray-400 dark:text-gray-500">Categoría {{ c + 1 }}</span>
+                  <span class="italic font-normal text-gray-500 dark:text-gray-400">Categoría {{ c + 1 }}</span>
                 }
               </span>
             </button>
           }
         }
 
-        <button
-          type="button"
-          (click)="onAddCategoryClick()"
-          [disabled]="categories.length >= MAX_CATEGORIES"
-          aria-label="Agregar categoría"
-          class="shrink-0 h-11 min-w-11 px-3 inline-flex items-center justify-center gap-1.5 rounded-lg font-semibold text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed shadow-sm touch-manipulation focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
-        >
-          <app-quiz-icon name="plus" class="w-6 h-6" />
-          <span class="text-sm tabular-nums">{{ categories.length }}/{{ MAX_CATEGORIES }}</span>
-        </button>
+        <!-- Counter + add as one segmented control -->
+        <div class="shrink-0 inline-flex items-stretch h-12 rounded-xl overflow-hidden border border-gray-200 dark:border-white/10">
+          <span class="inline-flex items-center px-3 text-sm font-semibold tabular-nums text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-white/5">
+            {{ categories.length }}/{{ MAX_CATEGORIES }}
+          </span>
+          <button
+            type="button"
+            (click)="onAddCategoryClick()"
+            [disabled]="categories.length >= MAX_CATEGORIES"
+            aria-label="Agregar categoría"
+            class="inline-flex items-center justify-center w-12 text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-200 dark:disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed transition-colors duration-150 motion-reduce:transition-none touch-manipulation focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white"
+          >
+            <app-quiz-icon name="plus" class="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
       @if (valueChips().length) {
-        <div role="tablist" aria-label="Valores" class="flex items-center gap-2 px-2 pb-2 overflow-x-auto [scrollbar-width:thin]">
+        <div role="tablist" aria-label="Valores" class="flex items-center gap-2 px-3 pt-1 pb-3 overflow-x-auto [scrollbar-width:thin]">
           @for (chip of valueChips(); track $index; let i = $index) {
             <button
               type="button"
@@ -100,23 +111,21 @@
               [attr.aria-selected]="i === selQ()"
               (click)="selectQuestion(i)"
               [attr.aria-label]="chip.value + ' puntos' + (chip.double ? ', puntos dobles' : '') + (chip.status === 'incomplete' ? ', sin completar' : '')"
-              class="relative shrink-0 min-w-16 h-11 px-3 inline-flex items-center justify-center gap-1 rounded-lg border-2 text-sm font-bold tabular-nums touch-manipulation focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
-              [class]="
-                i === selQ()
-                  ? 'border-indigo-600 bg-indigo-600 text-white'
-                  : chip.status === 'incomplete'
-                    ? 'border-amber-400 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100'
-                    : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:border-indigo-300'
-              "
+              class="qe-tile"
+              [class.qe-tile-selected]="i === selQ()"
             >
               {{ chip.value }}
               @if (chip.double) {
-                <app-quiz-icon name="bolt" class="w-4 h-4 text-amber-400" />
+                <app-quiz-icon name="bolt" class="w-4 h-4 text-amber-300" />
               }
               @if (chip.hasImage) {
-                <app-quiz-icon name="image" class="w-4 h-4" />
+                <app-quiz-icon name="image" class="w-4 h-4 text-blue-200" />
               }
-              <app-quiz-status-dot [status]="chip.status" class="absolute -top-1.5 -right-1.5" />
+              @if (chip.status === 'complete') {
+                <app-quiz-status-dot status="complete" [onDark]="true" />
+              } @else if (chip.started) {
+                <app-quiz-status-dot status="incomplete" [onDark]="true" />
+              }
             </button>
           }
         </div>
@@ -176,17 +185,20 @@
         </div>
 
         <!-- Answer -->
-        <div class="rounded-xl border-2 border-green-500 bg-green-50 dark:bg-green-900/20 p-2">
-          <textarea
-            formControlName="answer"
-            rows="3"
-            aria-label="Respuesta"
-            placeholder="Respuesta"
-            class="w-full px-2 py-1 text-base sm:text-lg font-semibold text-center resize-none bg-transparent text-green-900 dark:text-green-100 placeholder-green-700/50 dark:placeholder-green-300/50 focus:outline-none"
-            [class.ring-2]="q.get('answer')?.invalid && q.get('answer')?.touched"
-            [class.ring-red-500]="q.get('answer')?.invalid && q.get('answer')?.touched"
-          ></textarea>
-        </div>
+        <textarea
+          formControlName="answer"
+          rows="3"
+          aria-label="Respuesta"
+          placeholder="Respuesta"
+          class="w-full px-3 py-3 text-base sm:text-lg font-semibold text-center resize-none bg-white border rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
+          [class]="
+            q.get('answer')?.value?.trim()
+              ? 'border-green-500/60 dark:border-green-400/50 bg-green-50/60 dark:bg-green-900/10'
+              : 'border-gray-300 dark:border-gray-600'
+          "
+          [class.ring-2]="q.get('answer')?.invalid && q.get('answer')?.touched"
+          [class.ring-red-500]="q.get('answer')?.invalid && q.get('answer')?.touched"
+        ></textarea>
 
         <!-- Double points (optional, one per category) -->
         <button

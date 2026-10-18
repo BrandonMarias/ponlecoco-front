@@ -24,8 +24,8 @@ const INSTRUCTIONS_STORAGE_PREFIX = 'quiz-editor-instructions:';
   template: `
     <div class="content-page flex flex-col h-dvh overflow-hidden bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white">
       <!-- Top bar -->
-      <header class="relative z-20 flex-none bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-2 py-1.5">
-        <div class="flex flex-wrap items-center gap-x-2 gap-y-1 max-w-screen-2xl mx-auto">
+      <header class="qe-surface relative z-20 flex-none border-b px-3 py-2">
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-2 max-w-screen-2xl mx-auto">
           <app-back-button [compact]="true" [intercept]="true" label="Volver" (pressed)="back.emit()" />
 
           @if (logo()) {
@@ -39,46 +39,47 @@ const INSTRUCTIONS_STORAGE_PREFIX = 'quiz-editor-instructions:';
             [placeholder]="titlePlaceholder()"
             aria-label="Título"
             [attr.aria-invalid]="titleControl().invalid && titleControl().touched ? 'true' : null"
-            class="flex-1 min-w-0 h-10 px-3 text-base font-semibold bg-transparent border-b-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600 focus:border-indigo-500 focus:outline-none placeholder-gray-400 dark:placeholder-gray-500 truncate"
-            [class.ring-2]="titleControl().invalid && titleControl().touched"
-            [class.ring-red-500]="titleControl().invalid && titleControl().touched"
+            [class]="
+              'flex-1 min-w-0 h-10 px-1 text-lg font-bold bg-transparent border-b-2 rounded-none transition-colors duration-150 motion-reduce:transition-none focus:border-indigo-500 focus:outline-none placeholder-gray-400 dark:placeholder-gray-500 truncate ' +
+              (titleControl().invalid && titleControl().touched
+                ? 'border-red-500'
+                : 'border-transparent hover:border-gray-300 dark:hover:border-white/20')
+            "
           />
 
           <!-- Tools: second row on mobile, inline on md+ -->
-          <div class="order-last w-full flex items-center gap-1 md:order-none md:w-auto">
+          <div class="order-last w-full flex items-center gap-2 md:order-none md:w-auto">
             @if (showAi()) {
-              <button
-                type="button"
-                (click)="ai.emit()"
-                [disabled]="aiDisabled()"
-                [attr.aria-label]="aiLabel()"
-                class="inline-flex items-center justify-center w-10 h-10 rounded-full text-white bg-pink-600 hover:bg-pink-700 disabled:bg-gray-400 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-500 focus-visible:ring-offset-2"
+              <!-- AI button + usage badge as one pill -->
+              <div
+                class="inline-flex items-center gap-2 p-0.5 rounded-full bg-pink-50 dark:bg-pink-500/10 border border-pink-200 dark:border-pink-500/30 has-[app-ai-usage-badge>span]:pr-3"
               >
-                <app-quiz-icon name="ai" class="w-5 h-5" />
-              </button>
-              <app-ai-usage-badge class="mr-1" />
+                <button
+                  type="button"
+                  (click)="ai.emit()"
+                  [disabled]="aiDisabled()"
+                  [attr.aria-label]="aiLabel()"
+                  class="inline-flex items-center justify-center w-9 h-9 rounded-full text-white bg-pink-600 hover:bg-pink-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors duration-150 motion-reduce:transition-none focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900 touch-manipulation"
+                >
+                  <app-quiz-icon name="ai" class="w-5 h-5" />
+                </button>
+                <app-ai-usage-badge />
+              </div>
             }
-
-            <div class="relative">
-              <button
-                type="button"
-                (click)="toggleInstructions()"
-                aria-label="Ayuda"
-                [attr.aria-expanded]="instructionsOpen()"
-                class="inline-flex items-center justify-center w-10 h-10 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
-                [class.bg-indigo-100]="instructionsOpen()"
-                [class.dark:bg-indigo-900]="instructionsOpen()"
-              >
-                <app-quiz-icon name="help" class="w-5 h-5" />
-              </button>
-            </div>
 
             <button
               type="button"
-              (click)="review.emit()"
-              aria-label="Revisar preguntas"
-              class="inline-flex items-center justify-center gap-1 h-10 px-3 rounded-full text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+              (click)="toggleInstructions()"
+              aria-label="Ayuda"
+              [attr.aria-expanded]="instructionsOpen()"
+              class="qe-icon-btn"
+              [class.!bg-indigo-100]="instructionsOpen()"
+              [class.dark:!bg-indigo-500/20]="instructionsOpen()"
             >
+              <app-quiz-icon name="help" class="w-5 h-5" />
+            </button>
+
+            <button type="button" (click)="review.emit()" aria-label="Revisar preguntas" class="qe-pill-btn">
               <app-quiz-icon name="eye" class="w-5 h-5" />
               <span>Revisar</span>
             </button>
@@ -88,10 +89,11 @@ const INSTRUCTIONS_STORAGE_PREFIX = 'quiz-editor-instructions:';
                 type="button"
                 (click)="jumpIncomplete.emit()"
                 [attr.aria-label]="incompleteCount() + ' sin completar. Ir a la primera'"
-                class="ml-auto md:ml-1 inline-flex items-center gap-1 h-8 px-2.5 rounded-full text-xs font-semibold text-amber-800 dark:text-amber-200 bg-amber-100 dark:bg-amber-900/40 border border-amber-300 dark:border-amber-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+                [attr.title]="incompleteCount() + ' sin completar'"
+                class="ml-auto md:ml-1 inline-flex items-center gap-1 h-8 px-2.5 rounded-full text-xs font-semibold text-amber-800 dark:text-amber-200 bg-amber-50 dark:bg-amber-500/10 border border-amber-300/70 dark:border-amber-500/40 hover:bg-amber-100 dark:hover:bg-amber-500/20 whitespace-nowrap shrink-0 transition-colors duration-150 motion-reduce:transition-none focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
               >
                 <app-quiz-icon name="alert" class="w-4 h-4" />
-                {{ incompleteCount() }} sin completar
+                {{ incompleteCount() }}<span class="hidden sm:inline">{{ ' sin completar' }}</span>
               </button>
             }
           </div>
@@ -102,8 +104,8 @@ const INSTRUCTIONS_STORAGE_PREFIX = 'quiz-editor-instructions:';
             [disabled]="saving()"
             [attr.aria-disabled]="invalid() || saving()"
             [attr.aria-label]="saveLabel()"
-            class="inline-flex items-center justify-center gap-2 h-10 px-3 sm:px-4 rounded-full font-semibold text-white shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2"
-            [class]="invalid() || saving() ? 'bg-gray-400 dark:bg-gray-600 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'"
+            class="inline-flex items-center justify-center gap-2 h-10 min-w-10 px-3 sm:px-4 rounded-full font-semibold text-white shadow-sm transition-colors duration-150 motion-reduce:transition-none focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900 touch-manipulation"
+            [class]="invalid() || saving() ? 'bg-gray-500 dark:bg-gray-600 cursor-not-allowed' : 'bg-green-700 hover:bg-green-800 dark:bg-green-600 dark:hover:bg-green-700'"
           >
             @if (saving()) {
               <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
@@ -123,7 +125,7 @@ const INSTRUCTIONS_STORAGE_PREFIX = 'quiz-editor-instructions:';
           <div
             role="region"
             aria-label="Instrucciones"
-            class="absolute z-20 left-2 right-2 top-full mt-1 md:left-auto md:right-2 md:w-96 bg-white dark:bg-gray-800 border border-indigo-200 dark:border-indigo-700 rounded-xl shadow-xl p-3"
+            class="absolute z-20 left-2 right-2 top-full mt-1 md:left-auto md:right-2 md:w-96 bg-white dark:bg-gray-800 border border-indigo-200 dark:border-white/10 rounded-2xl shadow-xl p-4"
           >
             <ul class="space-y-1.5 text-sm text-gray-700 dark:text-gray-200">
               @for (line of instructions(); track $index) {
@@ -155,7 +157,7 @@ const INSTRUCTIONS_STORAGE_PREFIX = 'quiz-editor-instructions:';
           @if (total() > 0) {
             <nav
               aria-label="Cambiar de pregunta"
-              class="flex-none flex items-center justify-between gap-2 px-3 py-1.5 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700"
+              class="qe-surface flex-none flex items-center justify-between gap-2 px-3 py-1.5 border-t"
               style="padding-bottom: max(0.375rem, env(safe-area-inset-bottom))"
             >
               <button
@@ -163,7 +165,7 @@ const INSTRUCTIONS_STORAGE_PREFIX = 'quiz-editor-instructions:';
                 (click)="prev.emit()"
                 [disabled]="current() <= 0"
                 aria-label="Pregunta anterior"
-                class="inline-flex items-center justify-center w-12 h-10 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                class="qe-icon-btn !w-12 bg-gray-100 dark:bg-white/10"
               >
                 <app-quiz-icon name="chevron-left" class="w-5 h-5" />
               </button>
@@ -175,7 +177,7 @@ const INSTRUCTIONS_STORAGE_PREFIX = 'quiz-editor-instructions:';
                 (click)="next.emit()"
                 [disabled]="current() >= total() - 1"
                 aria-label="Pregunta siguiente"
-                class="inline-flex items-center justify-center w-12 h-10 rounded-full bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-30 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+                class="qe-icon-btn !w-12 !text-white bg-indigo-600 hover:!bg-indigo-700"
               >
                 <app-quiz-icon name="chevron-right" class="w-5 h-5" />
               </button>

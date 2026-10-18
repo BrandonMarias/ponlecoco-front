@@ -13,22 +13,24 @@ import { QuestionStatus } from './quiz-editor.utils';
   template: `
     <div class="flex items-center gap-2 min-w-0">
       <span class="font-bold text-lg truncate">{{ label() }}</span>
-      <app-quiz-status-dot [status]="status()" />
+      @if (status() === 'complete') {
+        <app-quiz-status-dot status="complete" />
+      }
       @if (badge()) {
-        <span class="px-1.5 rounded text-xs font-bold leading-5 text-white" [class]="badgeClass() || 'bg-gray-500'">{{ badge() }}</span>
+        <span class="qe-pill" [class]="badgeClass() || 'bg-gray-500'">{{ badge() }}</span>
       }
     </div>
-    <div class="flex items-center gap-0.5">
+    <div class="flex items-center gap-0.5 p-0.5 rounded-full bg-gray-100 dark:bg-white/5">
       @if (allowDuplicate()) {
-        <button type="button" (click)="duplicate.emit()" [disabled]="!canDuplicate()" aria-label="Duplicar pregunta" [class]="btn + neutral">
+        <button type="button" (click)="duplicate.emit()" [disabled]="!canDuplicate()" aria-label="Duplicar pregunta" class="qe-icon-btn">
           <app-quiz-icon name="copy" class="w-5 h-5" />
         </button>
       }
       @if (allowMove()) {
-        <button type="button" (click)="moveUp.emit()" [disabled]="index() <= 0" aria-label="Mover arriba" [class]="btn + neutral">
+        <button type="button" (click)="moveUp.emit()" [disabled]="index() <= 0" aria-label="Mover arriba" class="qe-icon-btn">
           <app-quiz-icon name="up" class="w-5 h-5" />
         </button>
-        <button type="button" (click)="moveDown.emit()" [disabled]="index() >= total() - 1" aria-label="Mover abajo" [class]="btn + neutral">
+        <button type="button" (click)="moveDown.emit()" [disabled]="index() >= total() - 1" aria-label="Mover abajo" class="qe-icon-btn">
           <app-quiz-icon name="down" class="w-5 h-5" />
         </button>
       }
@@ -38,7 +40,7 @@ import { QuestionStatus } from './quiz-editor.utils';
           (click)="remove.emit()"
           [disabled]="!canDelete()"
           aria-label="Eliminar pregunta"
-          [class]="btn + danger"
+          class="qe-icon-btn enabled:hover:bg-red-100 enabled:hover:text-red-600 enabled:focus-visible:text-red-600 dark:enabled:hover:bg-red-500/15 dark:enabled:hover:text-red-400 dark:enabled:focus-visible:text-red-400"
         >
           <app-quiz-icon name="trash" class="w-5 h-5" />
         </button>
@@ -65,9 +67,4 @@ export class QuizQuestionToolbarComponent {
   moveUp = output<void>();
   moveDown = output<void>();
   remove = output<void>();
-
-  protected readonly neutral = ' text-gray-600 dark:text-gray-300';
-  protected readonly danger = ' text-red-600 dark:text-red-400';
-  protected readonly btn =
-    'inline-flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500';
 }

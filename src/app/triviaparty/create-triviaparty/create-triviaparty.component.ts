@@ -46,6 +46,8 @@ interface ValueChip {
   status: QuestionStatus;
   hasImage: boolean;
   double: boolean;
+  /** Something typed already (drives the amber "partial" icon; untouched tiles stay neutral). */
+  started: boolean;
 }
 
 @Component({
@@ -104,6 +106,8 @@ export default class CreateTriviaPartyComponent implements OnInit, OnDestroy {
   selCat = signal(0);
   selQ = signal(0);
   reviewOpen = signal(false);
+  /** Validation colours only show after a save attempt, so fresh empty fields stay neutral. */
+  submitted = signal(false);
   /** Bumped on every form change so the computed views below re-evaluate. */
   private version = signal(0);
 
@@ -127,6 +131,7 @@ export default class CreateTriviaPartyComponent implements OnInit, OnDestroy {
       status: questionStatus(q),
       hasImage: !!this.imagePreviewOf(q as FormGroup),
       double: this.isDoublePoints(c, i),
+      started: !!(q.get('question')?.value?.trim() || q.get('answer')?.value?.trim()),
     }));
   });
 
@@ -695,6 +700,7 @@ export default class CreateTriviaPartyComponent implements OnInit, OnDestroy {
       return;
     }
 
+    this.submitted.set(true);
     if (!this.triviaPartyForm.valid) {
       this.showToastNotification('⚠️ Por favor, complete todos los campos requeridos', 'warning');
       this.triviaPartyForm.markAllAsTouched();

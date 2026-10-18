@@ -75,25 +75,27 @@
         <div formArrayName="options" role="radiogroup" aria-label="Respuesta correcta" class="grid grid-cols-2 gap-2 sm:gap-3">
           @for (opt of optionsOf(q); track $index; let o = $index) {
             <div
-              class="relative flex flex-col gap-1 p-2 min-h-32 rounded-xl text-white shadow-sm transition-shadow ring-offset-2 dark:ring-offset-gray-900 focus-within:ring-4 focus-within:ring-indigo-400"
+              class="relative flex flex-col gap-2 p-3 min-h-36 rounded-2xl text-white shadow-md transition-shadow duration-150 motion-reduce:transition-none ring-offset-2 ring-offset-gray-50 dark:ring-offset-gray-900 focus-within:ring-4 focus-within:ring-indigo-400"
               [class]="optionTiles[o].tile"
               [class.ring-4]="q.get('correctAnswerIndex')?.value === o"
               [class.ring-gray-900]="q.get('correctAnswerIndex')?.value === o"
               [class.dark:ring-white]="q.get('correctAnswerIndex')?.value === o"
             >
               <div class="flex items-center justify-between">
-                <app-quiz-icon [name]="optionTiles[o].shape" class="w-6 h-6 ml-1 text-white/90" />
+                <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-black/20">
+                  <app-quiz-icon [name]="optionTiles[o].shape" class="w-5 h-5 text-white" />
+                </span>
                 <button
                   type="button"
                   role="radio"
                   [attr.aria-checked]="q.get('correctAnswerIndex')?.value === o"
                   [attr.aria-label]="'Opción ' + (o + 1) + ' (' + optionTiles[o].color + ')' + (q.get('correctAnswerIndex')?.value === o ? ': correcta' : ': marcar como correcta')"
                   (click)="setCorrectAnswer(q, o)"
-                  class="w-10 h-10 shrink-0 inline-flex items-center justify-center rounded-full border-2 transition-colors touch-manipulation focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                  class="w-11 h-11 shrink-0 inline-flex items-center justify-center rounded-full border-2 transition-colors duration-150 motion-reduce:transition-none touch-manipulation focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
                   [class]="
                     q.get('correctAnswerIndex')?.value === o
-                      ? 'bg-white border-white text-green-600'
-                      : 'bg-white/10 border-white/80 text-transparent hover:bg-white/25'
+                      ? 'bg-white border-white text-emerald-600 shadow'
+                      : 'bg-black/10 border-white/70 text-transparent hover:bg-white/25'
                   "
                 >
                   <app-quiz-icon name="check" class="w-6 h-6" />
@@ -104,10 +106,10 @@
                 rows="3"
                 [attr.aria-label]="'Opción ' + (o + 1)"
                 placeholder="Opción {{ o + 1 }}"
-                class="flex-1 w-full px-1 bg-transparent resize-none text-base font-semibold text-white placeholder-white/70 focus:outline-none"
+                class="flex-1 w-full px-1 bg-transparent resize-none text-lg font-bold leading-snug text-white placeholder-white/85 focus:outline-none"
               ></textarea>
               @if (opt.invalid && opt.touched) {
-                <app-quiz-icon name="alert" class="absolute bottom-2 right-2 w-5 h-5" />
+                <app-quiz-icon name="alert" class="absolute bottom-2.5 right-2.5 w-5 h-5" />
               }
             </div>
           }

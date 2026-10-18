@@ -30,10 +30,10 @@ export class AiUsageBadgeComponent implements OnInit {
 
   colorClass = computed(() => {
     const u = this.usage.usage();
-    if (this.usage.isAdmin() || !u) return 'text-gray-500 dark:text-gray-400';
-    if (u.remaining <= 0) return 'text-red-600 dark:text-red-400';
-    if (u.remaining <= 3) return 'text-yellow-600 dark:text-yellow-400';
-    return 'text-gray-500 dark:text-gray-400';
+    if (this.usage.isAdmin() || !u) return 'text-gray-600 dark:text-gray-300';
+    if (u.remaining <= 0) return 'text-red-700 dark:text-red-400';
+    if (u.remaining <= 3) return 'text-amber-700 dark:text-yellow-400';
+    return 'text-gray-600 dark:text-gray-300';
   });
 
   title = computed(() => {

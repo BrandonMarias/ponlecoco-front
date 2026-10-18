@@ -1,22 +1,23 @@
 import { ChangeDetectionStrategy, Component, ElementRef, effect, inject, input, output, untracked } from '@angular/core';
 import { QuizIconComponent } from './quiz-icon.component';
 import { QuizStatusDotComponent } from './quiz-status-dot.component';
-import { NavItem } from './quiz-editor.utils';
+import { NavItem, QuestionStatus } from './quiz-editor.utils';
 
 /**
  * Question navigator. Desktop (md+): vertical rail of cards. Mobile: horizontal strip of numbered chips.
  * The selected item is kept in view. The "+" button is the last element in both layouts.
+ * Chip look comes from the shared `qe-chip*` classes (src/styles.css).
  */
 @Component({
   selector: 'app-quiz-navigator',
   standalone: true,
   imports: [QuizIconComponent, QuizStatusDotComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'block flex-none md:w-60 md:min-h-0' },
+  host: { class: 'block flex-none md:w-64 md:min-h-0' },
   template: `
     <nav
       aria-label="Preguntas"
-      class="h-full flex items-center md:items-stretch md:flex-col gap-2 p-2 overflow-x-auto md:overflow-x-hidden md:overflow-y-auto bg-white dark:bg-gray-800 border-b md:border-b-0 md:border-r border-gray-200 dark:border-gray-700 [scrollbar-width:thin]"
+      class="qe-surface h-full flex items-center md:items-stretch md:flex-col gap-2 px-3 py-2.5 md:p-3 overflow-x-auto md:overflow-x-hidden md:overflow-y-auto border-b md:border-b-0 md:border-r [scrollbar-width:thin]"
     >
       @for (item of items(); track $index; let i = $index) {
         @if (item.group && item.group !== items()[i - 1]?.group) {
@@ -30,50 +31,39 @@ import { NavItem } from './quiz-editor.utils';
           (click)="select.emit(i)"
           [attr.aria-current]="i === selected() ? 'true' : null"
           [attr.aria-label]="'Pregunta ' + (i + 1) + (item.badge ? ', ' + item.badge : '') + (item.status === 'incomplete' ? ', sin completar' : '')"
-          class="relative shrink-0 min-w-11 h-12 md:h-auto md:min-h-14 md:w-full px-2 md:px-3 md:py-2 flex flex-col md:flex-row items-center justify-center md:justify-start gap-0 md:gap-2 rounded-lg border-2 text-left transition-colors touch-manipulation focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
-          [class]="
-            i === selected()
-              ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/40 text-indigo-900 dark:text-indigo-100'
-              : item.status === 'incomplete'
-                ? 'border-amber-400 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100'
-                : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:border-indigo-300'
-          "
+          class="qe-chip flex-col md:flex-row md:h-auto md:min-h-14 md:w-full md:px-3 md:py-2 md:justify-start md:text-left gap-0 md:gap-2.5"
+          [class.qe-chip-selected]="i === selected()"
+          [class.md:scale-100]="i === selected()"
         >
-          <span class="text-sm font-bold leading-none md:w-6 md:text-center">{{ i + 1 }}</span>
+          <span class="flex items-center gap-1 md:contents">
+            <span class="text-base font-bold leading-none tabular-nums md:min-w-5 md:text-center">{{ i + 1 }}</span>
+            @if (progress(item); as p) {
+              <app-quiz-status-dot [status]="p" [onDark]="i === selected()" class="!w-3.5 !h-3.5 md:!w-4 md:!h-4 md:order-last" />
+            }
+          </span>
           @if (item.badge) {
-            <span
-              class="mt-0.5 md:mt-0 md:order-last px-1 rounded text-[10px] md:text-xs font-bold leading-4 text-white"
-              [class]="item.badgeClass ?? 'bg-gray-500'"
-              >{{ item.badge }}</span
-            >
+            <span class="qe-pill mt-0.5 md:mt-0 md:order-last md:ml-auto" [class]="item.badgeClass ?? 'bg-gray-500'">{{ item.badge }}</span>
           }
-          <span class="hidden md:block flex-1 min-w-0 text-sm line-clamp-2 break-words">
+          <span
+            class="hidden md:block flex-1 min-w-0 text-xs leading-snug truncate"
+            [class]="i === selected() ? 'text-white/85' : 'text-gray-500 dark:text-gray-400'"
+          >
             @if (item.label) {
               {{ item.label }}
             } @else {
-              <span class="italic text-gray-400 dark:text-gray-500">Sin texto</span>
+              <span class="italic">Sin texto</span>
             }
           </span>
           @if (item.hasImage) {
-            <app-quiz-icon
-              name="image"
-              class="absolute -bottom-1 -left-1 w-4 h-4 p-px rounded bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-300 md:static md:p-0 md:bg-transparent md:dark:bg-transparent md:order-last"
-            />
+            <app-quiz-icon name="image" class="hidden md:block w-4 h-4 md:order-last opacity-70" />
           }
-          <app-quiz-status-dot [status]="item.status" class="absolute -top-1.5 -right-1.5 md:static md:order-last" />
         </button>
       }
 
       @if (showAdd()) {
-        <div class="shrink-0 md:sticky md:bottom-0 md:pt-1 md:bg-white md:dark:bg-gray-800">
-          <button
-            type="button"
-            (click)="add.emit()"
-            [disabled]="!canAdd()"
-            aria-label="Agregar"
-            class="min-w-11 h-12 md:w-full md:h-12 px-3 inline-flex items-center justify-center gap-2 rounded-lg font-semibold text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed shadow-sm touch-manipulation focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
-          >
-            <app-quiz-icon name="plus" class="w-6 h-6" />
+        <div class="shrink-0 md:sticky md:bottom-0 md:pt-1 md:-mb-1 md:bg-white md:dark:bg-gray-900">
+          <button type="button" (click)="add.emit()" [disabled]="!canAdd()" aria-label="Agregar" class="qe-chip-add md:w-full">
+            <app-quiz-icon name="plus" class="w-5 h-5" />
             @if (counter()) {
               <span class="hidden md:inline text-sm tabular-nums">{{ counter() }}</span>
             }
@@ -108,5 +98,13 @@ export class QuizNavigatorComponent {
         ),
       );
     });
+  }
+
+  /** Untouched items stay neutral (no icon); started-but-incomplete ones get the amber icon. */
+  protected progress(item: NavItem): QuestionStatus | null {
+    if (item.status === 'complete') {
+      return 'complete';
+    }
+    return item.label || item.hasImage ? 'incomplete' : null;
   }
 }
