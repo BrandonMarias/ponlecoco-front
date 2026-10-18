@@ -14,7 +14,7 @@
           <div class="flex items-center justify-center gap-4">
             <span class="text-4xl font-bold text-yellow-300">X {{ question.value }}</span>
             @if (question.doublePoints) {
-              <img src="/media/img/puntosdobles.png" alt="Puntos Dobles" class="h-16 double-points-animation">
+              <img src="/media/img/puntosdobles.png" alt="Puntos Dobles" class="h-16 w-auto double-points-animation" height="64" decoding="async">
             }
           </div>
           <div class="text-5xl font-mono font-bold" [class.text-yellow-300]="!isStealing()" [class.text-red-500]="isStealing()">
@@ -26,7 +26,7 @@
 
         @if(question.imageUrl) {
           <div class="my-4 flex justify-center">
-            <img [src]="question.imageUrl" alt="Imagen de la pregunta" class="max-h-64 rounded-lg" />
+            <img [src]="question.imageUrl" alt="Imagen de la pregunta" loading="eager" decoding="async" class="max-h-64 rounded-lg" />
           </div>
         }
 
@@ -50,7 +50,7 @@
           <div class="flex items-center justify-center gap-4">
             <span class="text-4xl font-bold text-yellow-300">X {{ question.value }}</span>
             @if (question.doublePoints) {
-              <img src="/media/img/puntosdobles.png" alt="Puntos Dobles" class="h-16 double-points-animation">
+              <img src="/media/img/puntosdobles.png" alt="Puntos Dobles" class="h-16 w-auto double-points-animation" height="64" decoding="async">
             }
           </div>
           <div class="text-5xl font-mono font-bold" [class.text-yellow-300]="!isStealing()" [class.text-red-500]="isStealing()">
@@ -62,7 +62,7 @@
 
         @if(question.imageUrl) {
           <div class="my-4 flex justify-center">
-            <img [src]="question.imageUrl" alt="Imagen de la pregunta" class="max-h-64 rounded-lg" />
+            <img [src]="question.imageUrl" alt="Imagen de la pregunta" loading="eager" decoding="async" class="max-h-64 rounded-lg" />
           </div>
         }
 

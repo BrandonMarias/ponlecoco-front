@@ -2,7 +2,8 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { environment } from '../../environments/environment';
 import { QuickThinking } from './quick-thinking';
-import { Observable, map, Subject, BehaviorSubject } from 'rxjs';
+import { Observable, map, tap, Subject, BehaviorSubject } from 'rxjs';
+import { ApiCacheService } from '../shared/api-cache.service';
 import { io, Socket } from 'socket.io-client';
 import {
   RoomState,
@@ -30,6 +31,7 @@ interface ApiImageUploadResponse {
 })
 export class QuickThinkingService {
   private http = inject(HttpClient);
+  private cache = inject(ApiCacheService);
   private apiUrl = `${environment.apiUrl}/quick-thinking`;
 
   // WebSocket properties
@@ -70,8 +72,14 @@ export class QuickThinkingService {
   error$ = this.errorSubject.asObservable();
 
   // Get all quick thinking trivias for the user
-  getQuickThinkings() {
-    return this.http.get<QuickThinking[]>(this.apiUrl);
+  // Emits the cached list first (if any), then the fresh one
+  getQuickThinkings(): Observable<QuickThinking[]> {
+    return this.cache.swr('qt:list', () => this.http.get<QuickThinking[]>(this.apiUrl));
+  }
+
+  // Cached detail for the editor: emits the cached copy first (if any), then the fresh one
+  watchQuickThinkingById(id: string): Observable<QuickThinking> {
+    return this.cache.swr(`qt:${id}`, () => this.getQuickThinkingById(id));
   }
 
   // Get a specific quick thinking by ID
@@ -81,17 +89,21 @@ export class QuickThinkingService {
 
   // Create a new quick thinking trivia
   createQuickThinking(quickThinkingData: Omit<QuickThinking, 'id' | 'userId'>) {
-    return this.http.post<QuickThinking>(this.apiUrl, quickThinkingData);
+    return this.http
+      .post<QuickThinking>(this.apiUrl, quickThinkingData)
+      .pipe(tap(() => this.cache.invalidate('qt:')));
   }
 
   // Update an existing quick thinking trivia
   updateQuickThinking(id: string, quickThinkingData: Partial<Omit<QuickThinking, 'id' | 'userId'>>) {
-    return this.http.patch<QuickThinking>(`${this.apiUrl}/${id}`, quickThinkingData);
+    return this.http
+      .patch<QuickThinking>(`${this.apiUrl}/${id}`, quickThinkingData)
+      .pipe(tap(() => this.cache.invalidate('qt:')));
   }
 
   // Delete a quick thinking trivia
   deleteQuickThinking(id: string) {
-    return this.http.delete(`${this.apiUrl}/${id}`);
+    return this.http.delete(`${this.apiUrl}/${id}`).pipe(tap(() => this.cache.invalidate('qt:')));
   }
 
   // Upload an image for a question
@@ -118,7 +130,9 @@ export class QuickThinkingService {
 
   // Share/Unshare quick thinking
   toggleShareQuickThinking(id: string, isShared: boolean): Observable<QuickThinking> {
-    return this.http.patch<QuickThinking>(`${this.apiUrl}/${id}/shared`, { isShared });
+    return this.http
+      .patch<QuickThinking>(`${this.apiUrl}/${id}/shared`, { isShared })
+      .pipe(tap(() => this.cache.invalidate('qt:')));
   }
 
   // Get public quick thinking

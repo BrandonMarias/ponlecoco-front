@@ -42,7 +42,16 @@ export class QuestionModalComponent implements OnInit, OnDestroy {
   private winSound = new Audio('/media/sound/win.mp3');
   private loseSound = new Audio('/media/sound/lose.mp3');
   private drumrollSound = new Audio('/media/sound/redobletambores.mp3');
-  private suspenseSound = new Audio('/media/sound/suspenso.mp3');
+  private suspenseAudio?: HTMLAudioElement;
+
+  /** The 1.5MB loop is only created (and fetched) the first time it is needed. */
+  private get suspenseSound(): HTMLAudioElement {
+    if (!this.suspenseAudio) {
+      this.suspenseAudio = new Audio('/media/sound/suspenso.mp3');
+      this.suspenseAudio.loop = true;
+    }
+    return this.suspenseAudio;
+  }
 
   formattedTime = computed(() => {
     const minutes = Math.floor(this.timeLeft() / 60);
@@ -59,7 +68,6 @@ export class QuestionModalComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.timeLeft.set(this.timeLimit);
-    this.suspenseSound.loop = true;
     this.startTimer();
   }
 
@@ -67,8 +75,14 @@ export class QuestionModalComponent implements OnInit, OnDestroy {
     this.clearTimer();
     this.drumrollSound.pause();
     this.drumrollSound.currentTime = 0;
-    this.suspenseSound.pause();
-    this.suspenseSound.currentTime = 0;
+    this.stopSuspense();
+  }
+
+  private stopSuspense() {
+    if (this.suspenseAudio) {
+      this.suspenseAudio.pause();
+      this.suspenseAudio.currentTime = 0;
+    }
   }
 
   startTimer() {
@@ -96,8 +110,7 @@ export class QuestionModalComponent implements OnInit, OnDestroy {
       this.modalState.set('time_up_options');
       this.answerRevealed.emit();
     } else if (this.modalState() === 'steal_in_progress') {
-      this.suspenseSound.pause();
-      this.suspenseSound.currentTime = 0;
+      this.stopSuspense();
       const points = this.question.value;
       this.updateScore.emit({
         teamIndex: this.stealingTeamIndex()!,
@@ -110,8 +123,7 @@ export class QuestionModalComponent implements OnInit, OnDestroy {
 
   revealAnswer() {
     this.clearTimer();
-    this.suspenseSound.pause();
-    this.suspenseSound.currentTime = 0;
+    this.stopSuspense();
     this.drumrollSound.play();
     this.showAnswer.set(true);
     this.answerRevealed.emit();
@@ -119,8 +131,7 @@ export class QuestionModalComponent implements OnInit, OnDestroy {
 
   onCorrect() {
     this.clearTimer();
-    this.suspenseSound.pause();
-    this.suspenseSound.currentTime = 0;
+    this.stopSuspense();
     this.drumrollSound.pause();
     this.drumrollSound.currentTime = 0;
     this.winSound.play();
@@ -138,8 +149,7 @@ export class QuestionModalComponent implements OnInit, OnDestroy {
 
   onIncorrect() {
     this.clearTimer();
-    this.suspenseSound.pause();
-    this.suspenseSound.currentTime = 0;
+    this.stopSuspense();
     this.drumrollSound.pause();
     this.drumrollSound.currentTime = 0;
     this.loseSound.play();

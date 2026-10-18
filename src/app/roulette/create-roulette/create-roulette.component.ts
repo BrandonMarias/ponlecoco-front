@@ -174,7 +174,7 @@ export default class CreateRouletteComponent implements OnInit, OnDestroy {
             this.isEditMode.set(true);
             this.loading.set(true);
             this.loadingData.set(true);
-            return this.rouletteService.getRouletteById(this.rouletteId);
+            return this.rouletteService.watchRouletteById(this.rouletteId);
           }
           return of(null);
         })
@@ -182,6 +182,10 @@ export default class CreateRouletteComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (roulette) => {
           if (roulette) {
+            // Cached copy first, then the fresh one: don't overwrite what the user already edited
+            if (this.rouletteForm.dirty) {
+              return;
+            }
             this.patchForm(roulette);
             this.loading.set(false);
             this.loadingData.set(false);

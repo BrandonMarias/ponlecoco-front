@@ -1,26 +1,24 @@
-import { Component, inject, signal, OnInit, HostListener } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { HeaderComponent } from '../shared/header/header.component';
 import { TriviaPartyService } from '../triviaparty/triviaparty.service';
-import { TriviaParty } from '../triviaparty/triviaparty';
 import { RouletteService } from '../roulette/roulette.service';
-import { Roulette } from '../roulette/roulette';
 import { QuickThinkingService } from '../quick-thinking/quick-thinking.service';
-import { QuickThinking } from '../quick-thinking/quick-thinking';
 import { GameRoomApiService } from '../quick-thinking/game-room-api.service';
 import { ModalService } from '../shared/modal.service';
-import { forkJoin } from 'rxjs';
+import { Observable } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { ShareModalComponent } from '../shared/share-modal/share-modal.component';
-import { environment } from '../../environments/environment';
+
+type ItemType = 'triviaparty' | 'ruleta' | 'quick-thinking';
 
 // Unified interface for dashboard items
 interface DashboardItem {
   id: string;
   title: string;
-  type: 'triviaparty' | 'ruleta' | 'quick-thinking';
-  gameType?: 'triviaparty' | 'ruleta' | 'quick-thinking'; // For TriviaParty items that can be either type
+  type: ItemType;
+  gameType?: ItemType; // For TriviaParty items that can be either type
   isShared?: boolean; // Track if item is publicly shared
   createdAt?: string; // Creation date for sorting
   updatedAt?: string; // Update date
@@ -40,10 +38,29 @@ export default class DashboardComponent implements OnInit {
   private router = inject(Router);
   private modalService = inject(ModalService);
 
-  dashboardItems = signal<DashboardItem[]>([]);
-  loading = signal(true);
+  // One signal per source so each list renders as soon as it (or its cached copy) arrives
+  private triviaItems = signal<DashboardItem[]>([]);
+  private rouletteItems = signal<DashboardItem[]>([]);
+  private quickThinkingItems = signal<DashboardItem[]>([]);
+  private pendingSources = signal(3);
+
+  dashboardItems = computed<DashboardItem[]>(() => {
+    const items = [...this.triviaItems(), ...this.rouletteItems(), ...this.quickThinkingItems()];
+    // Sort by creation date (most recent first)
+    items.sort((a, b) => {
+      if (!a.createdAt || !b.createdAt) return 0;
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+    return items;
+  });
+  /** True until every list has emitted at least once (cache or network). */
+  loading = computed(() => this.pendingSources() > 0);
   error = signal<string | null>(null);
   openMenuId = signal<string | null>(null);
+  /** Item ids with a mutation in flight (prevents double taps). */
+  busyIds = signal<ReadonlySet<string>>(new Set());
+  /** Quick-thinking item whose room is being created. */
+  startingId = signal<string | null>(null);
 
   showTeamSelection = signal(false);
   showCreateOptions = signal(false);
@@ -73,57 +90,69 @@ export default class DashboardComponent implements OnInit {
   }
 
   loadAllTrivias() {
-    this.loading.set(true);
     this.error.set(null);
+    this.pendingSources.set(3);
 
-    forkJoin({
-      triviaParties: this.triviaPartyService.getTriviaParties(),
-      roulettes: this.rouletteService.getRoulettes(),
-      quickThinkings: this.quickThinkingService.getQuickThinkings()
-    }).subscribe({
-      next: ({ triviaParties, roulettes, quickThinkings }) => {
-        const items: DashboardItem[] = [
-          ...triviaParties.map(tp => ({
-            id: tp.id!,
-            title: tp.title,
-            type: 'triviaparty' as const,
-            gameType: tp.type || 'triviaparty',
-            isShared: tp.isShared || false,
-            createdAt: (tp as any).createdAt,
-            updatedAt: (tp as any).updatedAt
-          })),
-          ...roulettes.map(r => ({
-            id: r.id!,
-            title: r.title,
-            type: 'ruleta' as const,
-            isShared: r.isShared || false,
-            createdAt: (r as any).createdAt,
-            updatedAt: (r as any).updatedAt
-          })),
-          ...quickThinkings.map(qt => ({
-            id: qt.id!,
-            title: qt.title,
-            type: 'quick-thinking' as const,
-            isShared: qt.isShared || false,
-            createdAt: (qt as any).createdAt,
-            updatedAt: (qt as any).updatedAt
+    // The three requests are independent and run in parallel; each one first emits its cached copy.
+    this.loadSource(
+      this.triviaPartyService.getTriviaParties(),
+      this.triviaItems,
+      (tp: any) => ({ type: 'triviaparty', gameType: tp.type || 'triviaparty' })
+    );
+    this.loadSource(this.rouletteService.getRoulettes(), this.rouletteItems, () => ({ type: 'ruleta' }));
+    this.loadSource(
+      this.quickThinkingService.getQuickThinkings(),
+      this.quickThinkingItems,
+      () => ({ type: 'quick-thinking' })
+    );
+  }
+
+  private loadSource(
+    source$: Observable<any[]>,
+    target: { set(items: DashboardItem[]): void },
+    meta: (raw: any) => Pick<DashboardItem, 'type' | 'gameType'>
+  ) {
+    let emitted = false;
+    const markLoaded = () => {
+      if (!emitted) {
+        emitted = true;
+        this.pendingSources.update(n => n - 1);
+      }
+    };
+    source$.subscribe({
+      next: (list) => {
+        target.set(
+          list.map(raw => ({
+            id: raw.id!,
+            title: raw.title,
+            ...meta(raw),
+            isShared: raw.isShared || false,
+            createdAt: raw.createdAt,
+            updatedAt: raw.updatedAt,
           }))
-        ];
-
-        // Sort by creation date (most recent first)
-        items.sort((a, b) => {
-          if (!a.createdAt || !b.createdAt) return 0;
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-        });
-
-        this.dashboardItems.set(items);
-        this.loading.set(false);
+        );
+        markLoaded();
       },
       error: (err) => {
         this.error.set('Failed to load trivias. Please try again.');
         console.error(err);
-        this.loading.set(false);
-      }
+        markLoaded();
+      },
+    });
+  }
+
+  private sourceFor(type: ItemType) {
+    if (type === 'triviaparty') return this.triviaItems;
+    if (type === 'ruleta') return this.rouletteItems;
+    return this.quickThinkingItems;
+  }
+
+  private setBusy(id: string, busy: boolean) {
+    this.busyIds.update(current => {
+      const next = new Set(current);
+      if (busy) next.add(id);
+      else next.delete(id);
+      return next;
     });
   }
 
@@ -148,33 +177,40 @@ export default class DashboardComponent implements OnInit {
 
   async deleteItem(item: DashboardItem) {
     this.openMenuId.set(null);
+    if (this.busyIds().has(item.id)) return;
+
     const confirmed = await this.modalService.open({
       title: 'Confirmar Eliminación',
       message: '¿Estás seguro de que quieres eliminar esta trivia? Esta acción no se puede deshacer.'
     });
+    if (!confirmed) return;
 
-    if (confirmed) {
-      let deleteObservable;
-      if (item.type === 'triviaparty') {
-        deleteObservable = this.triviaPartyService.deleteTriviaParty(item.id);
-      } else if (item.type === 'ruleta') {
-        deleteObservable = this.rouletteService.deleteRoulette(item.id);
-      } else if (item.type === 'quick-thinking') {
-        deleteObservable = this.quickThinkingService.deleteQuickThinking(item.id);
-      } else {
-        return;
-      }
-
-      deleteObservable.subscribe({
-        next: () => {
-          this.dashboardItems.update(current => current.filter(i => i.id !== item.id));
-        },
-        error: (err) => {
-          this.error.set('Failed to delete trivia. Please try again.');
-          console.error(err);
-        }
-      });
+    let deleteObservable;
+    if (item.type === 'triviaparty') {
+      deleteObservable = this.triviaPartyService.deleteTriviaParty(item.id);
+    } else if (item.type === 'ruleta') {
+      deleteObservable = this.rouletteService.deleteRoulette(item.id);
+    } else if (item.type === 'quick-thinking') {
+      deleteObservable = this.quickThinkingService.deleteQuickThinking(item.id);
+    } else {
+      return;
     }
+
+    // Optimistic: remove right away, put it back if the server refuses
+    const source = this.sourceFor(item.type);
+    const previous = source();
+    source.set(previous.filter(i => i.id !== item.id));
+    this.setBusy(item.id, true);
+
+    deleteObservable.subscribe({
+      next: () => this.setBusy(item.id, false),
+      error: (err) => {
+        console.error(err);
+        this.setBusy(item.id, false);
+        source.update(current => (current.some(i => i.id === item.id) ? current : [...current, item]));
+        this.showToastNotification('No se pudo eliminar. Inténtalo de nuevo.', 'error');
+      }
+    });
   }
 
   toggleCreateOptions() {
@@ -209,21 +245,18 @@ export default class DashboardComponent implements OnInit {
 
     // If it's quick-thinking, create room immediately and navigate to game-room
     if (item && item.type === 'quick-thinking') {
-      this.loading.set(true);
+      if (this.startingId()) return;
+      this.startingId.set(itemId);
 
       // Ensure WebSocket is connected before creating room (only if not already connected)
       const token = localStorage.getItem('access_token');
       if (token && !this.quickThinkingService.isConnected()) {
-        console.log('🔌 Conectando WebSocket desde dashboard...');
         this.quickThinkingService.connect(token);
-      } else if (token) {
-        console.log('✅ WebSocket ya conectado');
       }
 
       this.gameRoomApiService.createRoom(itemId).subscribe({
         next: (room) => {
-          console.log('✅ Sala creada:', room);
-          this.loading.set(false);
+          this.startingId.set(null);
           // Navigate to game room with the room token
           this.router.navigate(['/quick-thinking/game-room', room.roomToken]);
         },
@@ -231,7 +264,7 @@ export default class DashboardComponent implements OnInit {
           console.error('❌ Error al crear sala:', error);
           const errorMsg = error.error?.message || 'Error al crear la sala. Inténtalo de nuevo.';
           this.showToastNotification(errorMsg, 'error');
-          this.loading.set(false);
+          this.startingId.set(null);
         }
       });
       return;
@@ -273,53 +306,43 @@ export default class DashboardComponent implements OnInit {
     this.closeTeamSelection();
   }
 
-  toggleShare(item: DashboardItem) {
-    const newSharedState = !item.isShared;
+  private setSharedRequest(item: DashboardItem, isShared: boolean): Observable<unknown> {
+    if (item.type === 'triviaparty') return this.triviaPartyService.toggleShareTriviaParty(item.id, isShared);
+    if (item.type === 'ruleta') return this.rouletteService.toggleShareRoulette(item.id, isShared);
+    return this.quickThinkingService.toggleShareQuickThinking(item.id, isShared);
+  }
 
-    if (item.type === 'triviaparty') {
-      this.triviaPartyService.toggleShareTriviaParty(item.id, newSharedState).subscribe({
-        next: () => {
-          this.dashboardItems.update(current =>
-            current.map(i =>
-              i.id === item.id ? { ...i, isShared: newSharedState } : i
-            )
-          );
-        },
-        error: (err: any) => {
-          this.error.set('Failed to update sharing status. Please try again.');
-          console.error(err);
-        }
-      });
-    } else if (item.type === 'ruleta') {
-      this.rouletteService.toggleShareRoulette(item.id, newSharedState).subscribe({
-        next: () => {
-          this.dashboardItems.update(current =>
-            current.map(i =>
-              i.id === item.id ? { ...i, isShared: newSharedState } : i
-            )
-          );
-        },
-        error: (err: any) => {
-          this.error.set('Failed to update sharing status. Please try again.');
-          console.error(err);
-        }
-      });
-    } else if (item.type === 'quick-thinking') {
-      this.quickThinkingService.toggleShareQuickThinking(item.id, newSharedState).subscribe({
-        next: () => {
-          this.dashboardItems.update(current =>
-            current.map(i =>
-              i.id === item.id ? { ...i, isShared: newSharedState } : i
-            )
-          );
-        },
-        error: (err: any) => {
-          this.error.set('Failed to update sharing status. Please try again.');
-          console.error(err);
-        }
-      });
-    }
+  private setSharedLocally(item: DashboardItem, isShared: boolean) {
+    this.sourceFor(item.type).update(current =>
+      current.map(i => (i.id === item.id ? { ...i, isShared } : i))
+    );
+  }
+
+  /** Optimistic share toggle; `onDone` runs after the server confirms. */
+  private updateShared(item: DashboardItem, isShared: boolean, onDone?: () => void, onFail?: () => void) {
+    if (this.busyIds().has(item.id)) return;
+    const previous = !!item.isShared;
+    this.setSharedLocally(item, isShared);
+    this.setBusy(item.id, true);
+
+    this.setSharedRequest(item, isShared).subscribe({
+      next: () => {
+        this.setBusy(item.id, false);
+        onDone?.();
+      },
+      error: (err: any) => {
+        console.error(err);
+        this.setBusy(item.id, false);
+        this.setSharedLocally(item, previous);
+        this.showToastNotification('❌ No se pudo actualizar el estado público', 'error');
+        onFail?.();
+      }
+    });
+  }
+
+  toggleShare(item: DashboardItem) {
     this.openMenuId.set(null);
+    this.updateShared(item, !item.isShared);
   }
 
   getShareUrl(item: DashboardItem): string {
@@ -391,7 +414,7 @@ export default class DashboardComponent implements OnInit {
 
   generateUniqueLink() {
     const item = this.shareModalItem();
-    if (!item) return;
+    if (!item || this.shareLoading()) return;
 
     this.shareLoading.set(true);
 
@@ -403,6 +426,7 @@ export default class DashboardComponent implements OnInit {
     } else if (item.type === 'quick-thinking') {
       service = this.quickThinkingService;
     } else {
+      this.shareLoading.set(false);
       return;
     }
 
@@ -429,54 +453,29 @@ export default class DashboardComponent implements OnInit {
 
   makePublic() {
     const item = this.shareModalItem();
-    if (!item) return;
+    if (!item || this.shareLoading() || this.busyIds().has(item.id)) return;
 
+    const successMessage =
+      item.type === 'triviaparty'
+        ? '✅ Trivia ahora es pública'
+        : item.type === 'ruleta'
+          ? '✅ Ruleta ahora es pública'
+          : '✅ Piensa Rápido ahora es público';
+
+    // Optimistic: the link is shown at once; the list flips to "Pública" and rolls back on error
+    this.generatedShareUrl.set(this.getShareUrl(item));
     this.shareLoading.set(true);
-
-    const updateSharedStatus = () => {
-      this.shareLoading.set(false);
-      const publicUrl = this.getShareUrl(item);
-      this.generatedShareUrl.set(publicUrl);
-
-      // Update item in list
-      const items = this.dashboardItems();
-      const index = items.findIndex(i => i.id === item.id);
-      if (index !== -1) {
-        items[index].isShared = true;
-        this.dashboardItems.set([...items]);
+    this.updateShared(
+      item,
+      true,
+      () => {
+        this.shareLoading.set(false);
+        this.showToastNotification(successMessage, 'success');
+      },
+      () => {
+        this.shareLoading.set(false);
+        this.generatedShareUrl.set('');
       }
-    };
-
-    const handleError = (err: any) => {
-      console.error('Error making public:', err);
-      this.shareLoading.set(false);
-      this.showToastNotification('❌ Error al hacer público el contenido', 'error');
-    };
-
-    if (item.type === 'triviaparty') {
-      this.triviaPartyService.toggleShareTriviaParty(item.id, true).subscribe({
-        next: () => {
-          updateSharedStatus();
-          this.showToastNotification('✅ Trivia ahora es pública', 'success');
-        },
-        error: handleError
-      });
-    } else if (item.type === 'ruleta') {
-      this.rouletteService.toggleShareRoulette(item.id, true).subscribe({
-        next: () => {
-          updateSharedStatus();
-          this.showToastNotification('✅ Ruleta ahora es pública', 'success');
-        },
-        error: handleError
-      });
-    } else if (item.type === 'quick-thinking') {
-      this.quickThinkingService.toggleShareQuickThinking(item.id, true).subscribe({
-        next: () => {
-          updateSharedStatus();
-          this.showToastNotification('✅ Piensa Rápido ahora es público', 'success');
-        },
-        error: handleError
-      });
-    }
+    );
   }
 }

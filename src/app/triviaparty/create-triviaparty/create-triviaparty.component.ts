@@ -222,7 +222,7 @@ export default class CreateTriviaPartyComponent implements OnInit, OnDestroy {
             this.isEditMode.set(true);
             this.loading.set(true);
             this.loadingData.set(true);
-            return this.triviaPartyService.getTriviaPartyById(this.triviaPartyId);
+            return this.triviaPartyService.watchTriviaPartyById(this.triviaPartyId);
           }
           return of(null);
         })
@@ -230,6 +230,10 @@ export default class CreateTriviaPartyComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (triviaParty) => {
           if (triviaParty) {
+            // Cached copy first, then the fresh one: don't overwrite what the user already edited
+            if (this.triviaPartyForm.dirty) {
+              return;
+            }
             this.patchForm(triviaParty);
             this.loading.set(false);
             this.loadingData.set(false);
@@ -253,6 +257,7 @@ export default class CreateTriviaPartyComponent implements OnInit, OnDestroy {
       title: triviaParty.title,
     });
 
+    this.categories.clear();
     triviaParty.categories.forEach((cat) => {
       const questionsFGs = cat.questions.map((q) => {
         return this.fb.group({

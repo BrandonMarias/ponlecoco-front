@@ -1,8 +1,9 @@
 import { Injectable, signal, inject, computed } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { catchError, Observable, of, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { ApiCacheService } from '../shared/api-cache.service';
 
 interface User {
   id: string;
@@ -31,6 +32,7 @@ interface AuthState {
 export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
+  private apiCache = inject(ApiCacheService);
   private apiUrl = environment.apiUrl;
 
   private authState = signal<AuthState>({ user: null, isAuthenticated: false });
@@ -82,8 +84,11 @@ export class AuthService {
         const token = this.extractToken(response);
         this.setAuthState(response.user, token);
       }),
-      catchError(() => {
-        this.clearAuthState();
+      catchError((error: HttpErrorResponse) => {
+        // Only a real 401 invalidates the session; network/server errors keep the restored one
+        if (error.status === 401) {
+          this.clearAuthState();
+        }
         return of(null);
       })
     );
@@ -164,6 +169,7 @@ export class AuthService {
     this.authState.set({ user: null, isAuthenticated: false });
     localStorage.removeItem('user_data');
     localStorage.removeItem('access_token');
+    this.apiCache.clear();
   }
 
   private extractToken(response: AuthResponse): string {

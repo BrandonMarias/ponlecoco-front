@@ -85,7 +85,7 @@ import { ReviewCard } from './quiz-editor.utils';
                     }
                   </p>
                   @if (card.imageUrl) {
-                    <img [src]="card.imageUrl" alt="" class="w-12 h-12 shrink-0 rounded-lg object-cover" />
+                    <img [src]="card.imageUrl" alt="" width="48" height="48" loading="lazy" decoding="async" class="w-12 h-12 shrink-0 rounded-lg object-cover" />
                   }
                 </div>
 

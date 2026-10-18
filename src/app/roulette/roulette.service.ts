@@ -2,7 +2,8 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { environment } from '../../environments/environment';
 import { Roulette } from './roulette';
-import { Observable, map } from 'rxjs';
+import { Observable, map, tap } from 'rxjs';
+import { ApiCacheService } from '../shared/api-cache.service';
 
 interface ImageUploadData {
   imageUrl: string;
@@ -19,18 +20,27 @@ interface ApiImageUploadResponse {
 })
 export class RouletteService {
   private http = inject(HttpClient);
+  private cache = inject(ApiCacheService);
   private apiUrl = `${environment.apiUrl}/roulette`;
 
-  getRoulettes() {
-    return this.http.get<Roulette[]>(this.apiUrl);
+  /** Emits the cached list first (if any), then the fresh one. */
+  getRoulettes(): Observable<Roulette[]> {
+    return this.cache.swr('roulette:list', () => this.http.get<Roulette[]>(this.apiUrl));
+  }
+
+  /** Cached detail for the editor: emits the cached copy first (if any), then the fresh one. */
+  watchRouletteById(id: string): Observable<Roulette> {
+    return this.cache.swr(`roulette:${id}`, () => this.getRouletteById(id));
   }
 
   createRoulette(rouletteData: Omit<Roulette, 'id' | 'userId'>) {
-    return this.http.post<Roulette>(this.apiUrl, rouletteData);
+    return this.http
+      .post<Roulette>(this.apiUrl, rouletteData)
+      .pipe(tap(() => this.cache.invalidate('roulette:')));
   }
 
   deleteRoulette(id: string) {
-    return this.http.delete(`${this.apiUrl}/${id}`);
+    return this.http.delete(`${this.apiUrl}/${id}`).pipe(tap(() => this.cache.invalidate('roulette:')));
   }
 
   getRouletteById(id: string) {
@@ -38,7 +48,9 @@ export class RouletteService {
   }
 
   updateRoulette(id: string, rouletteData: Omit<Roulette, 'id' | 'userId'>) {
-    return this.http.patch<Roulette>(`${this.apiUrl}/${id}`, rouletteData);
+    return this.http
+      .patch<Roulette>(`${this.apiUrl}/${id}`, rouletteData)
+      .pipe(tap(() => this.cache.invalidate('roulette:')));
   }
 
   uploadQuestionImage(image: File): Observable<ImageUploadData> {
@@ -58,7 +70,9 @@ export class RouletteService {
 
   // Share/Unshare roulette
   toggleShareRoulette(id: string, isShared: boolean): Observable<Roulette> {
-    return this.http.patch<Roulette>(`${this.apiUrl}/${id}/shared`, { isShared });
+    return this.http
+      .patch<Roulette>(`${this.apiUrl}/${id}/shared`, { isShared })
+      .pipe(tap(() => this.cache.invalidate('roulette:')));
   }
 
   // Get public roulette

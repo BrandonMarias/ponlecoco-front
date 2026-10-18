@@ -105,6 +105,27 @@ body {
   min-height: 4rem;
 }
 
+/* Snappy taps: no 300ms delay / double-tap zoom, no grey tap flash, instant pressed feedback */
+button,
+a,
+[role="button"],
+select,
+summary,
+label[for] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:not(:disabled):active,
+[role="button"]:active {
+  opacity: 0.85;
+  transition: opacity 60ms linear;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
 /* Touch targets for better mobile interaction */
 .touch-manipulation {
   touch-action: manipulation;

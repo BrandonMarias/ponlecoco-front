@@ -169,7 +169,7 @@ export default class CreateQuickThinkingComponent implements OnInit, OnDestroy {
             this.isEditMode.set(true);
             this.loading.set(true);
             this.loadingData.set(true);
-            return this.quickThinkingService.getQuickThinkingById(this.quickThinkingId);
+            return this.quickThinkingService.watchQuickThinkingById(this.quickThinkingId);
           }
           return of(null);
         })
@@ -177,6 +177,10 @@ export default class CreateQuickThinkingComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (quickThinking) => {
           if (quickThinking) {
+            // Cached copy first, then the fresh one: don't overwrite what the user already edited
+            if (this.quickThinkingForm.dirty) {
+              return;
+            }
             this.patchForm(quickThinking);
             this.loading.set(false);
             this.loadingData.set(false);

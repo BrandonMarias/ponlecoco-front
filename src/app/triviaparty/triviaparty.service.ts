@@ -2,7 +2,8 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { environment } from '../../environments/environment';
 import { TriviaParty } from './triviaparty';
-import { Observable, catchError, map } from 'rxjs';
+import { Observable, catchError, map, tap } from 'rxjs';
+import { ApiCacheService } from '../shared/api-cache.service';
 
 interface ImageUploadData {
   imageUrl: string;
@@ -19,18 +20,27 @@ interface ApiImageUploadResponse {
 })
 export class TriviaPartyService {
   private http = inject(HttpClient);
+  private cache = inject(ApiCacheService);
   private apiUrl = `${environment.apiUrl}/triviaparty`;
 
-  getTriviaParties() {
-    return this.http.get<TriviaParty[]>(this.apiUrl);
+  /** Emits the cached list first (if any), then the fresh one. */
+  getTriviaParties(): Observable<TriviaParty[]> {
+    return this.cache.swr('trivia:list', () => this.http.get<TriviaParty[]>(this.apiUrl));
+  }
+
+  /** Cached detail for the editor: emits the cached copy first (if any), then the fresh one. */
+  watchTriviaPartyById(id: string): Observable<TriviaParty> {
+    return this.cache.swr(`trivia:${id}`, () => this.getTriviaPartyById(id));
   }
 
   createTriviaParty(triviaPartyData: Omit<TriviaParty, 'id' | 'userId'>) {
-    return this.http.post<TriviaParty>(this.apiUrl, triviaPartyData);
+    return this.http
+      .post<TriviaParty>(this.apiUrl, triviaPartyData)
+      .pipe(tap(() => this.cache.invalidate('trivia:')));
   }
 
   deleteTriviaParty(id: string) {
-    return this.http.delete(`${this.apiUrl}/${id}`);
+    return this.http.delete(`${this.apiUrl}/${id}`).pipe(tap(() => this.cache.invalidate('trivia:')));
   }
 
   getTriviaPartyById(id: string) {
@@ -42,6 +52,7 @@ export class TriviaPartyService {
     const { type, ...dataWithoutType } = triviaPartyData;
 
     return this.http.patch<TriviaParty>(`${this.apiUrl}/${id}`, dataWithoutType).pipe(
+      tap(() => this.cache.invalidate('trivia:')),
       catchError((error) => {
         console.error('Error updating trivia party:', error);
         console.error('Request data sent:', dataWithoutType);
@@ -69,7 +80,9 @@ export class TriviaPartyService {
 
   // Share/Unshare trivia party
   toggleShareTriviaParty(id: string, isShared: boolean): Observable<TriviaParty> {
-    return this.http.patch<TriviaParty>(`${this.apiUrl}/${id}/shared`, { isShared });
+    return this.http
+      .patch<TriviaParty>(`${this.apiUrl}/${id}/shared`, { isShared })
+      .pipe(tap(() => this.cache.invalidate('trivia:')));
   }
 
   // Get public trivia party

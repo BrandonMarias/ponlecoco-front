@@ -264,6 +264,8 @@
               <img
                 [src]="currentQuestion()?.imageUrl"
                 alt="Imagen de pregunta"
+                loading="eager"
+                decoding="async"
                 class="max-w-full h-auto rounded-lg shadow-md max-h-64 object-contain"
               />
             </div>
@@ -467,7 +469,7 @@
         <div class="mb-6">
           <div class="bg-white p-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 flex justify-center">
             @if (qrCodeDataUrl()) {
-              <img [src]="qrCodeDataUrl()" alt="QR Code" class="w-64 h-64">
+              <img [src]="qrCodeDataUrl()" alt="QR Code" width="256" height="256" decoding="async" class="w-64 h-64">
             } @else {
               <div class="w-64 h-64 flex items-center justify-center">
                 <svg class="w-12 h-12 text-gray-400 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">

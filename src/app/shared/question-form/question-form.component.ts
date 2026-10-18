@@ -103,6 +103,10 @@ import { ImageCompressionService } from '../image-compression.service';
               <img
                 [src]="previewUrl() || questionForm().get('imageUrl')?.value"
                 alt="Preview"
+                width="80"
+                height="80"
+                loading="lazy"
+                decoding="async"
                 class="h-20 w-20 sm:h-16 sm:w-16 object-cover rounded"
               />
               @if (!isCompressing()) {

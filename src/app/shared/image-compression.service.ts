@@ -132,6 +132,77 @@ export class ImageCompressionService {
     });
   }
 
+  /**
+   * Cheap pre-upload downscale: longest side <= maxSide, re-encoded at `quality`.
+   * GIFs (animation) and non-raster files are returned untouched; small images that already fit
+   * are not re-encoded; if re-encoding would not make the file smaller the original is kept.
+   * Output is JPEG (WebP only when the source already is WebP) to match what the server accepts.
+   */
+  async downscaleImage(
+    file: File,
+    { maxSide = 1280, quality = 0.8, skipBelowBytes = 200 * 1024 } = {}
+  ): Promise<File> {
+    const rasterTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!rasterTypes.includes(file.type)) {
+      return file;
+    }
+
+    let img: HTMLImageElement;
+    try {
+      img = await this.loadImage(file);
+    } catch {
+      return file;
+    }
+
+    const { naturalWidth: w, naturalHeight: h } = img;
+    const scale = Math.min(1, maxSide / Math.max(w, h));
+    if (scale === 1 && file.size <= skipBelowBytes) {
+      return file;
+    }
+
+    const width = Math.max(1, Math.round(w * scale));
+    const height = Math.max(1, Math.round(h * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      return file;
+    }
+
+    const outputType = file.type === 'image/webp' ? 'image/webp' : 'image/jpeg';
+    if (outputType === 'image/jpeg') {
+      ctx.fillStyle = '#ffffff'; // JPEG has no alpha: avoid black where a PNG was transparent
+      ctx.fillRect(0, 0, width, height);
+    }
+    ctx.drawImage(img, 0, 0, width, height);
+
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, outputType, quality));
+    if (!blob || blob.type !== outputType || (scale === 1 && blob.size >= file.size)) {
+      return file;
+    }
+
+    const ext = outputType === 'image/webp' ? 'webp' : 'jpg';
+    const baseName = file.name.replace(/\.[^.]+$/, '') || 'image';
+    return new File([blob], `${baseName}.${ext}`, { type: outputType, lastModified: Date.now() });
+  }
+
+  private loadImage(file: File): Promise<HTMLImageElement> {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        resolve(img);
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error('Error al cargar la imagen'));
+      };
+      img.src = url;
+    });
+  }
+
   formatFileSize(bytes: number): string {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;

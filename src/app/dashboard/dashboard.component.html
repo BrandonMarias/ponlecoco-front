@@ -6,7 +6,7 @@
       <h1 class="text-2xl font-bold">Mis Trivias</h1>
       <button
         (click)="goToLobby()"
-        class="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors duration-200 shadow-md hover:shadow-lg"
+        class="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition duration-100 active:scale-95 shadow-md hover:shadow-lg"
       >
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
@@ -15,17 +15,32 @@
       </button>
     </div>
 
-    @if (loading()) {
-      <p>Loading...</p>
-    } @else if (error()) {
+    @if (error() && dashboardItems().length === 0) {
       <div class="p-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-red-800 dark:text-red-200" role="alert">
         {{ error() }}
+      </div>
+    } @else if (loading() && dashboardItems().length === 0) {
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" aria-busy="true" aria-label="Cargando">
+        @for (n of [1, 2, 3, 4]; track n) {
+          <div class="bg-white dark:bg-gray-900 p-4 rounded-lg shadow animate-pulse flex flex-col gap-3">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded bg-gray-200 dark:bg-gray-700"></div>
+              <div class="h-3 w-20 rounded bg-gray-200 dark:bg-gray-700"></div>
+            </div>
+            <div class="h-5 w-3/4 rounded bg-gray-200 dark:bg-gray-700"></div>
+            <div class="flex items-center justify-between mt-4">
+              <div class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+              <div class="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+            </div>
+          </div>
+        }
       </div>
     } @else {
       @if (dashboardItems().length > 0) {
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 pb-20 md:pb-8 lg:pb-2 ">
           @for (item of dashboardItems(); track item.id) {
-            <div class="bg-white dark:bg-gray-900 p-4 rounded-lg shadow hover:shadow-lg transition-shadow flex flex-col justify-between">
+            <div class="bg-white dark:bg-gray-900 p-4 rounded-lg shadow hover:shadow-lg transition-shadow flex flex-col justify-between"
+                 [class.pointer-events-none]="busyIds().has(item.id)">
               <div class="flex items-center gap-2 mb-2">
                 <img
                   [src]="item.type === 'triviaparty' ? '/media/img/triviaparty.png' :
@@ -33,6 +48,9 @@
                         '/media/img/piensarapido.png'"
                   [alt]="item.type"
                   class="w-8 h-8 object-contain"
+                  width="32"
+                  height="32"
+                  decoding="async"
                 />
                 <span class="text-sm text-gray-500 dark:text-gray-400">
                   {{ item.type === 'triviaparty' ? 'TriviaParty' :
@@ -52,10 +70,18 @@
               }
 
               <div class="flex items-center justify-between">
-                <button (click)="openTeamSelection(item.id)" class="text-green-500 hover:text-green-600">
-                  <svg class="w-10 h-10" fill="currentColor" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M11.596 8.697l-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/>
-                  </svg>
+                <button (click)="openTeamSelection(item.id)" [disabled]="startingId() !== null" aria-label="Jugar"
+                        class="text-green-500 hover:text-green-600 active:scale-90 transition-transform duration-100 disabled:opacity-60">
+                  @if (startingId() === item.id) {
+                    <svg class="w-10 h-10 animate-spin" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                    </svg>
+                  } @else {
+                    <svg class="w-10 h-10" fill="currentColor" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M11.596 8.697l-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/>
+                    </svg>
+                  }
                 </button>
                 <div class="relative">
                   <button (click)="toggleMenu(item.id); $event.stopPropagation()" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
@@ -148,19 +174,19 @@
     @if (showCreateOptions()) {
       <div class="mb-4 space-y-2">
         <!-- TriviaParty Option -->
-        <button (click)="navigateToCreateTriviaParty()" class="flex items-center gap-2 bg-indigo-600 text-white px-4 py-3 rounded-full shadow-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all">
+        <button (click)="navigateToCreateTriviaParty()" class="flex items-center gap-2 bg-indigo-600 text-white px-4 py-3 rounded-full shadow-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-100 active:scale-95">
           <img src="/media/img/triviaparty.png" alt="TriviaParty" class="w-6 h-6 object-contain">
           <span class="font-medium">TriviaParty</span>
         </button>
 
         <!-- Ruleta Option -->
-        <button (click)="navigateToCreateRoulette()" class="flex items-center gap-2 bg-purple-600 text-white px-4 py-3 rounded-full shadow-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-all">
+        <button (click)="navigateToCreateRoulette()" class="flex items-center gap-2 bg-purple-600 text-white px-4 py-3 rounded-full shadow-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-all duration-100 active:scale-95">
           <img src="/media/img/ruleta.png" alt="Ruleta" class="w-6 h-6 object-contain">
           <span class="font-medium">Ruleta</span>
         </button>
 
         <!-- Quick Thinking Option -->
-        <button (click)="navigateToCreateQuickThinking()" class="flex items-center gap-2 bg-pink-600 text-white px-4 py-3 rounded-full shadow-lg hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 transition-all">
+        <button (click)="navigateToCreateQuickThinking()" class="flex items-center gap-2 bg-pink-600 text-white px-4 py-3 rounded-full shadow-lg hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 transition-all duration-100 active:scale-95">
           <img src="/media/img/piensarapido.png" alt="Piensa Rápido" class="w-6 h-6 object-contain">
           <span class="font-medium">Piensa Rápido</span>
         </button>
@@ -168,7 +194,7 @@
     }
 
     <!-- Main FAB Button -->
-    <button (click)="toggleCreateOptions()" class="bg-indigo-600 text-white p-4 rounded-full shadow-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-transform"
+    <button (click)="toggleCreateOptions()" class="bg-indigo-600 text-white p-4 rounded-full shadow-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-transform duration-100 active:scale-90"
             [class.rotate-45]="showCreateOptions()">
       <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
@@ -225,7 +251,7 @@
           <button (click)="closeTeamSelection()" class="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500 cursor-pointer">
             Cancelar
           </button>
-          <button (click)="startGame()" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 cursor-pointer">
+          <button (click)="startGame()" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 cursor-pointer active:scale-95 transition-transform duration-100">
             ¡Empezar a Jugar!
           </button>
         </div>

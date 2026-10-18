@@ -29,7 +29,7 @@ const INSTRUCTIONS_STORAGE_PREFIX = 'quiz-editor-instructions:';
           <app-back-button [compact]="true" [intercept]="true" label="Volver" (pressed)="back.emit()" />
 
           @if (logo()) {
-            <img [src]="logo()" alt="" class="hidden sm:block w-8 h-8 shrink-0" />
+            <img [src]="logo()" alt="" width="32" height="32" decoding="async" class="hidden sm:block w-8 h-8 shrink-0" />
           }
 
           <input
