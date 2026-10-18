@@ -1,279 +1,221 @@
-<div class="content-page container mx-auto p-4 pb-20 text-gray-800 dark:text-white">
-  <!-- Back to Dashboard Button -->
-  <app-back-button />
-
-  <!-- Dynamic Title -->
-  <h1 class="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6">
-    @if (isEditMode()) {
-      Editar TriviaParty
-    } @else {
-      Crear Nueva TriviaParty
-    }
-  </h1>
-
-  @if (loading() && isEditMode()) {
-    <p class="dark:text-gray-300">Cargando datos de la trivia...</p>
-  } @else {
-    <!-- Main Form -->
-    <form [formGroup]="triviaPartyForm" (ngSubmit)="onSubmit()" (submit)="onSaveAttempt()" class="space-y-6 sm:space-y-8">
-      <!-- TriviaParty Title -->
-      <div>
-        <label
-          for="title"
-          class="block text-base sm:text-lg font-medium text-gray-700 dark:text-gray-300 mb-2"
-          >Título de la Trivia</label
-        >
-        <input
-          type="text"
-          id="title"
-          formControlName="title"
-          class="mt-1 block w-full px-3 py-3 sm:py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-base sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
-        />
-        @if (triviaPartyForm.get('title')?.invalid &&
-        triviaPartyForm.get('title')?.touched) {
-        <div class="text-red-600 text-sm mt-1 dark:text-red-400">
-          El título es requerido.
-        </div>
-        }
-      </div>
-
-      <!-- Categories -->
-      <div formArrayName="categories" class="space-y-4 sm:space-y-6">
-        <div class="mb-4">
-          <h2 class="text-xl sm:text-2xl font-semibold">Categorías</h2>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            {{ categories.length }} / 6 categorías
-          </p>
-        </div>
-        @if(categories.invalid && categories.touched &&
-        categories.errors?.['minlength']) {
-        <div
-          class="p-3 sm:p-4 text-sm text-red-800 bg-red-100 rounded-lg dark:bg-red-900 dark:text-red-300"
-          role="alert"
-        >
-          Debes añadir al menos una categoría.
-        </div>
-        } @for (category of categories.controls; track $index; let catIndex =
-        $index) {
-        <div
-          [formGroupName]="catIndex"
-          class="p-3 sm:p-4 border rounded-lg bg-gray-50 dark:bg-gray-800 transition-colors"
-          [class.border-red-500]="isCategoryInvalid(category)"
-          [class.border-gray-200]="!isCategoryInvalid(category)"
-          [class.dark:border-red-500]="isCategoryInvalid(category)"
-          [class.dark:border-gray-700]="!isCategoryInvalid(category)"
-        >
-          <!-- Category Header - Clickable to collapse -->
-          <div
-            class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-3 sm:gap-0 cursor-pointer"
-            (click)="toggleCategory(catIndex)"
-          >
-            <div class="flex items-center gap-3">
-              <svg class="w-5 h-5 transition-transform" [class.rotate-90]="!isCategoryCollapsed(catIndex)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-              </svg>
-              <h3 class="text-lg sm:text-xl font-medium">
-                Categoría {{ catIndex + 1 }}
-                @if (category.get('title')?.value) {
-                  <span class="text-sm text-gray-600 dark:text-gray-400"> - {{ category.get('title')?.value }}</span>
-                }
-                @if (isCategoryInvalid(category)) {
-                  <span class="ml-2 text-sm text-red-500">⚠️ Incompleta</span>
-                }
-              </h3>
+@if (loadingData()) {
+  <div class="content-page h-dvh flex items-center justify-center text-gray-600 dark:text-gray-300">
+    <p>Cargando datos de la trivia...</p>
+  </div>
+} @else {
+  <app-quiz-editor-shell
+    [titleControl]="titleControl"
+    titlePlaceholder="Título de la trivia"
+    instructionsKey="triviaparty"
+    [instructions]="instructions"
+    aiLabel="Generar categoría con IA"
+    [aiDisabled]="loading() || categories.length >= MAX_CATEGORIES || aiUsage.exhausted()"
+    [saving]="loading()"
+    [invalid]="triviaPartyForm.invalid"
+    [saveLabel]="isEditMode() ? 'Guardar cambios' : 'Guardar trivia'"
+    [incompleteCount]="incompleteTotal()"
+    [error]="error()"
+    [rail]="false"
+    [current]="linearIndex()"
+    [scrollKey]="linearIndex()"
+    [total]="totalQuestions()"
+    (back)="cancel()"
+    (save)="onSaveClick()"
+    (ai)="onAddCategoryWithIAClick()"
+    (review)="reviewOpen.set(true)"
+    (prev)="selectLinear(linearIndex() - 1)"
+    (next)="selectLinear(linearIndex() + 1)"
+    (jumpIncomplete)="jumpToFirstIncomplete()"
+  >
+    <!-- Category tabs + value chips -->
+    <div navigator class="flex-none bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <div role="tablist" aria-label="Categorías" class="flex items-center gap-2 p-2 overflow-x-auto [scrollbar-width:thin]">
+        @for (tab of categoryTabs(); track $index; let c = $index) {
+          @if (c === selCat()) {
+            <div
+              role="tab"
+              aria-selected="true"
+              class="shrink-0 flex items-center gap-1.5 h-11 pl-2.5 pr-1 rounded-lg border-2 border-indigo-600 bg-indigo-50 dark:bg-indigo-900/40"
+            >
+              <app-quiz-status-dot [status]="tab.status" />
+              <input
+                [id]="'cat-title-' + c"
+                type="text"
+                [formControl]="categoryTitle(c)"
+                [attr.aria-label]="'Título de la categoría ' + (c + 1)"
+                placeholder="Categoría {{ c + 1 }}"
+                class="w-32 sm:w-44 h-9 px-1 text-sm font-semibold bg-transparent text-indigo-900 dark:text-indigo-100 placeholder-indigo-400 dark:placeholder-indigo-300/60 focus:outline-none focus:bg-white dark:focus:bg-gray-900 rounded"
+                [class.ring-2]="categoryTitle(c).invalid && categoryTitle(c).touched"
+                [class.ring-red-500]="categoryTitle(c).invalid && categoryTitle(c).touched"
+              />
+              <button
+                type="button"
+                (click)="removeCategory(c)"
+                aria-label="Eliminar categoría"
+                class="inline-flex items-center justify-center w-10 h-10 rounded-full text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+              >
+                <app-quiz-icon name="trash" class="w-5 h-5" />
+              </button>
             </div>
+          } @else {
             <button
               type="button"
-              (click)="removeCategory(catIndex); $event.stopPropagation()"
-              class="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 touch-manipulation min-h-[44px]"
+              role="tab"
+              aria-selected="false"
+              (click)="selectCategory(c)"
+              [attr.aria-label]="'Categoría ' + (c + 1) + (tab.title ? ': ' + tab.title : '') + (tab.status === 'incomplete' ? ', sin completar' : '')"
+              class="shrink-0 flex items-center gap-1.5 h-11 px-3 max-w-44 rounded-lg border-2 bg-white dark:bg-gray-700 text-sm font-semibold text-gray-800 dark:text-gray-100 touch-manipulation focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+              [class]="tab.status === 'incomplete' ? 'border-amber-400' : 'border-gray-200 dark:border-gray-600 hover:border-indigo-300'"
             >
-              🗑️ Eliminar Categoría
+              <app-quiz-status-dot [status]="tab.status" />
+              <span class="truncate">
+                @if (tab.title) {
+                  {{ tab.title }}
+                } @else {
+                  <span class="italic font-normal text-gray-400 dark:text-gray-500">Categoría {{ c + 1 }}</span>
+                }
+              </span>
             </button>
-          </div>
+          }
+        }
 
-          <!-- Category Content - Collapsible -->
-          @if (!isCategoryCollapsed(catIndex)) {
-          <div class="space-y-4">
+        <button
+          type="button"
+          (click)="onAddCategoryClick()"
+          [disabled]="categories.length >= MAX_CATEGORIES"
+          aria-label="Agregar categoría"
+          class="shrink-0 h-11 min-w-11 px-3 inline-flex items-center justify-center gap-1.5 rounded-lg font-semibold text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed shadow-sm touch-manipulation focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+        >
+          <app-quiz-icon name="plus" class="w-6 h-6" />
+          <span class="text-sm tabular-nums">{{ categories.length }}/{{ MAX_CATEGORIES }}</span>
+        </button>
+      </div>
 
-          <!-- Category Title -->
-          <div class="mb-4">
-            <label
-              [for]="'cat-title-' + catIndex"
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >Título de la Categoría</label
+      @if (valueChips().length) {
+        <div role="tablist" aria-label="Valores" class="flex items-center gap-2 px-2 pb-2 overflow-x-auto [scrollbar-width:thin]">
+          @for (chip of valueChips(); track $index; let i = $index) {
+            <button
+              type="button"
+              role="tab"
+              [attr.aria-selected]="i === selQ()"
+              (click)="selectQuestion(i)"
+              [attr.aria-label]="chip.value + ' puntos' + (chip.double ? ', puntos dobles' : '') + (chip.status === 'incomplete' ? ', sin completar' : '')"
+              class="relative shrink-0 min-w-16 h-11 px-3 inline-flex items-center justify-center gap-1 rounded-lg border-2 text-sm font-bold tabular-nums touch-manipulation focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+              [class]="
+                i === selQ()
+                  ? 'border-indigo-600 bg-indigo-600 text-white'
+                  : chip.status === 'incomplete'
+                    ? 'border-amber-400 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100'
+                    : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:border-indigo-300'
+              "
             >
-            <input
-              [id]="'cat-title-' + catIndex"
-              type="text"
-              formControlName="title"
-              class="mt-1 block w-full px-3 py-3 sm:py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-base sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
-            />
-            @if(categories.at(catIndex).get('title')?.invalid &&
-            categories.at(catIndex).get('title')?.touched) {
-            <div class="text-red-600 text-sm mt-1 dark:text-red-400">
-              El título de la categoría es requerido.
-            </div>
-            }
-          </div>
-
-          <!-- Double Points Selection -->
-          <div class="mt-4">
-            <h4 class="text-base sm:text-lg font-medium mb-3">
-              Pregunta con Puntos Dobles (Opcional)
-            </h4>
-            <div class="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-x-4 sm:gap-y-2">
-              @for (question of questions(catIndex).controls; track $index; let
-              qIndex = $index) {
-              <label
-                [for]="'dp-' + catIndex + '-' + qIndex"
-                class="flex items-center space-x-2 cursor-pointer p-2 rounded border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 touch-manipulation min-h-[44px]"
-              >
-                <input
-                  [id]="'dp-' + catIndex + '-' + qIndex"
-                  type="radio"
-                  [name]="'doublePoints-' + catIndex"
-                  [value]="qIndex.toString()"
-                  [checked]="
-                    categories.at(catIndex).get('doublePointsQuestion')?.value ===
-                    qIndex.toString()
-                  "
-                  (click)="toggleDoublePoints(catIndex, qIndex.toString())"
-                  class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 dark:border-gray-600"
-                />
-                <span class="dark:text-gray-300 text-sm sm:text-base"
-                  >{{
-                    questions(catIndex).at(qIndex).get("value")?.value
-                  }}
-                  Puntos</span
-                >
-              </label>
+              {{ chip.value }}
+              @if (chip.double) {
+                <app-quiz-icon name="bolt" class="w-4 h-4 text-amber-400" />
               }
-            </div>
-          </div>
-
-          <!-- Questions -->
-          <div formArrayName="questions" class="mt-4 space-y-4">
-            <h4 class="text-base sm:text-lg font-medium">Preguntas</h4>
-            @for (question of questions(catIndex).controls; track $index; let
-            qIndex = $index) {
-            <app-question-form
-              [questionForm]="$any(questions(catIndex).at(qIndex))"
-              [questionId]="catIndex + '-' + qIndex"
-              [questionTitle]="'Pregunta por ' + questions(catIndex).at(qIndex).get('value')?.value + ' puntos'"
-              [previewUrl]="getPreviewUrl(catIndex, qIndex)"
-              [isCompressing]="isImageCompressing(catIndex, qIndex)"
-              [questionRows]="3"
-              [answerRows]="3"
-              (fileSelected)="onFileSelectedFromComponent($event, catIndex, qIndex)"
-              (imageRemoved)="removeImage(catIndex, qIndex)"
-            />
-            }
-          </div>
-          </div>
+              @if (chip.hasImage) {
+                <app-quiz-icon name="image" class="w-4 h-4" />
+              }
+              <app-quiz-status-dot [status]="chip.status" class="absolute -top-1.5 -right-1.5" />
+            </button>
           }
         </div>
-        }
-      </div>
-
-      <!-- Spacer para el fixed bottom bar -->
-      <div class="h-24"></div>
-
-      @if(error()) {
-      <div
-        class="p-3 sm:p-4 mt-4 text-sm text-red-800 bg-red-100 rounded-lg dark:bg-red-900 dark:text-red-300"
-        role="alert"
-      >
-        {{ error() }}
-      </div>
       }
-    </form>
-
-    <!-- Fixed Bottom Action Bar -->
-    <div class="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shadow-lg z-40">
-      <div class="container mx-auto px-4 py-3">
-        <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 items-stretch sm:items-center justify-between">
-          <!-- Left: Secondary Actions -->
-          <div class="flex flex-row gap-2">
-            <button
-              type="button"
-              (click)="router.navigate(['/dashboard'])"
-              class="flex-1 sm:flex-none px-4 py-2.5 font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors min-h-[44px] flex items-center justify-center gap-2"
-            >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-              </svg>
-              Cancelar
-            </button>
-            <button
-              type="button"
-              (click)="onAddCategoryClick()"
-              [disabled]="categories.length >= 6"
-              class="flex-1 sm:flex-none px-4 py-2.5 font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 rounded-lg transition-colors min-h-[44px] flex items-center justify-center gap-2"
-            >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-              </svg>
-              <span class="hidden sm:inline">Categoría</span>
-            </button>
-            <button
-              type="button"
-              (click)="onAddCategoryWithIAClick()"
-              [disabled]="categories.length >= 6 || aiUsage.exhausted()"
-              class="flex-1 sm:flex-none px-4 py-2.5 font-medium text-white bg-pink-600 hover:bg-pink-700 disabled:bg-gray-400 rounded-lg transition-colors min-h-[44px] flex items-center justify-center gap-2"
-            >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
-              </svg>
-              <span class="hidden sm:inline">IA</span>
-            </button>
-            <app-ai-usage-badge class="self-center" />
-          </div>
-
-          <!-- Right: Primary Action -->
-          <button
-            type="button"
-            (click)="onSaveClick()"
-            [disabled]="loading()"
-            class="px-6 py-2.5 font-semibold text-white bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed rounded-lg shadow-md transition-all min-h-[44px] flex items-center justify-center gap-2"
-          >
-            @if(loading()) {
-              <svg class="w-5 h-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              <span>Guardando...</span>
-            } @else {
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-              </svg>
-              <span>@if (isEditMode()) { Guardar Cambios } @else { Guardar Trivia }</span>
-            }
-          </button>
-        </div>
-      </div>
     </div>
-  }
 
-  <!-- Toast Notification -->
-  @if (showToast()) {
-    <div class="fixed bottom-4 right-4 z-50 animate-slide-in-up">
-      <div [class]="toastType() === 'success' ? 'bg-green-500' : toastType() === 'warning' ? 'bg-yellow-500' : 'bg-red-500'"
-           class="text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 min-w-[300px]">
-        @if (toastType() === 'success') {
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-          </svg>
-        } @else if (toastType() === 'warning') {
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-          </svg>
-        } @else {
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-          </svg>
+    <!-- Editor panel -->
+    @if (!categories.length) {
+      <div class="h-full flex flex-col items-center justify-center gap-3 p-6 text-center">
+        <button
+          type="button"
+          (click)="onAddCategoryClick()"
+          aria-label="Agregar categoría"
+          class="w-24 h-24 inline-flex items-center justify-center rounded-3xl text-white bg-indigo-600 hover:bg-indigo-700 shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+        >
+          <app-quiz-icon name="plus" class="w-12 h-12" />
+        </button>
+        @if (categories.touched && categories.invalid) {
+          <p role="alert" class="inline-flex items-center gap-1 text-sm font-medium text-red-600 dark:text-red-400">
+            <app-quiz-icon name="alert" class="w-4 h-4" />
+            Añade al menos una categoría
+          </p>
         }
-        <span class="font-medium">{{ toastMessage() }}</span>
       </div>
-    </div>
+    }
+
+    @for (q of currentList(); track $index) {
+      <div [formGroup]="q" class="max-w-2xl mx-auto w-full p-3 md:p-5 space-y-3">
+        <!-- 5 fixed values per category: no duplicate / move / delete of single questions -->
+        <app-quiz-question-toolbar
+          [label]="q.get('value')?.value + ' pts'"
+          [status]="questionStatus(q)"
+          [allowDuplicate]="false"
+          [allowMove]="false"
+          [allowDelete]="false"
+        />
+
+        <!-- Question + optional image -->
+        <div class="flex items-start gap-3">
+          <textarea
+            formControlName="question"
+            rows="4"
+            aria-label="Pregunta"
+            placeholder="Escribe la pregunta..."
+            class="flex-1 min-w-0 px-3 py-3 text-lg sm:text-xl font-semibold text-center resize-none bg-white border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
+            [class.ring-2]="q.get('question')?.invalid && q.get('question')?.touched"
+            [class.ring-red-500]="q.get('question')?.invalid && q.get('question')?.touched"
+          ></textarea>
+          <app-image-upload
+            variant="tile"
+            [previewUrl]="getPreviewUrl(selCat(), selQ())"
+            [isCompressing]="isImageCompressing(selCat(), selQ())"
+            [inputId]="'img-' + selCat() + '-' + selQ()"
+            (fileSelected)="onFileSelectedFromComponent($event, selCat(), selQ())"
+            (imageRemoved)="removeImage(selCat(), selQ())"
+          />
+        </div>
+
+        <!-- Answer -->
+        <div class="rounded-xl border-2 border-green-500 bg-green-50 dark:bg-green-900/20 p-2">
+          <textarea
+            formControlName="answer"
+            rows="3"
+            aria-label="Respuesta"
+            placeholder="Respuesta"
+            class="w-full px-2 py-1 text-base sm:text-lg font-semibold text-center resize-none bg-transparent text-green-900 dark:text-green-100 placeholder-green-700/50 dark:placeholder-green-300/50 focus:outline-none"
+            [class.ring-2]="q.get('answer')?.invalid && q.get('answer')?.touched"
+            [class.ring-red-500]="q.get('answer')?.invalid && q.get('answer')?.touched"
+          ></textarea>
+        </div>
+
+        <!-- Double points (optional, one per category) -->
+        <button
+          type="button"
+          (click)="toggleDoublePoints(selCat(), selQ().toString())"
+          [attr.aria-pressed]="isDoublePoints(selCat(), selQ())"
+          aria-label="Puntos dobles"
+          class="inline-flex items-center gap-1.5 h-10 px-4 rounded-full border-2 text-sm font-bold touch-manipulation focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+          [class]="
+            isDoublePoints(selCat(), selQ())
+              ? 'border-amber-500 bg-amber-500 text-white'
+              : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-amber-400'
+          "
+        >
+          <app-quiz-icon name="bolt" class="w-5 h-5" />
+          ×2
+        </button>
+      </div>
+    }
+  </app-quiz-editor-shell>
+
+  @if (reviewOpen()) {
+    <app-quiz-review-overlay
+      [cards]="reviewCards()"
+      [incomplete]="incompleteTotal()"
+      (select)="pickFromReview($event)"
+      (closed)="reviewOpen.set(false)"
+    />
   }
-</div>
+}
+
+<app-quiz-toast [show]="showToast()" [message]="toastMessage()" [type]="toastType()" />

@@ -6,6 +6,53 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   template: `
+    @if (variant() === 'tile') {
+      <input
+        type="file"
+        accept="image/*"
+        (change)="onFileSelected($event)"
+        [id]="inputId()"
+        class="hidden"
+        #tileInput
+      />
+      <div class="relative w-20 h-20 shrink-0">
+        <button
+          type="button"
+          (click)="tileInput.click()"
+          [disabled]="isCompressing()"
+          [attr.aria-label]="previewUrl() ? 'Cambiar imagen' : 'Agregar imagen'"
+          class="w-full h-full overflow-hidden rounded-xl flex items-center justify-center touch-manipulation focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+          [class]="previewUrl()
+            ? 'border border-gray-300 dark:border-gray-600'
+            : 'border-2 border-dashed border-gray-300 dark:border-gray-600 text-gray-400 dark:text-gray-500 hover:border-indigo-400 hover:text-indigo-500'"
+        >
+          @if (isCompressing()) {
+            <svg class="animate-spin h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          } @else if (previewUrl()) {
+            <img [src]="previewUrl()" alt="Imagen de la pregunta" class="w-full h-full object-cover" />
+          } @else {
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+          }
+        </button>
+        @if (previewUrl() && !isCompressing()) {
+          <button
+            type="button"
+            (click)="onRemoveImage()"
+            aria-label="Quitar imagen"
+            class="absolute -top-2 -right-2 w-7 h-7 flex items-center justify-center bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 before:absolute before:-inset-2 before:content-['']"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        }
+      </div>
+    } @else {
     <div class="mb-4">
       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
         {{ label() }}
@@ -69,9 +116,12 @@ import { CommonModule } from '@angular/common';
         </div>
       }
     </div>
+    }
   `,
 })
 export class ImageUploadComponent {
+  /** `tile` = compact square (tap to add/replace, x to remove) used by the quiz editors. */
+  variant = input<'default' | 'tile'>('default');
 
   label = input<string>('Imagen (Opcional)');
   helperText = input<string | undefined>(undefined);

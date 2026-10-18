@@ -1,205 +1,96 @@
-<div class="content-page container mx-auto p-4 pb-20 text-gray-800 dark:text-white">
-  <!-- Back to Dashboard Button -->
-  <app-back-button />
+@if (loadingData()) {
+  <div class="content-page h-dvh flex items-center justify-center text-gray-600 dark:text-gray-300">
+    <p>Cargando datos de la ruleta...</p>
+  </div>
+} @else {
+  <app-quiz-editor-shell
+    [titleControl]="titleControl"
+    titlePlaceholder="Ej: Ruleta del Conocimiento"
+    instructionsKey="roulette"
+    [instructions]="instructions"
+    [aiDisabled]="loading() || aiUsage.exhausted()"
+    [saving]="loading()"
+    [invalid]="rouletteForm.invalid"
+    [saveLabel]="isEditMode() ? 'Guardar cambios' : 'Guardar ruleta'"
+    [incompleteCount]="incompleteTotal()"
+    [error]="error()"
+    [current]="state.selected()"
+    [scrollKey]="state.selected()"
+    [total]="questions.length"
+    (back)="cancel()"
+    (save)="onSaveClick()"
+    (ai)="generateRouletteWithAI()"
+    (review)="state.openReview()"
+    (prev)="state.prev()"
+    (next)="state.next()"
+    (jumpIncomplete)="jumpToFirstIncomplete()"
+  >
+    <app-quiz-navigator
+      navigator
+      [items]="navItems()"
+      [selected]="state.selected()"
+      [showAdd]="false"
+      (select)="state.select($event)"
+    />
 
-  <!-- Dynamic Title -->
-  <h1 class="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6">
-    @if (isEditMode()) {
-      Editar Ruleta
-    } @else {
-      Crear Nueva Ruleta
-    }
-  </h1>
-
-  @if (loading() && isEditMode()) {
-    <p class="dark:text-gray-300">Cargando datos de la ruleta...</p>
-  } @else {
-    <!-- Main Form -->
-    <form [formGroup]="rouletteForm" (ngSubmit)="onSubmit()" (submit)="onSaveAttempt()" class="space-y-6 sm:space-y-8">
-      <!-- Roulette Title -->
-      <div>
-        <label
-          for="title"
-          class="block text-base sm:text-lg font-medium text-gray-700 dark:text-gray-300 mb-2"
-        >
-          Título de la Ruleta
-        </label>
-        <input
-          type="text"
-          id="title"
-          formControlName="title"
-          class="mt-1 block w-full px-3 py-3 sm:py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-base sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
-          placeholder="Ej: Ruleta del Conocimiento"
+    @for (q of currentList(); track $index) {
+      <div [formGroup]="q" class="max-w-2xl mx-auto w-full p-3 md:p-5 space-y-3">
+        <!-- 12 fixed slots: no add / duplicate / move / delete -->
+        <app-quiz-question-toolbar
+          [label]="'Pregunta ' + (state.selected() + 1)"
+          [status]="questionStatus(q)"
+          [badge]="q.get('value')?.value + ' pts'"
+          [badgeClass]="navItems()[state.selected()]?.badgeClass"
+          [allowDuplicate]="false"
+          [allowMove]="false"
+          [allowDelete]="false"
         />
-        @if (rouletteForm.get('title')?.invalid && rouletteForm.get('title')?.touched) {
-        <div class="text-red-600 text-sm mt-1 dark:text-red-400">
-          El título es requerido.
-        </div>
-        }
-      </div>
 
-      <!-- Instructions -->
-      <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-600 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
-        <div class="flex items-start gap-3 sm:gap-4">
-          <svg class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-          </svg>
-          <div>
-            <h3 class="text-base sm:text-lg font-semibold text-blue-800 dark:text-blue-200 mb-2">
-              Estructura de la Ruleta
-            </h3>
-            <p class="text-blue-700 dark:text-blue-300 text-sm">
-              La ruleta contiene exactamente 12 preguntas distribuidas de la siguiente manera:
-            </p>
-            <ul class="text-blue-700 dark:text-blue-300 text-sm mt-2 list-disc list-inside space-y-1">
-              <li>3 preguntas de 100 puntos</li>
-              <li>2 preguntas de 200 puntos</li>
-              <li>2 preguntas de 300 puntos</li>
-              <li>3 preguntas de 400 puntos</li>
-              <li>2 preguntas de 500 puntos</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      <!-- Questions by Value -->
-      <div formArrayName="questions" class="space-y-4 sm:space-y-6">
-        <div class="mb-4">
-          <h2 class="text-xl sm:text-2xl font-semibold">Preguntas de la Ruleta</h2>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            12 preguntas distribuidas por valor de puntos
-          </p>
+        <!-- Question + optional image -->
+        <div class="flex items-start gap-3">
+          <textarea
+            formControlName="question"
+            rows="4"
+            aria-label="Pregunta"
+            placeholder="Escribe la pregunta..."
+            class="flex-1 min-w-0 px-3 py-3 text-lg sm:text-xl font-semibold text-center resize-none bg-white border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
+            [class.ring-2]="q.get('question')?.invalid && q.get('question')?.touched"
+            [class.ring-red-500]="q.get('question')?.invalid && q.get('question')?.touched"
+          ></textarea>
+          <app-image-upload
+            variant="tile"
+            [previewUrl]="getPreviewUrl(state.selected())"
+            [isCompressing]="isImageCompressing(state.selected())"
+            [inputId]="'img-' + state.selected()"
+            (fileSelected)="onFileSelected($event, state.selected())"
+            (imageRemoved)="removeImage(state.selected())"
+          />
         </div>
 
-        @for (valueConfig of [
-          { value: 100, count: 3, color: 'bg-green-600' },
-          { value: 200, count: 2, color: 'bg-blue-600' },
-          { value: 300, count: 2, color: 'bg-purple-600' },
-          { value: 400, count: 3, color: 'bg-orange-600' },
-          { value: 500, count: 2, color: 'bg-red-600' }
-        ]; track valueConfig.value) {
-        <div class="p-3 sm:p-4 border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
-          <div class="flex items-center gap-3 mb-4">
-            <div class="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
-                 [ngClass]="valueConfig.color">
-              {{ valueConfig.value }}
-            </div>
-            <h3 class="text-lg sm:text-xl font-medium">
-              Preguntas de {{ valueConfig.value }} puntos
-              <span class="text-sm font-normal text-gray-500 dark:text-gray-400">
-                ({{ valueConfig.count }} preguntas)
-              </span>
-            </h3>
-          </div>
-
-          <!-- Questions -->
-          <div class="mt-4 space-y-4">
-            @for (questionGroup of getQuestionsByValue(valueConfig.value); track getQuestionIndex(questionGroup); let qIndex = $index) {
-              <app-question-form
-                [questionForm]="questionGroup"
-                [questionId]="getQuestionIndex(questionGroup).toString()"
-                [questionTitle]="'Pregunta ' + (qIndex + 1) + ' por ' + valueConfig.value + ' puntos'"
-                [previewUrl]="getPreviewUrl(getQuestionIndex(questionGroup))"
-                [isCompressing]="isImageCompressing(getQuestionIndex(questionGroup))"
-                [questionRows]="2"
-                [answerRows]="2"
-                (fileSelected)="onFileSelected($event, getQuestionIndex(questionGroup))"
-                (imageRemoved)="removeImage(getQuestionIndex(questionGroup))"
-              />
-            }
-          </div>
-        </div>
-      }
-    </div>
-
-      <!-- Spacer para el fixed bottom bar -->
-      <div class="h-24"></div>
-
-      @if(error()) {
-      <div
-        class="p-3 sm:p-4 mt-4 text-sm text-red-800 bg-red-100 rounded-lg dark:bg-red-900 dark:text-red-300"
-        role="alert"
-      >
-        {{ error() }}
-      </div>
-      }
-  </form>
-
-    <!-- Fixed Bottom Action Bar -->
-    <div class="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shadow-lg z-40">
-      <div class="container mx-auto px-4 py-3">
-        <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 items-stretch sm:items-center justify-between">
-          <!-- Left: Secondary Actions -->
-          <div class="flex flex-row gap-2">
-            <button
-              type="button"
-              (click)="router.navigate(['/dashboard'])"
-              class="flex-1 sm:flex-none px-4 py-2.5 font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors min-h-[44px] flex items-center justify-center gap-2"
-            >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-              </svg>
-              Cancelar
-            </button>
-            <button
-              type="button"
-              (click)="generateRouletteWithAI()"
-              [disabled]="loading() || aiUsage.exhausted()"
-              class="flex-1 sm:flex-none px-4 py-2.5 font-medium text-white bg-pink-600 hover:bg-pink-700 disabled:bg-gray-400 rounded-lg transition-colors min-h-[44px] flex items-center justify-center gap-2"
-            >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
-              </svg>
-              <span class="hidden sm:inline">Generar con IA</span>
-            </button>
-            <app-ai-usage-badge class="self-center" />
-          </div>
-
-          <!-- Right: Primary Action -->
-          <button
-            type="button"
-            (click)="onSaveClick()"
-            [disabled]="loading()"
-            class="px-6 py-2.5 font-semibold text-white bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed rounded-lg shadow-md transition-all min-h-[44px] flex items-center justify-center gap-2"
-          >
-            @if(loading()) {
-              <svg class="w-5 h-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              <span>Guardando...</span>
-            } @else {
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-              </svg>
-              <span>@if (isEditMode()) { Guardar Cambios } @else { Guardar Ruleta }</span>
-            }
-          </button>
+        <!-- Answer -->
+        <div class="rounded-xl border-2 border-green-500 bg-green-50 dark:bg-green-900/20 p-2">
+          <textarea
+            formControlName="answer"
+            rows="3"
+            aria-label="Respuesta"
+            placeholder="Respuesta"
+            class="w-full px-2 py-1 text-base sm:text-lg font-semibold text-center resize-none bg-transparent text-green-900 dark:text-green-100 placeholder-green-700/50 dark:placeholder-green-300/50 focus:outline-none"
+            [class.ring-2]="q.get('answer')?.invalid && q.get('answer')?.touched"
+            [class.ring-red-500]="q.get('answer')?.invalid && q.get('answer')?.touched"
+          ></textarea>
         </div>
       </div>
-    </div>
+    }
+  </app-quiz-editor-shell>
+
+  @if (state.reviewOpen()) {
+    <app-quiz-review-overlay
+      [cards]="reviewCards()"
+      [incomplete]="incompleteTotal()"
+      (select)="state.pick($any($event))"
+      (closed)="state.closeReview()"
+    />
   }
+}
 
-  <!-- Toast Notification -->
-  @if (showToast()) {
-    <div class="fixed bottom-4 right-4 z-50 animate-slide-in-up">
-      <div [class]="toastType() === 'success' ? 'bg-green-500' : toastType() === 'warning' ? 'bg-yellow-500' : 'bg-red-500'"
-           class="text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 min-w-[300px]">
-        @if (toastType() === 'success') {
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-          </svg>
-        } @else if (toastType() === 'warning') {
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-          </svg>
-        } @else {
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-          </svg>
-        }
-        <span class="font-medium">{{ toastMessage() }}</span>
-      </div>
-    </div>
-  }
-</div>
+<app-quiz-toast [show]="showToast()" [message]="toastMessage()" [type]="toastType()" />

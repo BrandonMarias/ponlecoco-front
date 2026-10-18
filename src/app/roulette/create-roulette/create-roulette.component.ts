@@ -1,8 +1,10 @@
-import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, signal, computed, viewChild, OnInit, OnDestroy } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import {
   FormArray,
   FormBuilder,
+  FormControl,
   FormGroup,
   ReactiveFormsModule,
   Validators,
@@ -13,15 +15,46 @@ import { finalize, switchMap, of, Observable, forkJoin, map, tap } from 'rxjs';
 import { Roulette } from '../roulette';
 import { ModalService } from '../../shared/modal.service';
 import { ImageCompressionService } from '../../shared/image-compression.service';
-import QuestionFormComponent from '../../shared/question-form/question-form.component';
-import { BackButtonComponent } from '../../shared/back-button/back-button.component';
+import { ImageUploadComponent } from '../../shared/image-upload/image-upload.component';
 import { AiUsageService } from '../../shared/ai-usage.service';
-import { AiUsageBadgeComponent } from '../../shared/ai-usage-badge/ai-usage-badge.component';
+import { QuizEditorShellComponent } from '../../shared/quiz-editor/quiz-editor-shell.component';
+import { QuizNavigatorComponent } from '../../shared/quiz-editor/quiz-navigator.component';
+import { QuizQuestionToolbarComponent } from '../../shared/quiz-editor/quiz-question-toolbar.component';
+import { QuizReviewOverlayComponent } from '../../shared/quiz-editor/quiz-review-overlay.component';
+import { QuizToastComponent } from '../../shared/quiz-editor/quiz-toast.component';
+import { QuizEditorState } from '../../shared/quiz-editor/quiz-editor-state';
+import {
+  NavItem,
+  ReviewCard,
+  firstIncompleteIndex,
+  incompleteCount,
+  missingFields,
+  questionStatus,
+  truncate,
+} from '../../shared/quiz-editor/quiz-editor.utils';
+
+/** Badge colour per point value (same palette the old screen used for the value headers). */
+const VALUE_COLORS: Record<number, string> = {
+  100: 'bg-green-600',
+  200: 'bg-blue-600',
+  300: 'bg-purple-600',
+  400: 'bg-orange-600',
+  500: 'bg-red-600',
+};
 
 @Component({
   selector: 'app-create-roulette',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, QuestionFormComponent, BackButtonComponent, AiUsageBadgeComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    ImageUploadComponent,
+    QuizEditorShellComponent,
+    QuizNavigatorComponent,
+    QuizQuestionToolbarComponent,
+    QuizReviewOverlayComponent,
+    QuizToastComponent,
+  ],
   templateUrl: './create-roulette.component.html',
 })
 export default class CreateRouletteComponent implements OnInit, OnDestroy {
@@ -33,8 +66,13 @@ export default class CreateRouletteComponent implements OnInit, OnDestroy {
   private imageCompressionService = inject(ImageCompressionService);
   aiUsage = inject(AiUsageService);
 
+  readonly questionStatus = questionStatus;
+  private shell = viewChild(QuizEditorShellComponent);
+
   rouletteForm: FormGroup;
   loading = signal(false);
+  /** True only while the roulette being edited is fetched (the editor stays mounted while saving). */
+  loadingData = signal(false);
   error = signal<string | null>(null);
   compressingImages = signal<Set<string>>(new Set());
   isEditMode = signal(false);
@@ -45,6 +83,65 @@ export default class CreateRouletteComponent implements OnInit, OnDestroy {
   showToast = signal(false);
   toastMessage = signal('');
   toastType = signal<'success' | 'error' | 'warning'>('success');
+
+  readonly instructions = [
+    '12 preguntas: 3×100, 2×200, 2×300, 3×400, 2×500',
+    'Cada una con pregunta y respuesta',
+    'La imagen es opcional',
+  ];
+
+  // Editor state
+  state = new QuizEditorState(() => this.questions.length);
+  /** Bumped on every form change so the computed views below re-evaluate. */
+  private version = signal(0);
+
+  navItems = computed<NavItem[]>(() => {
+    this.version();
+    this.compressingImages();
+    return this.questions.controls.map((q) => {
+      const value: number = q.get('value')?.value;
+      return {
+        label: truncate(q.get('question')?.value, 80),
+        status: questionStatus(q),
+        hasImage: !!this.imagePreviewOf(q as FormGroup),
+        badge: String(value),
+        badgeClass: VALUE_COLORS[value],
+        group: `${value} pts`,
+      };
+    });
+  });
+
+  incompleteTotal = computed(() => {
+    this.version();
+    return incompleteCount(this.questions.controls);
+  });
+
+  /** One-element list that drives the editor panel (rebinds the form group when the selection changes). */
+  currentList = computed<FormGroup[]>(() => {
+    this.version();
+    const group = this.questions.at(this.state.selected()) as FormGroup | undefined;
+    return group ? [group] : [];
+  });
+
+  reviewCards = computed<ReviewCard[]>(() => {
+    this.version();
+    return this.questions.controls.map((q, i) => {
+      const value: number = q.get('value')?.value;
+      const answer: string = q.get('answer')?.value ?? '';
+      return {
+        key: i,
+        number: String(i + 1),
+        question: truncate(q.get('question')?.value, 140),
+        answers: [{ text: truncate(answer, 80), correct: !!answer.trim() }],
+        imageUrl: this.imagePreviewOf(q as FormGroup),
+        complete: questionStatus(q) === 'complete',
+        missing: missingFields(q, { question: 'Pregunta', answer: 'Respuesta' }),
+        badge: String(value),
+        badgeClass: VALUE_COLORS[value],
+        group: `${value} pts`,
+      };
+    });
+  });
 
   // Predefined question structure for roulette
   private questionValues = [
@@ -63,6 +160,9 @@ export default class CreateRouletteComponent implements OnInit, OnDestroy {
         [Validators.required, Validators.minLength(12)]
       ),
     });
+    this.rouletteForm.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => this.version.update((v) => v + 1));
   }
 
   ngOnInit(): void {
@@ -73,6 +173,7 @@ export default class CreateRouletteComponent implements OnInit, OnDestroy {
           if (this.rouletteId) {
             this.isEditMode.set(true);
             this.loading.set(true);
+            this.loadingData.set(true);
             return this.rouletteService.getRouletteById(this.rouletteId);
           }
           return of(null);
@@ -83,11 +184,13 @@ export default class CreateRouletteComponent implements OnInit, OnDestroy {
           if (roulette) {
             this.patchForm(roulette);
             this.loading.set(false);
+            this.loadingData.set(false);
           }
         },
         error: (err) => {
           this.error.set('Failed to load roulette data.');
           this.loading.set(false);
+          this.loadingData.set(false);
           console.error(err);
         },
       });
@@ -118,10 +221,7 @@ export default class CreateRouletteComponent implements OnInit, OnDestroy {
       title: roulette.title,
     });
 
-    // Clear existing questions
-    while (this.questions.length !== 0) {
-      this.questions.removeAt(0);
-    }
+    this.clearQuestions();
 
     // Add questions from roulette
     roulette.questions.forEach((q) => {
@@ -143,20 +243,27 @@ export default class CreateRouletteComponent implements OnInit, OnDestroy {
         this.questions.push(defaultQuestions[i]);
       }
     }
+    this.state.select(0);
   }
 
   get questions() {
     return this.rouletteForm.get('questions') as FormArray;
   }
 
-  getQuestionsByValue(value: number): FormGroup[] {
-    return this.questions.controls.filter(control =>
-      control.get('value')?.value === value
-    ) as FormGroup[];
+  get titleControl() {
+    return this.rouletteForm.get('title') as FormControl;
   }
 
-  getQuestionIndex(questionGroup: FormGroup): number {
-    return this.questions.controls.indexOf(questionGroup);
+  private imagePreviewOf(group: FormGroup): string | null {
+    return this.previewUrls.get(group) || group.get('imageUrl')?.value || null;
+  }
+
+  private clearQuestions() {
+    this.previewUrls.forEach(url => URL.revokeObjectURL(url));
+    this.previewUrls.clear();
+    while (this.questions.length !== 0) {
+      this.questions.removeAt(0);
+    }
   }
 
   async onFileSelected(eventOrFile: Event | File, questionIndex: number) {
@@ -224,6 +331,7 @@ export default class CreateRouletteComponent implements OnInit, OnDestroy {
         imageFile: result.file,
         imageUrl: null, // Clear existing URL when a new file is selected
       });
+      questionGroup.markAsDirty();
 
     } catch (error) {
       // Remove from compressing set on error
@@ -248,11 +356,11 @@ export default class CreateRouletteComponent implements OnInit, OnDestroy {
       imageFile: null,
       imageUrl: null,
     });
+    questionGroup.markAsDirty();
   }
 
   getPreviewUrl(questionIndex: number): string | null {
-    const questionGroup = this.questions.at(questionIndex) as FormGroup;
-    return this.previewUrls.get(questionGroup) || null;
+    return this.imagePreviewOf(this.questions.at(questionIndex) as FormGroup);
   }
 
   isImageCompressing(questionIndex: number): boolean {
@@ -281,10 +389,7 @@ export default class CreateRouletteComponent implements OnInit, OnDestroy {
               title: aiResponse.title
             });
 
-            // Clear existing questions
-            while (this.questions.length !== 0) {
-              this.questions.removeAt(0);
-            }
+            this.clearQuestions();
 
             // Add AI generated questions
             aiResponse.questions.forEach((q) => {
@@ -307,6 +412,8 @@ export default class CreateRouletteComponent implements OnInit, OnDestroy {
               }
             }
 
+            this.rouletteForm.markAsDirty();
+            this.state.select(0);
             this.loading.set(false);
             this.aiUsage.load();
           },
@@ -427,15 +534,7 @@ export default class CreateRouletteComponent implements OnInit, OnDestroy {
     }, 3000);
   }
 
-  onSaveAttempt(event?: Event) {
-    if (!this.rouletteForm.valid) {
-      event?.preventDefault();
-      this.showToastNotification('Revise el formulario', 'warning');
-      return false;
-    }
-    return true;
-  }
-
+  /** Save button: invalid forms jump to the first incomplete item instead of submitting. */
   onSaveClick() {
     if (this.loading()) {
       return;
@@ -444,9 +543,34 @@ export default class CreateRouletteComponent implements OnInit, OnDestroy {
     if (!this.rouletteForm.valid) {
       this.showToastNotification('⚠️ Por favor, complete todos los campos requeridos', 'warning');
       this.rouletteForm.markAllAsTouched();
+      this.jumpToFirstIncomplete();
       return;
     }
 
     this.onSubmit();
+  }
+
+  jumpToFirstIncomplete() {
+    if (this.titleControl.invalid) {
+      this.shell()?.focusTitle();
+      return;
+    }
+    const index = firstIncompleteIndex(this.questions.controls);
+    if (index >= 0) {
+      this.state.select(index);
+    }
+  }
+
+  async cancel() {
+    if (this.rouletteForm.dirty) {
+      const confirmed = await this.modalService.open({
+        title: 'Descartar Cambios',
+        message: '¿Estás seguro de que quieres salir? Los cambios no guardados se perderán.'
+      });
+      if (!confirmed) {
+        return;
+      }
+    }
+    this.router.navigateByUrl('/dashboard');
   }
 }

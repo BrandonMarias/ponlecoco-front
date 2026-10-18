@@ -1,245 +1,129 @@
-<div class="content-page container mx-auto p-4 pb-20 text-gray-800 dark:text-white">
-  <!-- Back to Dashboard Button -->
-  <app-back-button />
+@if (loadingData()) {
+  <div class="content-page h-dvh flex items-center justify-center text-gray-600 dark:text-gray-300">
+    <p>Cargando datos de la trivia...</p>
+  </div>
+} @else {
+  <app-quiz-editor-shell
+    [titleControl]="titleControl"
+    titlePlaceholder="Ej: Cultura General"
+    logo="/media/img/piensarapido.png"
+    instructionsKey="quick-thinking"
+    [instructions]="instructions"
+    [aiDisabled]="loading() || aiUsage.exhausted()"
+    [saving]="loading()"
+    [invalid]="quickThinkingForm.invalid"
+    [saveLabel]="isEditMode() ? 'Guardar cambios' : 'Guardar trivia'"
+    [incompleteCount]="incompleteTotal()"
+    [current]="state.selected()"
+    [scrollKey]="state.selected()"
+    [total]="questions.length"
+    (back)="cancel()"
+    (save)="onSaveClick()"
+    (ai)="generateQuestionsWithAI()"
+    (review)="state.openReview()"
+    (prev)="state.prev()"
+    (next)="state.next()"
+    (jumpIncomplete)="jumpToFirstIncomplete()"
+  >
+    <app-quiz-navigator
+      navigator
+      [items]="navItems()"
+      [selected]="state.selected()"
+      [canAdd]="questions.length < MAX_QUESTIONS"
+      [counter]="questions.length + '/' + MAX_QUESTIONS"
+      (select)="state.select($event)"
+      (add)="addQuestion()"
+    />
 
-  <!-- Dynamic Title -->
-  <h1 class="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 flex items-center gap-3">
-    <img src="/media/img/piensarapido.png" alt="Piensa Rápido" class="w-10 h-10 sm:w-12 sm:h-12">
-    @if (isEditMode()) {
-      Editar Piensa Rápido
-    } @else {
-      Crear Piensa Rápido
-    }
-  </h1>
-
-  @if (loading() && isEditMode()) {
-    <p class="dark:text-gray-300">Cargando datos de la trivia...</p>
-  } @else {
-    <!-- Main Form -->
-    <form [formGroup]="quickThinkingForm" (ngSubmit)="onSubmit()" class="space-y-6 sm:space-y-8">
-      <!-- Title -->
-      <div>
-        <label
-          for="title"
-          class="block text-base sm:text-lg font-medium text-gray-700 dark:text-gray-300 mb-2"
-        >
-          Título de la Trivia
-        </label>
-        <input
-          type="text"
-          id="title"
-          formControlName="title"
-          class="mt-1 block w-full px-3 py-3 sm:py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-base sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200"
-          placeholder="Ej: Cultura General"
+    @for (q of currentList(); track $index) {
+      <div [formGroup]="q" class="max-w-2xl mx-auto w-full p-3 md:p-5 space-y-3">
+        <app-quiz-question-toolbar
+          [label]="'Pregunta ' + (state.selected() + 1)"
+          [status]="questionStatus(q)"
+          [index]="state.selected()"
+          [total]="questions.length"
+          [canDuplicate]="questions.length < MAX_QUESTIONS"
+          [canDelete]="questions.length > 1"
+          (duplicate)="duplicateQuestion(state.selected())"
+          (moveUp)="moveQuestion(state.selected(), -1)"
+          (moveDown)="moveQuestion(state.selected(), 1)"
+          (remove)="removeQuestion(state.selected())"
         />
-        @if (quickThinkingForm.get('title')?.invalid && quickThinkingForm.get('title')?.touched) {
-        <div class="text-red-600 text-sm mt-1 dark:text-red-400">
-          El título es requerido.
-        </div>
-        }
-      </div>
 
-      <!-- Instructions -->
-      <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-600 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
-        <div class="flex items-start gap-3 sm:gap-4">
-          <svg class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-          </svg>
-          <div>
-            <h3 class="text-base sm:text-lg font-semibold text-blue-800 dark:text-blue-200 mb-2">
-              Instrucciones
-            </h3>
-            <ul class="text-blue-700 dark:text-blue-300 text-sm mt-2 list-disc list-inside space-y-1">
-              <li>Cada pregunta debe tener exactamente 4 opciones de respuesta</li>
-              <li>Selecciona cuál es la respuesta correcta (índice 0-3)</li>
-              <li>Puedes agregar una imagen opcional a cada pregunta</li>
-              <li>Añade tantas preguntas como necesites</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      <!-- Questions -->
-      <div formArrayName="questions" class="space-y-6">
-        <div class="mb-4">
-          <h2 class="text-xl sm:text-2xl font-semibold">Preguntas</h2>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            {{ questions.length }} / {{ MAX_QUESTIONS }} preguntas
-          </p>
+        <!-- Question + optional image -->
+        <div class="flex items-start gap-3">
+          <textarea
+            formControlName="question"
+            rows="4"
+            aria-label="Pregunta"
+            placeholder="Escribe la pregunta..."
+            class="flex-1 min-w-0 px-3 py-3 text-lg sm:text-xl font-semibold text-center resize-none bg-white border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
+            [class.ring-2]="q.get('question')?.invalid && q.get('question')?.touched"
+            [class.ring-red-500]="q.get('question')?.invalid && q.get('question')?.touched"
+          ></textarea>
+          <app-image-upload
+            variant="tile"
+            [previewUrl]="getImagePreview(state.selected())"
+            [isCompressing]="isCompressing(q)"
+            [inputId]="'image-' + state.selected()"
+            (fileSelected)="onImageSelected($event, state.selected())"
+            (imageRemoved)="removeImage(state.selected())"
+          />
         </div>
 
-        @for (question of questions.controls; track $index) {
-          <div [formGroupName]="$index" class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 sm:p-6 border border-gray-200 dark:border-gray-700">
-            <!-- Question Header -->
-            <div class="flex justify-between items-start mb-4">
-              <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                Pregunta {{ $index + 1 }}
-              </h3>
-              <button
-                type="button"
-                (click)="removeQuestion($index)"
-                class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
-                [disabled]="questions.length <= 1"
-              >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                </svg>
-              </button>
-            </div>
-
-            <!-- Question Text -->
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Pregunta *
-              </label>
+        <!-- Options: tap the check to mark the correct one -->
+        <div formArrayName="options" role="radiogroup" aria-label="Respuesta correcta" class="grid grid-cols-2 gap-2 sm:gap-3">
+          @for (opt of optionsOf(q); track $index; let o = $index) {
+            <div
+              class="relative flex flex-col gap-1 p-2 min-h-32 rounded-xl text-white shadow-sm transition-shadow ring-offset-2 dark:ring-offset-gray-900 focus-within:ring-4 focus-within:ring-indigo-400"
+              [class]="optionTiles[o].tile"
+              [class.ring-4]="q.get('correctAnswerIndex')?.value === o"
+              [class.ring-gray-900]="q.get('correctAnswerIndex')?.value === o"
+              [class.dark:ring-white]="q.get('correctAnswerIndex')?.value === o"
+            >
+              <div class="flex items-center justify-between">
+                <app-quiz-icon [name]="optionTiles[o].shape" class="w-6 h-6 ml-1 text-white/90" />
+                <button
+                  type="button"
+                  role="radio"
+                  [attr.aria-checked]="q.get('correctAnswerIndex')?.value === o"
+                  [attr.aria-label]="'Opción ' + (o + 1) + ' (' + optionTiles[o].color + ')' + (q.get('correctAnswerIndex')?.value === o ? ': correcta' : ': marcar como correcta')"
+                  (click)="setCorrectAnswer(q, o)"
+                  class="w-10 h-10 shrink-0 inline-flex items-center justify-center rounded-full border-2 transition-colors touch-manipulation focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                  [class]="
+                    q.get('correctAnswerIndex')?.value === o
+                      ? 'bg-white border-white text-green-600'
+                      : 'bg-white/10 border-white/80 text-transparent hover:bg-white/25'
+                  "
+                >
+                  <app-quiz-icon name="check" class="w-6 h-6" />
+                </button>
+              </div>
               <textarea
-                formControlName="question"
-                rows="2"
-                class="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
-                placeholder="Escribe la pregunta aquí..."
+                [formControlName]="o"
+                rows="3"
+                [attr.aria-label]="'Opción ' + (o + 1)"
+                placeholder="Opción {{ o + 1 }}"
+                class="flex-1 w-full px-1 bg-transparent resize-none text-base font-semibold text-white placeholder-white/70 focus:outline-none"
               ></textarea>
-              @if (question.get('question')?.invalid && question.get('question')?.touched) {
-                <div class="text-red-600 text-sm mt-1 dark:text-red-400">
-                  La pregunta es requerida.
-                </div>
+              @if (opt.invalid && opt.touched) {
+                <app-quiz-icon name="alert" class="absolute bottom-2 right-2 w-5 h-5" />
               }
             </div>
-
-            <!-- Options -->
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Opciones de Respuesta *
-              </label>
-              <div formArrayName="options" class="space-y-2">
-                @for (option of getOptions($index).controls; track optIdx; let optIdx = $index) {
-                  <div class="flex items-center gap-2">
-                    <span class="flex-shrink-0 w-6 h-6 flex items-center justify-center bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 rounded-full text-sm font-medium">
-                      {{ optIdx + 1 }}
-                    </span>
-                    <input
-                      type="text"
-                      [formControlName]="optIdx"
-                      class="flex-1 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
-                      placeholder="Opción {{ optIdx + 1 }}"
-                    />
-                  </div>
-                }
-              </div>
-            </div>
-
-            <!-- Correct Answer Index -->
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Respuesta Correcta *
-              </label>
-              <select
-                formControlName="correctAnswerIndex"
-                class="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
-              >
-                <option [value]="0">Opción 1</option>
-                <option [value]="1">Opción 2</option>
-                <option [value]="2">Opción 3</option>
-                <option [value]="3">Opción 4</option>
-              </select>
-            </div>
-
-            <!-- Image Upload -->
-            <app-image-upload
-              [label]="'Imagen (Opcional)'"
-              [helperText]="'Formatos soportados: JPG, PNG, GIF, etc.'"
-              [previewUrl]="getImagePreview($index)"
-              [isCompressing]="compressingImages().has($index)"
-              [inputId]="'image-' + $index"
-              (fileSelected)="onImageSelected($event, $index)"
-              (imageRemoved)="removeImage($index)"
-            ></app-image-upload>
-          </div>
-        }
-      </div>
-
-      <!-- Spacer para el fixed bottom bar -->
-      <div class="h-24"></div>
-    </form>
-
-    <!-- Fixed Bottom Action Bar -->
-    <div class="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shadow-lg z-40">
-      <div class="container mx-auto px-4 py-3">
-        <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 items-stretch sm:items-center justify-between">
-          <!-- Left: Secondary Actions -->
-          <div class="flex flex-row gap-2">
-            <button
-              type="button"
-              (click)="cancel()"
-              class="flex-1 sm:flex-none px-4 py-2.5 font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors min-h-[44px] flex items-center justify-center gap-2"
-            >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-              </svg>
-              Cancelar
-            </button>
-            <button
-              type="button"
-              (click)="addQuestion()"
-              [disabled]="questions.length >= MAX_QUESTIONS"
-              class="flex-1 sm:flex-none px-4 py-2.5 font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 rounded-lg transition-colors min-h-[44px] flex items-center justify-center gap-2"
-            >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-              </svg>
-              <span class="hidden sm:inline">Agregar</span>
-            </button>
-            <button
-              type="button"
-              (click)="generateQuestionsWithAI()"
-              [disabled]="loading() || aiUsage.exhausted()"
-              class="flex-1 sm:flex-none px-4 py-2.5 font-medium text-white bg-pink-600 hover:bg-pink-700 disabled:bg-gray-400 rounded-lg transition-colors min-h-[44px] flex items-center justify-center gap-2"
-            >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
-              </svg>
-              <span class="hidden sm:inline">IA</span>
-            </button>
-            <app-ai-usage-badge class="self-center" />
-          </div>
-
-          <!-- Right: Primary Action -->
-          <button
-            type="button"
-            (click)="onSubmit()"
-            [disabled]="quickThinkingForm.invalid || loading()"
-            class="px-6 py-2.5 font-semibold text-white bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed rounded-lg shadow-md transition-all min-h-[44px] flex items-center justify-center gap-2"
-          >
-            @if (loading()) {
-              <svg class="w-5 h-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              <span>Guardando...</span>
-            } @else {
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-              </svg>
-              <span>@if (isEditMode()) { Guardar Cambios } @else { Guardar Trivia }</span>
-            }
-          </button>
+          }
         </div>
       </div>
-    </div>
-  }
+    }
+  </app-quiz-editor-shell>
 
-  <!-- Toast Notification -->
-  @if (showToast()) {
-    <div class="fixed bottom-4 right-4 z-50 animate-slide-up">
-      <div
-        [class]="
-          'px-4 py-3 rounded-lg shadow-lg ' +
-          (toastType() === 'success' ? 'bg-green-500 text-white' :
-           toastType() === 'error' ? 'bg-red-500 text-white' :
-           'bg-yellow-500 text-white')
-        "
-      >
-        {{ toastMessage() }}
-      </div>
-    </div>
+  @if (state.reviewOpen()) {
+    <app-quiz-review-overlay
+      [cards]="reviewCards()"
+      [incomplete]="incompleteTotal()"
+      (select)="state.pick($any($event))"
+      (closed)="state.closeReview()"
+    />
   }
-</div>
+}
+
+<app-quiz-toast [show]="showToast()" [message]="toastMessage()" [type]="toastType()" />

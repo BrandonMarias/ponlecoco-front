@@ -1,8 +1,11 @@
-import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, signal, computed, viewChild, OnInit, OnDestroy } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import {
+  AbstractControl,
   FormArray,
   FormBuilder,
+  FormControl,
   FormGroup,
   ReactiveFormsModule,
   Validators,
@@ -14,14 +17,47 @@ import { QuickThinking } from '../quick-thinking';
 import { ModalService } from '../../shared/modal.service';
 import { ImageCompressionService } from '../../shared/image-compression.service';
 import { ImageUploadComponent } from '../../shared/image-upload/image-upload.component';
-import { BackButtonComponent } from '../../shared/back-button/back-button.component';
 import { AiUsageService } from '../../shared/ai-usage.service';
-import { AiUsageBadgeComponent } from '../../shared/ai-usage-badge/ai-usage-badge.component';
+import { QuizEditorShellComponent } from '../../shared/quiz-editor/quiz-editor-shell.component';
+import { QuizNavigatorComponent } from '../../shared/quiz-editor/quiz-navigator.component';
+import { QuizQuestionToolbarComponent } from '../../shared/quiz-editor/quiz-question-toolbar.component';
+import { QuizReviewOverlayComponent } from '../../shared/quiz-editor/quiz-review-overlay.component';
+import { QuizToastComponent } from '../../shared/quiz-editor/quiz-toast.component';
+import { QuizIconComponent, QuizIconName } from '../../shared/quiz-editor/quiz-icon.component';
+import { QuizEditorState } from '../../shared/quiz-editor/quiz-editor-state';
+import {
+  NavItem,
+  ReviewCard,
+  firstIncompleteIndex,
+  incompleteCount,
+  insertAfter,
+  missingFields,
+  moveItem,
+  questionStatus,
+  removeItem,
+  truncate,
+} from '../../shared/quiz-editor/quiz-editor.utils';
+
+interface OptionTile {
+  tile: string;
+  shape: QuizIconName;
+  color: string;
+}
 
 @Component({
   selector: 'app-create-quick-thinking',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, ImageUploadComponent, BackButtonComponent, AiUsageBadgeComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    ImageUploadComponent,
+    QuizEditorShellComponent,
+    QuizNavigatorComponent,
+    QuizQuestionToolbarComponent,
+    QuizReviewOverlayComponent,
+    QuizToastComponent,
+    QuizIconComponent,
+  ],
   templateUrl: './create-quick-thinking.component.html',
 })
 export default class CreateQuickThinkingComponent implements OnInit, OnDestroy {
@@ -33,21 +69,83 @@ export default class CreateQuickThinkingComponent implements OnInit, OnDestroy {
   private imageCompressionService = inject(ImageCompressionService);
   aiUsage = inject(AiUsageService);
 
+  readonly questionStatus = questionStatus;
+  private shell = viewChild(QuizEditorShellComponent);
+
   quickThinkingForm: FormGroup;
   loading = signal(false);
+  /** True only while the quiz being edited is fetched (the editor itself stays mounted while saving). */
+  loadingData = signal(false);
   error = signal<string | null>(null);
-  compressingImages = signal<Set<number>>(new Set());
+  compressingImages = signal<Set<AbstractControl>>(new Set());
   isEditMode = signal(false);
   private quickThinkingId: string | null = null;
-  private previewUrls = new Map<number, string>();
+  // Keyed by question group so previews survive reordering / deleting questions.
+  private previewUrls = new Map<AbstractControl, string>();
 
   // Constants
   readonly MAX_QUESTIONS = 30;
+  readonly instructions = [
+    '4 opciones por pregunta',
+    'Toca ✓ en la opción correcta',
+    'La imagen es opcional',
+    'Hasta 30 preguntas',
+  ];
+  readonly optionTiles: OptionTile[] = [
+    { tile: 'bg-red-600', shape: 'triangle', color: 'rojo' },
+    { tile: 'bg-blue-600', shape: 'diamond', color: 'azul' },
+    { tile: 'bg-amber-600', shape: 'circle', color: 'amarillo' },
+    { tile: 'bg-green-600', shape: 'square', color: 'verde' },
+  ];
 
   // Toast notification
   showToast = signal(false);
   toastMessage = signal('');
   toastType = signal<'success' | 'error' | 'warning'>('success');
+
+  // Editor state
+  state = new QuizEditorState(() => this.questions.length);
+  /** Bumped on every form change so the computed views below re-evaluate. */
+  private version = signal(0);
+
+  navItems = computed<NavItem[]>(() => {
+    this.version();
+    this.compressingImages();
+    return this.questions.controls.map((q) => ({
+      label: truncate(q.get('question')?.value, 80),
+      status: questionStatus(q),
+      hasImage: !!this.imagePreviewOf(q as FormGroup),
+    }));
+  });
+
+  incompleteTotal = computed(() => {
+    this.version();
+    return incompleteCount(this.questions.controls);
+  });
+
+  /** One-element list that drives the editor panel (rebinds the form group when the selection changes). */
+  currentList = computed<FormGroup[]>(() => {
+    this.version();
+    const group = this.questions.at(this.state.selected()) as FormGroup | undefined;
+    return group ? [group] : [];
+  });
+
+  reviewCards = computed<ReviewCard[]>(() => {
+    this.version();
+    return this.questions.controls.map((q, i) => {
+      const options: string[] = q.get('options')?.value ?? [];
+      const correct = q.get('correctAnswerIndex')?.value;
+      return {
+        key: i,
+        number: String(i + 1),
+        question: truncate(q.get('question')?.value, 140),
+        answers: options.map((text, idx) => ({ text: truncate(text, 60), correct: idx === correct })),
+        imageUrl: this.imagePreviewOf(q as FormGroup),
+        complete: questionStatus(q) === 'complete',
+        missing: missingFields(q, { question: 'Pregunta', options: 'Opción', correctAnswerIndex: 'Correcta' }),
+      };
+    });
+  });
 
   constructor() {
     this.quickThinkingForm = this.fb.group({
@@ -57,6 +155,9 @@ export default class CreateQuickThinkingComponent implements OnInit, OnDestroy {
         [Validators.required, Validators.minLength(1)]
       ),
     });
+    this.quickThinkingForm.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => this.version.update((v) => v + 1));
   }
 
   ngOnInit(): void {
@@ -67,6 +168,7 @@ export default class CreateQuickThinkingComponent implements OnInit, OnDestroy {
           if (this.quickThinkingId) {
             this.isEditMode.set(true);
             this.loading.set(true);
+            this.loadingData.set(true);
             return this.quickThinkingService.getQuickThinkingById(this.quickThinkingId);
           }
           return of(null);
@@ -77,11 +179,13 @@ export default class CreateQuickThinkingComponent implements OnInit, OnDestroy {
           if (quickThinking) {
             this.patchForm(quickThinking);
             this.loading.set(false);
+            this.loadingData.set(false);
           }
         },
         error: (err) => {
           this.error.set('Error al cargar la trivia.');
           this.loading.set(false);
+          this.loadingData.set(false);
           console.error(err);
         },
       });
@@ -111,10 +215,7 @@ export default class CreateQuickThinkingComponent implements OnInit, OnDestroy {
       title: quickThinking.title,
     });
 
-    // Clear existing questions
-    while (this.questions.length !== 0) {
-      this.questions.removeAt(0);
-    }
+    this.clearQuestions();
 
     // Add questions from quick thinking
     quickThinking.questions.forEach((q) => {
@@ -135,10 +236,19 @@ export default class CreateQuickThinkingComponent implements OnInit, OnDestroy {
       });
       this.questions.push(questionGroup);
     });
+    this.state.select(0);
   }
 
   get questions() {
     return this.quickThinkingForm.get('questions') as FormArray;
+  }
+
+  get titleControl() {
+    return this.quickThinkingForm.get('title') as FormControl;
+  }
+
+  optionsOf(group: FormGroup): FormControl[] {
+    return (group.get('options') as FormArray).controls as FormControl[];
   }
 
   getOptions(questionIndex: number): FormArray {
@@ -151,6 +261,30 @@ export default class CreateQuickThinkingComponent implements OnInit, OnDestroy {
       return;
     }
     this.questions.push(this.createQuestionGroup());
+    this.questions.markAsDirty();
+    this.state.select(this.questions.length - 1);
+  }
+
+  duplicateQuestion(index: number) {
+    if (this.questions.length >= this.MAX_QUESTIONS) {
+      this.showToastNotification(`No se pueden agregar más de ${this.MAX_QUESTIONS} preguntas`, 'warning');
+      return;
+    }
+    const source = this.questions.at(index) as FormGroup;
+    const copy = this.createQuestionGroup();
+    copy.patchValue(source.getRawValue());
+
+    // A not-yet-uploaded image gets its own preview URL so each question can be edited/removed independently.
+    const file: File | null = source.get('imageFile')?.value;
+    if (file && this.previewUrls.has(source)) {
+      this.previewUrls.set(copy, URL.createObjectURL(file));
+    }
+
+    this.state.select(insertAfter(this.questions, index, copy));
+  }
+
+  moveQuestion(index: number, delta: -1 | 1) {
+    this.state.select(moveItem(this.questions, index, delta));
   }
 
   async removeQuestion(index: number) {
@@ -165,15 +299,15 @@ export default class CreateQuickThinkingComponent implements OnInit, OnDestroy {
     });
 
     if (confirmed) {
-      // Clean up preview URL if exists
-      const previewUrl = this.previewUrls.get(index);
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl);
-        this.previewUrls.delete(index);
-      }
-
-      this.questions.removeAt(index);
+      this.revokePreview(this.questions.at(index) as FormGroup);
+      this.state.afterRemove(removeItem(this.questions, index));
     }
+  }
+
+  setCorrectAnswer(group: FormGroup, optionIndex: number) {
+    const control = group.get('correctAnswerIndex')!;
+    control.setValue(optionIndex);
+    control.markAsDirty();
   }
 
   async onImageSelected(file: File, questionIndex: number) {
@@ -189,16 +323,16 @@ export default class CreateQuickThinkingComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const questionGroup = this.questions.at(questionIndex);
+    const questionGroup = this.questions.at(questionIndex) as FormGroup;
 
     // Clean up previous preview URL
-    const oldPreviewUrl = this.previewUrls.get(questionIndex);
+    const oldPreviewUrl = this.previewUrls.get(questionGroup);
     if (oldPreviewUrl) {
       URL.revokeObjectURL(oldPreviewUrl);
     }
 
     // Compress image
-    this.compressingImages.update(set => new Set(set).add(questionIndex));
+    this.compressingImages.update(set => new Set(set).add(questionGroup));
 
     try {
       const result = await this.imageCompressionService.compressImage(file);
@@ -206,7 +340,7 @@ export default class CreateQuickThinkingComponent implements OnInit, OnDestroy {
       // Remove from compressing set
       this.compressingImages.update(set => {
         const newSet = new Set(set);
-        newSet.delete(questionIndex);
+        newSet.delete(questionGroup);
         return newSet;
       });
 
@@ -220,20 +354,21 @@ export default class CreateQuickThinkingComponent implements OnInit, OnDestroy {
 
       // Create preview URL with the compressed file
       const previewUrl = URL.createObjectURL(result.file);
-      this.previewUrls.set(questionIndex, previewUrl);
+      this.previewUrls.set(questionGroup, previewUrl);
 
       // Store the compressed file (not the result object)
       questionGroup.patchValue({
         imageFile: result.file,
         imageUrl: null // Clear existing URL when a new file is selected
       });
+      questionGroup.markAsDirty();
     } catch (error) {
       console.error('Error compressing image:', error);
 
       // Remove from compressing set on error
       this.compressingImages.update(set => {
         const newSet = new Set(set);
-        newSet.delete(questionIndex);
+        newSet.delete(questionGroup);
         return newSet;
       });
 
@@ -243,31 +378,70 @@ export default class CreateQuickThinkingComponent implements OnInit, OnDestroy {
   }
 
   removeImage(questionIndex: number) {
-    const questionGroup = this.questions.at(questionIndex);
+    const questionGroup = this.questions.at(questionIndex) as FormGroup;
     questionGroup.patchValue({
       imageUrl: null,
       imageFile: null
     });
-
-    // Clean up preview URL
-    const previewUrl = this.previewUrls.get(questionIndex);
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-      this.previewUrls.delete(questionIndex);
-    }
+    questionGroup.markAsDirty();
+    this.revokePreview(questionGroup);
   }
 
   getImagePreview(questionIndex: number): string | null {
-    const questionGroup = this.questions.at(questionIndex);
-    const previewUrl = this.previewUrls.get(questionIndex);
-    const existingImageUrl = questionGroup.get('imageUrl')?.value;
+    return this.imagePreviewOf(this.questions.at(questionIndex) as FormGroup);
+  }
 
-    return previewUrl || existingImageUrl || null;
+  isCompressing(group: FormGroup): boolean {
+    return this.compressingImages().has(group);
   }
 
   hasImageFile(questionIndex: number): boolean {
     const questionGroup = this.questions.at(questionIndex);
     return !!questionGroup.get('imageFile')?.value;
+  }
+
+  private imagePreviewOf(group: FormGroup): string | null {
+    return this.previewUrls.get(group) || group.get('imageUrl')?.value || null;
+  }
+
+  private revokePreview(group: FormGroup) {
+    const previewUrl = this.previewUrls.get(group);
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      this.previewUrls.delete(group);
+    }
+  }
+
+  private clearQuestions() {
+    this.questions.controls.forEach(q => this.revokePreview(q as FormGroup));
+    while (this.questions.length !== 0) {
+      this.questions.removeAt(0);
+    }
+  }
+
+  /** Save button: invalid forms jump to the first incomplete item instead of submitting. */
+  onSaveClick() {
+    if (this.loading()) {
+      return;
+    }
+    if (this.quickThinkingForm.invalid) {
+      this.quickThinkingForm.markAllAsTouched();
+      this.jumpToFirstIncomplete();
+      this.showToastNotification('Por favor completa todos los campos requeridos', 'error');
+      return;
+    }
+    this.onSubmit();
+  }
+
+  jumpToFirstIncomplete() {
+    if (this.titleControl.invalid) {
+      this.shell()?.focusTitle();
+      return;
+    }
+    const index = firstIncompleteIndex(this.questions.controls);
+    if (index >= 0) {
+      this.state.select(index);
+    }
   }
 
   async onSubmit() {
@@ -398,10 +572,7 @@ export default class CreateQuickThinkingComponent implements OnInit, OnDestroy {
           this.quickThinkingForm.patchValue({ title: response.title });
         }
 
-        // Clear existing questions
-        while (this.questions.length !== 0) {
-          this.questions.removeAt(0);
-        }
+        this.clearQuestions();
 
         // Add generated questions
         response.questions.forEach((q: any) => {
@@ -423,6 +594,8 @@ export default class CreateQuickThinkingComponent implements OnInit, OnDestroy {
           this.questions.push(questionGroup);
         });
 
+        this.quickThinkingForm.markAsDirty();
+        this.state.select(0);
         this.showToastNotification('✅ Preguntas generadas exitosamente', 'success');
         this.aiUsage.load();
       },
