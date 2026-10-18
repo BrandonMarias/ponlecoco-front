@@ -12,7 +12,6 @@ import { AuthService } from '../../auth/auth.service';
   template: `
     <app-quiz-editor-shell
       [titleControl]="title"
-      instructionsKey="spec"
       [instructions]="['uno', 'dos']"
       [current]="1"
       [total]="3"
@@ -53,31 +52,32 @@ describe('QuizEditorShellComponent', () => {
     });
   });
 
-  it('opens the instructions only the very first visit', async () => {
+  it('starts closed and toggles only with the help button', async () => {
     await create();
+    expect(popover()).toBeNull();
+    helpButton().click();
+    await fixture.whenStable();
     expect(popover()).not.toBeNull();
-    fixture.destroy();
-
-    await create();
+    helpButton().click();
+    await fixture.whenStable();
     expect(popover()).toBeNull();
   });
 
-  it('remembers the state the user left it in', async () => {
+  it('always starts closed, even if it was left open before', async () => {
     await create();
-    helpButton().click(); // close
+    helpButton().click();
     await fixture.whenStable();
-    expect(popover()).toBeNull();
-    helpButton().click(); // open and leave it open
-    await fixture.whenStable();
-    expect(popover()).not.toBeNull();
     fixture.destroy();
 
     await create();
-    expect(popover()).not.toBeNull();
+    expect(popover()).toBeNull();
   });
 
   it('closes the instructions with Escape', async () => {
     await create();
+    helpButton().click();
+    await fixture.whenStable();
+    expect(popover()).not.toBeNull();
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
     await fixture.whenStable();
     expect(popover()).toBeNull();

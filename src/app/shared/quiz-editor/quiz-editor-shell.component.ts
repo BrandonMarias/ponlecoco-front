@@ -1,10 +1,8 @@
-import { ChangeDetectionStrategy, Component, ElementRef, OnInit, effect, input, output, signal, untracked, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, effect, input, output, signal, untracked, viewChild } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { BackButtonComponent } from '../back-button/back-button.component';
 import { AiUsageBadgeComponent } from '../ai-usage-badge/ai-usage-badge.component';
 import { QuizIconComponent } from './quiz-icon.component';
-
-const INSTRUCTIONS_STORAGE_PREFIX = 'quiz-editor-instructions:';
 
 /**
  * Editor chrome shared by the quiz creators: compact top bar (back, title, AI, help, review, save),
@@ -188,13 +186,12 @@ const INSTRUCTIONS_STORAGE_PREFIX = 'quiz-editor-instructions:';
     </div>
   `,
 })
-export class QuizEditorShellComponent implements OnInit {
+export class QuizEditorShellComponent {
   titleControl = input.required<FormControl>();
   titlePlaceholder = input('Título');
   logo = input<string | null>(null);
 
-  /** localStorage key suffix + bullets for the "?" popover. */
-  instructionsKey = input.required<string>();
+  /** Bullets for the "?" popover (closed until the user taps the button). */
   instructions = input<string[]>([]);
 
   showAi = input(true);
@@ -237,20 +234,16 @@ export class QuizEditorShellComponent implements OnInit {
     });
   }
 
-  ngOnInit(): void {
-    this.restoreInstructionsState();
-  }
-
   focusTitle(): void {
     this.titleInput()?.nativeElement.focus();
   }
 
   toggleInstructions(): void {
-    this.setInstructions(!this.instructionsOpen());
+    this.instructionsOpen.update((open) => !open);
   }
 
   closeInstructions(): void {
-    this.setInstructions(false);
+    this.instructionsOpen.set(false);
   }
 
   onKeydown(event: KeyboardEvent): void {
@@ -262,36 +255,6 @@ export class QuizEditorShellComponent implements OnInit {
       // Alt+Arrow is "browser back/forward" on desktop; the editor takes it over.
       event.preventDefault();
       (event.key === 'ArrowLeft' ? this.prev : this.next).emit();
-    }
-  }
-
-  /** Open by default only the very first visit; afterwards restore what the user left. */
-  private restoreInstructionsState(): void {
-    const key = INSTRUCTIONS_STORAGE_PREFIX + this.instructionsKey();
-    let stored: string | null = null;
-    try {
-      stored = localStorage.getItem(key);
-    } catch {
-      return;
-    }
-    if (stored === null) {
-      this.instructionsOpen.set(true);
-      this.persistInstructions(false);
-    } else {
-      this.instructionsOpen.set(stored === 'open');
-    }
-  }
-
-  private setInstructions(open: boolean): void {
-    this.instructionsOpen.set(open);
-    this.persistInstructions(open);
-  }
-
-  private persistInstructions(open: boolean): void {
-    try {
-      localStorage.setItem(INSTRUCTIONS_STORAGE_PREFIX + this.instructionsKey(), open ? 'open' : 'closed');
-    } catch {
-      // storage unavailable (private mode): state just isn't remembered
     }
   }
 }
