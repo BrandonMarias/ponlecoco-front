@@ -15,11 +15,13 @@ import { ModalService } from '../../shared/modal.service';
 import { ImageCompressionService } from '../../shared/image-compression.service';
 import QuestionFormComponent from '../../shared/question-form/question-form.component';
 import { BackButtonComponent } from '../../shared/back-button/back-button.component';
+import { AiUsageService } from '../../shared/ai-usage.service';
+import { AiUsageBadgeComponent } from '../../shared/ai-usage-badge/ai-usage-badge.component';
 
 @Component({
   selector: 'app-create-roulette',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, QuestionFormComponent, BackButtonComponent],
+  imports: [CommonModule, ReactiveFormsModule, QuestionFormComponent, BackButtonComponent, AiUsageBadgeComponent],
   templateUrl: './create-roulette.component.html',
 })
 export default class CreateRouletteComponent implements OnInit, OnDestroy {
@@ -29,6 +31,7 @@ export default class CreateRouletteComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private modalService = inject(ModalService);
   private imageCompressionService = inject(ImageCompressionService);
+  aiUsage = inject(AiUsageService);
 
   rouletteForm: FormGroup;
   loading = signal(false);
@@ -305,9 +308,16 @@ export default class CreateRouletteComponent implements OnInit, OnDestroy {
             }
 
             this.loading.set(false);
+            this.aiUsage.load();
           },
           error: (err) => {
             console.error('Error generating roulette with AI:', err);
+            const quotaMessage = this.aiUsage.handleError(err);
+            if (quotaMessage) {
+              this.showToastNotification(quotaMessage, 'warning');
+              this.loading.set(false);
+              return;
+            }
             let errorMessage = 'Error al generar la ruleta con IA. Por favor, inténtalo de nuevo.';
             if (err.error && err.error.message) {
               errorMessage = Array.isArray(err.error.message)

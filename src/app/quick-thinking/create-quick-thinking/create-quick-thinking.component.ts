@@ -15,11 +15,13 @@ import { ModalService } from '../../shared/modal.service';
 import { ImageCompressionService } from '../../shared/image-compression.service';
 import { ImageUploadComponent } from '../../shared/image-upload/image-upload.component';
 import { BackButtonComponent } from '../../shared/back-button/back-button.component';
+import { AiUsageService } from '../../shared/ai-usage.service';
+import { AiUsageBadgeComponent } from '../../shared/ai-usage-badge/ai-usage-badge.component';
 
 @Component({
   selector: 'app-create-quick-thinking',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, ImageUploadComponent, BackButtonComponent],
+  imports: [CommonModule, ReactiveFormsModule, ImageUploadComponent, BackButtonComponent, AiUsageBadgeComponent],
   templateUrl: './create-quick-thinking.component.html',
 })
 export default class CreateQuickThinkingComponent implements OnInit, OnDestroy {
@@ -29,6 +31,7 @@ export default class CreateQuickThinkingComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private modalService = inject(ModalService);
   private imageCompressionService = inject(ImageCompressionService);
+  aiUsage = inject(AiUsageService);
 
   quickThinkingForm: FormGroup;
   loading = signal(false);
@@ -421,9 +424,15 @@ export default class CreateQuickThinkingComponent implements OnInit, OnDestroy {
         });
 
         this.showToastNotification('✅ Preguntas generadas exitosamente', 'success');
+        this.aiUsage.load();
       },
       error: (err) => {
         console.error('Error generating questions:', err);
+        const quotaMessage = this.aiUsage.handleError(err);
+        if (quotaMessage) {
+          this.showToastNotification(quotaMessage, 'warning');
+          return;
+        }
         this.error.set('Error al generar las preguntas. Por favor, inténtalo de nuevo.');
         this.showToastNotification('❌ Error al generar preguntas con IA', 'error');
       }

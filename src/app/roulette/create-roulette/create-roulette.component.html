@@ -144,7 +144,7 @@
             <button
               type="button"
               (click)="generateRouletteWithAI()"
-              [disabled]="loading()"
+              [disabled]="loading() || aiUsage.exhausted()"
               class="flex-1 sm:flex-none px-4 py-2.5 font-medium text-white bg-pink-600 hover:bg-pink-700 disabled:bg-gray-400 rounded-lg transition-colors min-h-[44px] flex items-center justify-center gap-2"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -152,6 +152,7 @@
               </svg>
               <span class="hidden sm:inline">Generar con IA</span>
             </button>
+            <app-ai-usage-badge class="self-center" />
           </div>
 
           <!-- Right: Primary Action -->

@@ -18,11 +18,13 @@ import { AiCategoryResponse } from '../../shared/ai.interface';
 import { ImageCompressionService } from '../../shared/image-compression.service';
 import QuestionFormComponent from '../../shared/question-form/question-form.component';
 import { BackButtonComponent } from '../../shared/back-button/back-button.component';
+import { AiUsageService } from '../../shared/ai-usage.service';
+import { AiUsageBadgeComponent } from '../../shared/ai-usage-badge/ai-usage-badge.component';
 
 @Component({
   selector: 'app-create-triviaparty',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, QuestionFormComponent, BackButtonComponent],
+  imports: [CommonModule, ReactiveFormsModule, QuestionFormComponent, BackButtonComponent, AiUsageBadgeComponent],
   templateUrl: './create-triviaparty.component.html',
 })
 export default class CreateTriviaPartyComponent implements OnInit, OnDestroy {
@@ -33,6 +35,7 @@ export default class CreateTriviaPartyComponent implements OnInit, OnDestroy {
   private aiService = inject(AiService);
   private modalService = inject(ModalService);
   private imageCompressionService = inject(ImageCompressionService);
+  aiUsage = inject(AiUsageService);
 
   triviaPartyForm: FormGroup;
   loading = signal(false);
@@ -162,9 +165,15 @@ export default class CreateTriviaPartyComponent implements OnInit, OnDestroy {
         .subscribe({
           next: (response) => {
             this.addCategoryFromIA(response);
+            this.aiUsage.load();
           },
           error: (err) => {
-            this.error.set(err.error.message || 'An unexpected error occurred.');
+            const quotaMessage = this.aiUsage.handleError(err);
+            if (quotaMessage) {
+              this.showToastNotification(quotaMessage, 'warning');
+              return;
+            }
+            this.error.set(err.error?.message || 'An unexpected error occurred.');
           },
         });
     }
